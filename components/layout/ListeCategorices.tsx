@@ -1,27 +1,165 @@
+"use client";
+
+import { useState } from "react";
+
 export default function ListeCategorices() {
+  const [activeCategory, setActiveCategory] = useState<number | null>(null);
+
   const categories = [
-    "Immobilier",
-    "Véhicules",
-    "Emploi",
-    "Mode",
-    "Maison",
-    "Multimédia",
-    "Loisirs",
-    "Services",
+    {
+      name: "Immobilier",
+      sousCategories: [
+        { titre: "Tout Immobilier", items: [] },
+        {
+          titre: "Ventes immobilières",
+          items: ["Appartement", "Maison", "Terrain", "Voir tout"],
+        },
+        {
+          titre: "Immobilier Neuf",
+          items: [
+            "Appartement",
+            "Maison",
+            "Programmes logements neufs",
+            "Promoteurs immobiliers",
+          ],
+        },
+        {
+          titre: "Locations",
+          items: ["Appartement", "Maison", "Parking", "Voir tout"],
+        },
+        { titre: "Colocations", items: [] },
+        { titre: "Bureaux & Commerces", items: [] },
+        { titre: "Services de déménagement", items: [] },
+      ],
+    },
+    {
+      name: "Véhicules",
+      sousCategories: [
+        { titre: "Voitures", items: [] },
+        { titre: "Motos", items: [] },
+        { titre: "Caravaning", items: [] },
+        { titre: "Utilitaires", items: [] },
+        { titre: "Équipement Auto", items: [] },
+        { titre: "Équipement Moto", items: [] },
+        { titre: "Équipement Caravaning", items: [] },
+        { titre: "Nautisme", items: [] },
+        { titre: "Équipement Nautisme", items: [] },
+      ],
+    },
+    { name: "Vacances", sousCategories: [] },
+    { name: "Emploi", sousCategories: [] },
+    { name: "Mode", sousCategories: [] },
+    { name: "Maison & Jardin", sousCategories: [] },
+    { name: "Famille", sousCategories: [] },
+    { name: "Électronique", sousCategories: [] },
+    { name: "Loisirs", sousCategories: [] },
+    { name: "Autres", sousCategories: [] },
+    { name: "Bons plans !", sousCategories: [] },
   ];
 
   return (
-    <nav className="w-full bg-gray-50 border-t border-gray-200">
-      <ul className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-6 py-3 text-sm font-medium text-gray-700">
-        {categories.map((cat, index) => (
-          <li
-            key={index}
-            className="cursor-pointer hover:text-orange-500 transition"
+    <div className="w-full bg-white border-b border-gray-200">
+      <nav className="relative">
+        <div className="max-w-7xl mx-auto px-4">
+          <ul
+            className="flex items-center justify-start gap-1 py-4 text-sm"
+            onMouseLeave={() => setActiveCategory(null)}
           >
-            {cat}
-          </li>
-        ))}
-      </ul>
-    </nav>
+            {categories.map((cat, index) => (
+              <li
+                key={index}
+                className="flex items-center"
+                onMouseEnter={() => setActiveCategory(index)}
+              >
+                <a
+                  href="#"
+                  className={`px-3 py-1 transition-all duration-200 whitespace-nowrap relative ${
+                    activeCategory === index
+                      ? "text-black font-bold"
+                      : "text-gray-700 font-normal hover:text-orange-500"
+                  }`}
+                >
+                  {cat.name}
+                  {activeCategory === index && (
+                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-orange-500"></span>
+                  )}
+                </a>
+                {index < categories.length - 1 && (
+                  <span className="text-gray-700 select-none">·</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Dropdown sous-catégories */}
+        {activeCategory !== null &&
+          categories[activeCategory].sousCategories.length > 0 && (
+            <div
+              className="absolute left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 animate-fadeIn"
+              onMouseEnter={() => setActiveCategory(activeCategory)}
+              onMouseLeave={() => setActiveCategory(null)}
+            >
+              <div className="max-w-7xl mx-auto px-4 py-6">
+                <div className="grid grid-cols-4 gap-8">
+                  {categories[activeCategory].sousCategories.map(
+                    (souscat, idx) => (
+                      <div key={idx} className="animate-slideDown">
+                        <h3 className="font-semibold text-gray-900 mb-3 text-sm">
+                          {souscat.titre}
+                        </h3>
+                        {souscat.items.length > 0 && (
+                          <ul className="space-y-2">
+                            {souscat.items.map((item, itemIdx) => (
+                              <li key={itemIdx}>
+                                <a
+                                  href="#"
+                                  className="text-sm text-gray-600 hover:text-orange-500 transition-colors duration-200"
+                                >
+                                  {item}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+      </nav>
+      
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+        
+        .animate-slideDown {
+          animation: slideDown 0.3s ease-out;
+        }
+      `}</style>
+    </div>
   );
 }
