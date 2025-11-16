@@ -58,8 +58,9 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
     { name: "Famille", sousCategories: [] },
     { name: "Électronique", sousCategories: [] },
     { name: "Loisirs", sousCategories: [] },
-    { name: "Autres", sousCategories: [] },
     { name: "Bons plans !", sousCategories: [] },
+    { name: "Autres", sousCategories: [] },
+
   ];
 
   // Si c'est pour le menu mobile latéral, afficher une liste verticale simple
@@ -69,7 +70,7 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
         {categories.map((cat, index) => (
           <button
             key={index}
-            className="w-full text-left py-3 hover:bg-gray-50 transition text-gray-900"
+            className="flex items-center text-left py-2 hover:bg-gray-50 transition text-gray-700 font-medium text-sm"
           >
             {cat.name}
           </button>
@@ -98,12 +99,12 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
                   className={`px-3 py-1 transition-all duration-200 whitespace-nowrap relative ${
                     activeCategory === index
                       ? "text-black font-bold"
-                      : "text-gray-700 font-normal hover:text-orange-500"
+                      : "text-gray-700 font-normal hover:text-primary"
                   }`}
                 >
                   {cat.name}
                   {activeCategory === index && (
-                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-orange-500"></span>
+                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary"></span>
                   )}
                 </a>
                 {index < categories.length - 1 && (
@@ -123,11 +124,11 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
               onMouseLeave={() => setActiveCategory(null)}
             >
               <div className="max-w-7xl mx-auto px-4 py-6">
-                <div className="grid grid-cols-4 gap-8">
+                <div className="flex flex-wrap gap-8">
                   {categories[activeCategory].sousCategories.map(
                     (souscat, idx) => (
-                      <div key={idx} className="animate-slideDown">
-                        <h3 className="font-semibold text-gray-900 mb-3 text-sm">
+                      <div key={idx} className="animate-slideDown min-w-[200px]">
+                        <h3 className="font-bold text-gray-900 mb-3 text-sm">
                           {souscat.titre}
                         </h3>
                         {souscat.items.length > 0 && (
@@ -136,7 +137,7 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
                               <li key={itemIdx}>
                                 <a
                                   href="#"
-                                  className="text-sm text-gray-600 hover:text-orange-500 transition-colors duration-200"
+                                  className="text-sm text-gray-600 hover:text-secondary transition-colors duration-200 block py-1"
                                 >
                                   {item}
                                 </a>
@@ -144,10 +145,20 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
                             ))}
                           </ul>
                         )}
+                        {/* Afficher un indicateur si pas d'items mais titre présent */}
+                        {souscat.items.length === 0 && (
+                          <a
+                            href="#"
+                            className="text-sm text-gray-600 hover:text-secondary transition-colors duration-200 block py-1"
+                          >
+                            Voir tout
+                          </a>
+                        )}
                       </div>
                     )
                   )}
                 </div>
+             
               </div>
             </div>
           )}

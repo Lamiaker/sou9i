@@ -6,6 +6,8 @@ import { Plus, Bell, Heart, Mail, User, Search, Menu, X, MessageCircle, Gift } f
 import logo from "@/public/logo.png";
 import SearchBarre from "./searchBarre";
 import ListeCategorices from "./ListeCategorices";
+import MenuButton from "../ui/MenuButton";
+import IconButtonWithLabel from "../ui/IconButtonWithLabel";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -41,13 +43,7 @@ export default function Header() {
 
         {/* Barre de recherche mobile */}
         <div className="px-4 py-3 border-b border-gray-100">
-          <button
-            onClick={() => setIsMobileSearchOpen(true)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 border border-gray-300 rounded-md bg-gray-50 text-left hover:bg-gray-100 transition"
-          >
-            <Search size={18} className="text-gray-500" />
-            <span className="text-gray-500 text-sm">Rechercher sur leboncoin</span>
-          </button>
+          <SearchBarre />
         </div>
 
         {/* Catégories scrollables horizontalement - Mobile */}
@@ -69,68 +65,60 @@ export default function Header() {
               className="cursor-pointer object-contain"
             />
 
-            <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
+            <button className="bg-secondary cursor-pointer hover:bg-primary text-white font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
               <Plus size={20} />
               Déposer une annonce
             </button>
           </div>
 
           {/* Section milieu : barre de recherche */}
-          <div className="flex-1 max-w-xl mx-6">
+          <div className="flex-1 max-w-xl mx-6 ">
             <SearchBarre />
           </div>
 
           {/* Section droite : menu utilisateur */}
           <div className="flex items-center space-x-6 text-gray-700">
-            <button className="flex flex-col items-center group">
-              <Bell size={22} />
-              <span className="relative text-xs font-medium mt-1">
-                Mes recherches
-                <span className="absolute left-0 bottom-0 w-full h-0.5 bg-orange-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
-              </span>
-            </button>
+                <IconButtonWithLabel 
+                  icon={Bell} 
+                  label="Mes recherches" 
+                />
 
-            <button className="flex flex-col items-center group">
-              <Heart size={22} />
-              <span className="relative text-xs font-medium mt-1">
-                Favoris
-                <span className="absolute left-0 bottom-0 w-full h-0.5 bg-orange-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
-              </span>
-            </button>
+                <IconButtonWithLabel 
+                  icon={Heart} 
+                  label="Favoris" 
+                />
 
-            <button className="flex flex-col items-center group">
-              <Mail size={22} />
-              <span className="relative text-xs font-medium mt-1">
-                Messages
-                <span className="absolute left-0 bottom-0 w-full h-0.5 bg-orange-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
-              </span>
-            </button>
+                <IconButtonWithLabel 
+                  icon={Mail} 
+                  label="Messages" 
+                />
 
-            <button className="flex flex-col items-center group">
-              <User size={22} />
-              <span className="relative text-xs font-medium mt-1">
-                Se connecter
-                <span className="absolute left-0 bottom-0 w-full h-0.5 bg-orange-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
-              </span>
-            </button>
-          </div>
+                <IconButtonWithLabel 
+                  icon={User} 
+                  label="Se connecter" 
+                />
+              </div>
         </div>
 
         {/* Catégories Desktop */}
-        <ListeCategorices />
+       <ListeCategorices />
+      
+      
       </div>
 
       {/* Menu latéral mobile - Style Leboncoin exact */}
       {isMobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
+            className="fixed inset-0 bg-gray-300 bg-opacity-40 z-40 lg:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
           <div className="fixed top-0 left-0 h-full w-full max-w-sm bg-white z-50 shadow-2xl lg:hidden overflow-y-auto animate-slideInLeft">
             {/* Header du menu avec logo */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between px-6  py-4 border-b border-gray-200">
+            <div className="w-6"></div>
+
               <Image
                 src={logo}
                 alt="leboncoin"
@@ -150,59 +138,51 @@ export default function Header() {
             {/* Menu principal */}
             <div className="py-2">
               {/* Déposer une annonce */}
-              <button className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition text-left border-b border-gray-100">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Plus size={20} className="text-gray-700" strokeWidth={2} />
-                </div>
-                <span className="text-gray-800 font-bold">Déposer une annonce</span>
-              </button>
+           {/* Déposer une annonce */}
+                    <MenuButton 
+                      icon={Plus} 
+                      text="Déposer une annonce" 
+                    />
 
-              {/* Rechercher */}
-              <button className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition text-left border-b border-gray-100">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Search size={20} className="text-gray-700" strokeWidth={2} />
-                </div>
-                <span className="text-gray-800 font-bold">Rechercher</span>
-              </button>
+                    {/* Rechercher */}
+                    <MenuButton 
+                      icon={Search} 
+                      text="Rechercher" 
+                      hasBorder={true}
+                    />
 
-              {/* Messages */}
-              <button className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition text-left border-b border-gray-100">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <MessageCircle size={20} className="text-gray-700" strokeWidth={2} />
-                </div>
-                <span className="text-gray-800 font-bold">Messages</span>
-              </button>
+                    {/* Messages */}
+                    <MenuButton 
+                      icon={MessageCircle} 
+                      text="Messages" 
+                    />
 
-              {/* Favoris */}
-              <button className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition text-left border-b border-gray-100">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Heart size={20} className="text-gray-700" strokeWidth={2} />
-                </div>
-                <span className="text-gray-800 font-bold">Favoris</span>
-              </button>
+                    {/* Favoris */}
+                    <MenuButton 
+                      icon={Heart} 
+                      text="Favoris" 
+                    />
 
-              {/* Recherches sauvegardées */}
-              <button className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition text-left border-b border-gray-100">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Bell size={20} className="text-gray-700" strokeWidth={2} />
-                </div>
-                <span className="text-gray-800 font-bold">Recherches sauvegardées</span>
-              </button>
+                    {/* Recherches sauvegardées */}
+                    <MenuButton 
+                      icon={Bell} 
+                      text="Recherches sauvegardées" 
+                      hasBorder={true}
+                    />
 
-              {/* Bons plans */}
-              <button className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition text-left border-b border-gray-200">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Gift size={20} className="text-gray-700" strokeWidth={2} />
-                </div>
-                <span className="text-gray-800 font-bold">Bons plans !</span>
-              </button>
+                    {/* Bons plans */}
+                    <MenuButton 
+                      icon={Gift} 
+                      text="Bons plans !" 
+                      hasBorder={true}
+                    />
 
               {/* Section Catégories - Utilise le composant ListeCategorices */}
-              <div className="pt-4 pb-2">
-                <h3 className="px-6 py-2 text-xs font-medium  text-gray-500 uppercase tracking-wider">
+              <div className="pt-4 pb-2 ">
+                <h3 className="px-4 py-2 text-xs font-medium  text-gray-500 uppercase tracking-wider ">
                   Catégories
                 </h3>
-                <div className="px-6 py-2">
+                <div className="px-4 py-2">
                   <ListeCategorices isMobileMenu={true} />
                 </div>
               </div>
