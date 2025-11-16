@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-export default function ListeCategorices() {
+// Interface pour les props
+interface ListeCategoricesProps {
+  isMobileMenu?: boolean;
+}
+
+export default function ListeCategorices({ isMobileMenu = false }: ListeCategoricesProps) {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
 
   const categories = [
@@ -57,6 +62,23 @@ export default function ListeCategorices() {
     { name: "Bons plans !", sousCategories: [] },
   ];
 
+  // Si c'est pour le menu mobile latéral, afficher une liste verticale simple
+  if (isMobileMenu) {
+    return (
+      <>
+        {categories.map((cat, index) => (
+          <button
+            key={index}
+            className="w-full text-left py-3 hover:bg-gray-50 transition text-gray-900"
+          >
+            {cat.name}
+          </button>
+        ))}
+      </>
+    );
+  }
+
+  // Sinon, afficher le menu normal avec dropdowns (Desktop et Mobile horizontal)
   return (
     <div className="w-full bg-white border-b border-gray-200">
       <nav className="relative">
@@ -85,14 +107,14 @@ export default function ListeCategorices() {
                   )}
                 </a>
                 {index < categories.length - 1 && (
-                  <span className="text-gray-700 select-none">·</span>
+                  <span className="text-gray-300 select-none">·</span>
                 )}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Dropdown sous-catégories */}
+        {/* Dropdown sous-catégories - Desktop uniquement */}
         {activeCategory !== null &&
           categories[activeCategory].sousCategories.length > 0 && (
             <div
