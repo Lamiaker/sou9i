@@ -1,15 +1,7 @@
 // categories.ts
 
 // Interfaces
-export interface SousCategorie {
-  titre: string;
-  items: string[];
-}
-
-export interface Categorie {
-  name: string;
-  sousCategories: SousCategorie[];
-}
+import { Categorie } from "./types";
 
 // Données
 export const categories: Categorie[] = [

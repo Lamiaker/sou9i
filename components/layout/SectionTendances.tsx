@@ -2,16 +2,8 @@
 
 import Image from "next/image";
 import { useRef } from "react";
-
-interface TendanceItem {
-  title: string;
-  img: string;
-}
-
-interface SectionTendancesProps {
-  title: string;
-  items: TendanceItem[];
-}
+import ArrowButton from "../ui/ArrowButton";
+import {SectionTendancesProps} from "@/app/Data/types";
 
 export function SectionTendances({ title, items }: SectionTendancesProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -47,18 +39,19 @@ export function SectionTendances({ title, items }: SectionTendancesProps) {
       {/* SLIDER */}
       <div className="relative ">
         {/* Boutons Prev / Next (desktop seulement) */}
-        <button
-          onClick={scrollLeft}
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition"
-        >
-        &lt;
-        </button>
-        <button
-          onClick={scrollRight}
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition"
-        >
-          &gt;
-        </button>
+               <ArrowButton
+                      direction="left"
+                      onClick={scrollLeft}
+                      className="-left-4"
+                      ariaLabel="Précédent"
+                    />
+        
+                    <ArrowButton
+                      direction="right"
+                      onClick={scrollRight}
+                      className="-right-4"
+                      ariaLabel="Suivant"
+                    />
 
         {/* Conteneur items */}
         <div

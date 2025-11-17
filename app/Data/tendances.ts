@@ -13,17 +13,14 @@ export const tendances: TendanceItem[] = [
     title: "Smartphones",
     img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9",
   },
-  {
-    title: "Immobilier",
-    img: "https://images.unsplash.com/photo-1560185127-6a8c0b0f0b7b",
-  },
+
   {
     title: "Vélos",
     img: "https://images.unsplash.com/photo-1541625602330-2277a4c46182",
   },
   {
     title: "Mode & vêtements",
-    img: "https://images.unsplash.com/photo-1521335629791-ce4aec67dd47",
+    img: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=400&h=400&fit=crop",
   },
   {
     title: "Consoles & jeux vidéo",
@@ -34,7 +31,7 @@ export const tendances: TendanceItem[] = [
     img: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
   },
   {
-    title: "Électroménager",
-    img: "https://images.unsplash.com/photo-1586201375761-83865001e31b",
+    title: "Mode & vêtements",
+    img: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=400&h=400&fit=crop",
   },
 ];

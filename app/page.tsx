@@ -5,6 +5,8 @@ import { SectionPublicite } from "@/components/layout/SectionPublicite";
 import { SectionTendances } from "@/components/layout/SectionTendances";
 import { tendances } from "./Data/tendances"; 
 import SectionVetements from "@/components/layout/SectionVetements";
+import { vetementsProducts } from "@/app/Data/products-vetements";
+
 
 
 export default function Home() {
@@ -33,6 +35,7 @@ export default function Home() {
         <SectionVetements
           title="Vêtements"
           viewAllLink="#"
+          products={vetementsProducts}
          
         />
 
