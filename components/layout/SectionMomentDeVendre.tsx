@@ -1,6 +1,9 @@
- import {SectionMomentDeVendreProps} from "@/app/Data/types";
 
-
+ interface SectionMomentDeVendreProps {
+  title: string;
+  description?: string;
+  buttonText: string;
+}
 export function SectionMomentDeVendre({ title, description, buttonText }: SectionMomentDeVendreProps) {
   return (
     <section className="w-full mb-8 ">

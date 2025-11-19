@@ -11,6 +11,9 @@ interface ListeCategoricesProps {
 export default function ListeCategorices({ isMobileMenu = false }: ListeCategoricesProps) {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
 
+const generateCategoryLink = (name: string) => {
+  return "/" + encodeURIComponent(name.toLowerCase());
+};
 
 
   // Si c'est pour le menu mobile latéral, afficher une liste verticale simple
@@ -18,12 +21,13 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
     return (
       <>
         {categories.map((cat, index) => (
-          <button
+          <a
+            href={generateCategoryLink(cat.name)}
             key={index}
             className="flex items-center text-left py-2 hover:bg-gray-50 transition text-gray-700 font-medium text-sm"
           >
             {cat.name}
-          </button>
+          </a>
         ))}
       </>
     );
@@ -45,7 +49,8 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
                 onMouseEnter={() => setActiveCategory(index)}
               >
                 <a
-                  href="/immobilier/1"
+                  href={generateCategoryLink(cat.name)}
+
                   className={`px-3 py-1 transition-all duration-200 whitespace-nowrap relative ${
                     activeCategory === index
                       ? "text-gray-700 font-semibold"

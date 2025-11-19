@@ -1,6 +1,3 @@
-// ============================================
-// 🏡 Types Immobilier – Projet Next.js
-// ============================================
 
 // Types principaux
 export type TypeBien =
@@ -98,53 +95,5 @@ export interface ImmobilierItem {
   localDetails?: LocalCommercialDetails;
 }
 
-// ============================================
-// 🧪 Exemple pour ta page détail
-// ============================================
 
-export const immobilierExample: ImmobilierItem = {
-  id: "1",
-  typeBien: "Maison",
-  typeTransaction: "Vente",
-
-  surface: 135,
-  pieces: 4,
-
-  localisation: {
-    ville: "Oran",
-    codePostal: "31000",
-    adresse: "Rue des Jardins",
-  },
-
-  prix: 28500000,
-
-  description:
-    "Belle maison familiale entièrement rénovée avec jardin privé, proche des commodités. Parfait pour une famille.",
-
-  dateConstruction: 2014,
-
-  images: [
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
-    "https://images.unsplash.com/photo-1599423300746-b62533397364?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
-    "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800",
-  ],
-
-  logementDetails: {
-    chambres: 3,
-    meuble: false,
-    sallesDeBain: 2,
-    etage: "RDC + 1",
-    ascenseur: false,
-
-    terrasse: { present: true, surface: 18 },
-    jardin: { present: true, surface: 120 },
-
-    parking: { present: true, places: 1 },
-
-    chauffage: "Électrique",
-
-    dpe: "C",
-    ges: "B",
-  },
-};
 

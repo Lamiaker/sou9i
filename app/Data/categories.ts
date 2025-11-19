@@ -1,8 +1,18 @@
 
-import { Categorie } from "./types";
+ interface SousCategorie {
+  titre: string;
+  items: string[];
+}
+
+ interface Categorie {
+  name: string;
+  link?: string;
+  sousCategories: SousCategorie[];
+}
 export const categories: Categorie[] = [
   {
     name: "Immobilier",
+    link: "/immobilier",
     sousCategories: [
       { titre: "Tout Immobilier", items: [] },
       {
