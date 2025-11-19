@@ -1,33 +1,22 @@
 "use client";
 import { useState } from "react";
+import { useParams } from "next/navigation"; // pour récupérer l'id depuis URL
 import { ChevronLeft, ChevronRight, MapPin, Calendar, Package, Truck } from "lucide-react";
-
-// Données de démonstration
-const demoItem = {
-  id: "1",
-  title: "Veste en Jean Vintage",
-  price: 4500,
-  category: "Femme",
-  type: "Veste",
-  size: "M",
-  brand: "Levi's",
-  condition: "Très bon état",
-  color: "Bleu denim",
-  material: "100% Coton",
-  location: "Alger Centre",
-  publishedAt: "15 Nov 2025",
-  description: "Magnifique veste en jean vintage de la marque Levi's. Portée quelques fois seulement, dans un état impeccable. Coupe parfaite et intemporelle qui s'adapte à tous les styles.",
-  deliveryMethods: ["Livraison à domicile", "Point relais", "Remise en main propre"],
-  photos: [
-    "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1543076447-215ad9ba6923?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=800&h=600&fit=crop"
-  ]
-};
+import  { vetementsProducts,ProductItem } from "@/app/Data/products-vetements";
 
 export default function ClothingDetail() {
+  const { id } = useParams(); // URL: /vetement/1 -> id = "1"
+  const item: ProductItem | undefined = vetementsProducts.find((p) => p.id === id);
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const item = demoItem;
+
+  if (!item) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Produit non trouvé.</p>
+      </div>
+    );
+  }
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % item.photos.length);
@@ -131,7 +120,7 @@ export default function ClothingDetail() {
                 
                 <div className="flex items-baseline gap-3 mb-8">
                   <span className="text-5xl font-bold text-indigo-600">
-                    {item.price.toLocaleString()}
+                   {item.price.toLocaleString("fr-FR")}
                   </span>
                   <span className="text-2xl text-slate-600">DA</span>
                 </div>

@@ -66,7 +66,12 @@ export default function Header() {
             />
 
             <button className="bg-secondary cursor-pointer hover:bg-primary text-white font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
-              <Plus size={20} />
+              {/* <Plus size={20} /> */}
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
               Déposer une annonce
             </button>
           </div>
@@ -138,7 +143,7 @@ export default function Header() {
             {/* Menu principal */}
             <div className="py-2">
               {/* Déposer une annonce */}
-           {/* Déposer une annonce */}
+         
                     <MenuButton 
                       icon={Plus} 
                       text="Déposer une annonce" 
@@ -211,29 +216,7 @@ export default function Header() {
         </div>
       )}
 
-      <style jsx>{`
-        @keyframes slideInLeft {
-          from {
-            transform: translateX(-100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-
-        .animate-slideInLeft {
-          animation: slideInLeft 0.25s ease-out;
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+    
     </header>
   );
 }

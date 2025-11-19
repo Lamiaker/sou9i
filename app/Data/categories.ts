@@ -1,9 +1,5 @@
-// categories.ts
 
-// Interfaces
 import { Categorie } from "./types";
-
-// Données
 export const categories: Categorie[] = [
   {
     name: "Immobilier",
@@ -45,15 +41,48 @@ export const categories: Categorie[] = [
       { titre: "Équipement Nautisme", items: [] },
     ],
   },
-  { name: "Vacances", sousCategories: [] },
-  { name: "Emploi", sousCategories: [] },
-  { name: "Mode", sousCategories: [] },
-  { name: "Maison & Jardin", sousCategories: [] },
-  { name: "Famille", sousCategories: [] },
-  { name: "Électronique", sousCategories: [] },
-  { name: "Loisirs", sousCategories: [] },
-  { name: "Bons plans !", sousCategories: [] },
-  { name: "Autres", sousCategories: [] },
+  { name: "Vacances", sousCategories: [
+    { titre: "Voyages", items: [] },
+    { titre: "Hotes", items: [] },
+    { titre: "Voyages et Hotes", items: [] },
+  ] },
+  { name: "Emploi", sousCategories: [
+    { titre: "Offres d'emploi", items: [] },
+    { titre: "Candidatures", items: [] },
+  ] },
+  { name: "Mode", sousCategories: [
+    { titre: "Homme", items: [] },
+    { titre: "Femme", items: [] },
+    { titre: "Enfants", items: [] },
+  ] },
+  { name: "Maison & Jardin", sousCategories: [
+    { titre: "Maison", items: [] },
+    { titre: "Jardin", items: [] },
+  ] },
+  { name: "Famille", sousCategories: [
+    { titre: "Enfants", items: [] },
+    { titre: "Famille", items: [] },
+    { titre: "Famille & Enfants", items: [] },
+  ] },
+  { name: "Électronique", sousCategories: [
+    { titre: "Ordinateurs", items: [] },
+    { titre: "Smartphones", items: [] },
+    { titre: "Tablettes", items: [] },
+    { titre: "Accessoires", items: [] },
+  ] },
+  { name: "Loisirs", sousCategories: [
+    { titre: "Musique", items: [] },
+    { titre: "Loisirs", items: [] },
+    { titre: "Loisirs et Musique", items: [] },
+  ] },
+  { name: "Bons plans !", sousCategories: [
+    { titre: "Bons plans", items: [] },
+    { titre: "Bons plans et Loisirs", items: [] },
+    { titre: "Bons plans et Musique", items: [] },
+  ] },
+  { name: "Autres", sousCategories: [
+    
+  ] },
 ];
 
 export default categories;

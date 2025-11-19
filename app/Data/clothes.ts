@@ -1,4 +1,20 @@
-import { ClothingAd } from "./types";
+ interface ClothingAd {
+  id: string;
+  title: string;                 // Titre de l'annonce
+  price: number;                 // Prix demandé
+  category: string;              // Catégorie (Vêtements, Chaussures…)
+  type: string;                  // Type de vêtement (Jean, Robe…)
+  size: string;                  // Taille (S, M, 38…)
+  brand: string;                 // Marque (Zara, Nike…)
+  condition: string;             // État du vêtement
+  color: string;                 // Couleur
+  material: string;              // Matière (Coton…)
+  description: string;           // Description détaillée
+  location: string;              // Ville + code postal
+  deliveryMethods: string[];     // Modes de livraison
+  publishedAt: string;           // Date de publication
+  photos: string[];              // URLs des images
+}
 
 export const clothes: ClothingAd[] = [
   {

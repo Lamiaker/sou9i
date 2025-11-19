@@ -1,32 +1,4 @@
-// Types communs pour réutilisation
 
-export interface ProductItem {
-  id: string;
-  sellerName: string;
-  sellerRating: number;
-  sellerReviews: number;
-  sellerAvatar: string;
-  title: string;
-  price: string;
-  image: string;
-  deliveryAvailable: boolean;
-  location: string;
-  postedTime: string;
-}
-export interface SectionVetementsProps {
-  title?: string;
-  viewAllLink?: string;
-  products?: ProductItem[];
-}
- interface TendanceItem {
-  title: string;
-  img: string;
-}
-
-export interface SectionTendancesProps {
-  title: string;
-  items: TendanceItem[];
-}
 export interface SectionMomentDeVendreProps {
   title: string;
   description?: string;

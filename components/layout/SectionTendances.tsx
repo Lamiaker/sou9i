@@ -1,10 +1,13 @@
-"use client"; // nécessaire pour utiliser useRef et les événements
+"use client";
 
 import Image from "next/image";
 import { useRef } from "react";
 import ArrowButton from "../ui/ArrowButton";
-import {SectionTendancesProps} from "@/app/Data/types";
-
+import { TendanceItem  } from "@/app/Data/tendances";
+ interface SectionTendancesProps {
+  title: string;
+  items: TendanceItem[];
+}
 export function SectionTendances({ title, items }: SectionTendancesProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
 

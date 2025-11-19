@@ -45,10 +45,10 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
                 onMouseEnter={() => setActiveCategory(index)}
               >
                 <a
-                  href="#"
+                  href="/immobilier/1"
                   className={`px-3 py-1 transition-all duration-200 whitespace-nowrap relative ${
                     activeCategory === index
-                      ? "text-black font-bold"
+                      ? "text-gray-700 font-semibold"
                       : "text-gray-700 font-normal hover:text-primary"
                   }`}
                 >
@@ -78,7 +78,7 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
                   {categories[activeCategory].sousCategories.map(
                     (souscat, idx) => (
                       <div key={idx} className="animate-slideDown min-w-[200px]">
-                        <h3 className="font-bold text-gray-900 mb-3 text-sm">
+                        <h3 className="font-bold text-gray-700 mb-3 text-sm">
                           {souscat.titre}
                         </h3>
                         {souscat.items.length > 0 && (
@@ -113,36 +113,7 @@ export default function ListeCategorices({ isMobileMenu = false }: ListeCategori
             </div>
           )}
       </nav>
-      
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-        
-        .animate-slideDown {
-          animation: slideDown 0.3s ease-out;
-        }
-      `}</style>
+     
     </div>
   );
 }
