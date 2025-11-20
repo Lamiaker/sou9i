@@ -115,7 +115,7 @@ export default function Header() {
       {isMobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-gray-300 bg-opacity-40 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/10 backdrop-blur-[1px] bg-opacity-40 z-40 lg:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 

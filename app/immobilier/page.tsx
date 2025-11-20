@@ -1,6 +1,6 @@
 "use client";
-import { useState, useMemo } from 'react';
-import { MapPin, Heart, ChevronRight, ChevronDown, X, SlidersHorizontal } from 'lucide-react';
+import { useState, useMemo,  useRef } from 'react';
+import { MapPin, Heart,  ChevronDown, X, SlidersHorizontal } from 'lucide-react';
 
 import immobilierExamples from '@/app/Data/immobilierExamples';
 
@@ -35,6 +35,7 @@ export default function ImmobilierListPage() {
     chambresMin: 0,
   });
 
+
   const toggleFavorite = (id: string) => {
     setFavorites(prev => 
       prev.includes(id) ? prev.filter(fav => fav !== id) : [...prev, id]
@@ -51,50 +52,37 @@ export default function ImmobilierListPage() {
   // Appliquer les filtres
   const filteredAnnonces = useMemo(() => {
     return immobilierExamples.filter(annonce => {
-      // Filtre type de transaction
       if (filters.typeTransaction && annonce.typeTransaction !== filters.typeTransaction) {
         return false;
       }
-      
-      // Filtre type de bien
       if (filters.typeBien && annonce.typeBien !== filters.typeBien) {
         return false;
       }
-      
-      // Filtre ville
       if (filters.ville && annonce.localisation.ville !== filters.ville) {
         return false;
       }
-      
-      // Filtre prix
       if (annonce.prix < filters.prixMin || annonce.prix > filters.prixMax) {
         return false;
       }
-      
-      // Filtre surface
       if (annonce.surface < filters.surfaceMin || annonce.surface > filters.surfaceMax) {
         return false;
       }
-      
-      // Filtre pièces
       if (annonce.pieces < filters.piecesMin || annonce.pieces > filters.piecesMax) {
         return false;
       }
-      
-      // Filtre chambres
       if (filters.chambresMin > 0 && annonce.logementDetails?.chambres) {
         if (annonce.logementDetails.chambres < filters.chambresMin) {
           return false;
         }
       }
-      
       return true;
     });
   }, [filters]);
 
-  const updateFilter = (key: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
+const updateFilter = (key: keyof FilterState, value: any) => {
+  setFilters(prev => ({ ...prev, [key]: value }));
+};
+
 
   const resetFilters = () => {
     setFilters({
@@ -115,54 +103,65 @@ export default function ImmobilierListPage() {
   const typesBien = Array.from(new Set(immobilierExamples.map(a => a.typeBien)));
   const typesTransaction = Array.from(new Set(immobilierExamples.map(a => a.typeTransaction)));
 
-  const FilterDropdown = ({ title, type, options }: { title: string, type: string, options: string[] }) => (
-    <div className="relative">
-      <button 
-        onClick={() => setOpenFilter(openFilter === type ? null : type)}
-        className={`flex items-center gap-2 px-4 py-2 border rounded-xl transition-all shadow-sm ${
-          filters[type as keyof FilterState] 
-            ? 'bg-orange-50 border-orange-500 text-orange-700' 
-            : 'bg-white border-gray-300 hover:border-orange-500 hover:bg-orange-50/60'
-        }`}
-      >
-        <span className="text-sm font-medium">{title}</span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${openFilter === type ? 'rotate-180' : ''}`} />
-      </button>
-      
-      {openFilter === type && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-30 p-3">
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {options.map(option => (
-              <label key={option} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                <input
-                  type="radio"
-                  name={type}
-                  value={option}
-                  checked={filters[type as keyof FilterState] === option}
-                  onChange={(e) => updateFilter(type as keyof FilterState, e.target.value)}
-                  className="text-orange-500 focus:ring-orange-500"
-                />
-                <span className="text-sm">{option}</span>
-              </label>
-            ))}
+  const FilterDropdown = ({ title, type, options }: { title: string, type: string, options: string[] }) => {
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <button 
+          onClick={() => setOpenFilter(openFilter === type ? null : type)}
+          className={`flex items-center gap-2 px-4 py-2 border rounded-xl transition-all shadow-sm ${
+            filters[type as keyof FilterState] 
+              ? 'bg-blue-50 border-blue-500 text-blue-700'
+              : 'bg-white border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+          }`}
+        >
+          <span className="text-sm font-medium">{title}</span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${openFilter === type ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {openFilter === type && (
+          <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-30 p-3">
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {options.map(option => (
+                <label key={option} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
+                  <input
+                    type="radio"
+                    name={type}
+                    value={option}
+                    checked={filters[type as keyof FilterState] === option}
+                    onChange={(e) => {
+                      updateFilter(type as keyof FilterState, e.target.value);
+                    }}
+                    className="text-blue-500 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">{option}</span>
+                </label>
+              ))}
+            </div>
+            {filters[type as keyof FilterState] && (
+              <button 
+                onClick={() => updateFilter(type as keyof FilterState, '')}
+                className="w-full mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              >
+                Effacer
+              </button>
+            )}
           </div>
-          {filters[type as keyof FilterState] && (
-            <button 
-              onClick={() => updateFilter(type as keyof FilterState, '')}
-              className="w-full mt-2 text-xs text-orange-600 hover:text-orange-700 font-medium"
-            >
-              Effacer
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
+  };
+
+  // Fonction pour fermer les dropdowns en cliquant en dehors
+  const handleOverlayClick = () => {
+    setOpenFilter(null);
+  };
 
   return (
-    <div className="bg-gray-50  min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       {/* Barre de filtres principale */}
-      <div className="backdrop-blur-md bg-white border-b-gray-400  sticky top-0 z-20 shadow-sm">
+      <div className="backdrop-blur-md bg-white border-b border-gray-300 sticky top-0 z-20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-wrap gap-3 items-center">
             {/* Type de transaction */}
@@ -192,8 +191,8 @@ export default function ImmobilierListPage() {
                 onClick={() => setOpenFilter(openFilter === 'prix' ? null : 'prix')}
                 className={`flex items-center gap-2 px-4 py-2 border rounded-xl transition-all shadow-sm ${
                   (filters.prixMin > 0 || filters.prixMax < 100000000) 
-                    ? 'bg-orange-50 border-orange-500 text-orange-700' 
-                    : 'bg-white border-gray-300 hover:border-orange-500 hover:bg-orange-50/60'
+                    ? 'bg-blue-50 border-blue-500 text-blue-700'
+                    : 'bg-white border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                 }`}
               >
                 <span className="text-sm font-medium">Prix</span>
@@ -214,7 +213,7 @@ export default function ImmobilierListPage() {
                         step="1000000"
                         value={filters.prixMax}
                         onChange={(e) => updateFilter('prixMax', Number(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-orange"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-blue"
                       />
                       <div className="flex justify-between text-xs text-gray-500 mt-1">
                         <span>0 DA</span>
@@ -231,8 +230,8 @@ export default function ImmobilierListPage() {
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               className={`flex items-center gap-2 px-4 py-2 border rounded-xl transition-all ${
                 showAdvancedFilters 
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-md' 
-                  : 'bg-orange-500/10 border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white hover:shadow-md'
+                  ? 'bg-blue-500 text-white border-blue-500 shadow-md'
+                  : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200 hover:border-gray-400'
               }`}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -267,7 +266,7 @@ export default function ImmobilierListPage() {
                     step="10"
                     value={filters.surfaceMax}
                     onChange={(e) => updateFilter('surfaceMax', Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-orange"
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-blue"
                   />
                   <div className="text-xs text-gray-500 mt-1 text-center">
                     Jusqu'à {filters.surfaceMax} m²
@@ -282,7 +281,7 @@ export default function ImmobilierListPage() {
                   <select
                     value={filters.piecesMin}
                     onChange={(e) => updateFilter('piecesMin', Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
                   >
                     {[0,1,2,3,4,5].map(num => (
                       <option key={num} value={num}>
@@ -300,7 +299,7 @@ export default function ImmobilierListPage() {
                   <select
                     value={filters.chambresMin}
                     onChange={(e) => updateFilter('chambresMin', Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
                   >
                     {[0,1,2,3,4].map(num => (
                       <option key={num} value={num}>
@@ -320,7 +319,7 @@ export default function ImmobilierListPage() {
                   </button>
                   <button
                     onClick={() => setShowAdvancedFilters(false)}
-                    className="flex-1 px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                    className="flex-1 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
                     Appliquer
                   </button>
@@ -331,17 +330,17 @@ export default function ImmobilierListPage() {
         </div>
       </div>
 
-      {/* Overlay pour fermer les dropdowns */}
+      {/* Overlay pour fermer les dropdowns - SEULEMENT quand on clique dessus */}
       {openFilter && (
         <div 
-          className="fixed inset-0 z-10 bg-amber-700" 
-          onClick={() => setOpenFilter(null)}
+          className="fixed inset-0 z-10 bg-black/10 backdrop-blur-[1px]" 
+          onClick={handleOverlayClick}
         />
-      )}     
+      )}       
                
-      <div className="max-w-7xl mx-auto px-4 py-6 ">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         {/* En-tête avec compteur */}
-        <div className="mb-6 flex justify-between items-center ">
+        <div className="mb-6 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Annonces Immobilier 
@@ -357,7 +356,7 @@ export default function ImmobilierListPage() {
           {/* Badges des filtres actifs */}
           <div className="flex flex-wrap gap-2">
             {filters.typeTransaction && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                 {filters.typeTransaction}
                 <X 
                   className="w-3 h-3 cursor-pointer" 
@@ -366,7 +365,7 @@ export default function ImmobilierListPage() {
               </span>
             )}
             {filters.typeBien && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                 {filters.typeBien}
                 <X 
                   className="w-3 h-3 cursor-pointer" 
@@ -375,7 +374,7 @@ export default function ImmobilierListPage() {
               </span>
             )}
             {filters.ville && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                 {filters.ville}
                 <X 
                   className="w-3 h-3 cursor-pointer" 
@@ -384,10 +383,9 @@ export default function ImmobilierListPage() {
               </span>
             )}
           </div>
-          
         </div>
 
-        {/* Liste des annonces */}
+        {/* Liste des annonces (le reste du code reste identique) */}
         <div className="space-y-4">
           {filteredAnnonces.map((annonce) => (
             <div
@@ -522,7 +520,7 @@ export default function ImmobilierListPage() {
             </p>
             <button
               onClick={resetFilters}
-              className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               Réinitialiser les filtres
             </button>
@@ -531,22 +529,22 @@ export default function ImmobilierListPage() {
       </div>
 
       <style jsx>{`
-        .slider-orange::-webkit-slider-thumb {
+        .slider-blue::-webkit-slider-thumb {
           appearance: none;
           height: 20px;
           width: 20px;
           border-radius: 50%;
-          background: #f97316;
+          background: #3b82f6;
           cursor: pointer;
           border: 2px solid white;
           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        .slider-orange::-moz-range-thumb {
+        .slider-blue::-moz-range-thumb {
           height: 20px;
           width: 20px;
           border-radius: 50%;
-          background: #f97316;
+          background: #3b82f6;
           cursor: pointer;
           border: 2px solid white;
           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
