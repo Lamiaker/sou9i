@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 import Image from "next/image";
 import { Plus, Bell, Heart, Mail, User, Search, Menu, X, MessageCircle, Gift } from "lucide-react";
 import logo from "@/public/logo.png";
@@ -8,10 +10,38 @@ import SearchBarre from "./searchBarre";
 import ListeCategorices from "./ListeCategorices";
 import MenuButton from "../ui/MenuButton";
 import IconButtonWithLabel from "../ui/IconButtonWithLabel";
+import Spinner from "../ui/Spinner";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [menuClosing, setMenuClosing] = useState(false);
+
+  const router = useRouter();
+
+
+    {isLoading && (
+      <div className="fixed inset-0 bg-white/60 z-[9999] flex items-center justify-center">
+        <Spinner size={40} />
+      </div>
+    )}
+
+     const handleMenuAction = (path: string) => {
+        setMenuClosing(true);   // démarre animation
+        setIsLoading(true);     // spinner
+
+        setTimeout(() => {
+            setIsMobileMenuOpen(false);  // ferme vraiment le menu
+            setMenuClosing(false);       // reset
+            router.push(path);           // navigation
+  }, 250); // 250ms ≈ durée de l'animation
+};
+
+
+
+
+
 
   return (
     <header className="w-full shadow-sm bg-white sticky top-0 z-30">
@@ -119,7 +149,12 @@ export default function Header() {
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          <div className="fixed top-0 left-0 h-full w-full max-w-sm bg-white z-50 shadow-2xl lg:hidden overflow-y-auto animate-slideInLeft">
+          {/* <div className="fixed top-0 left-0 h-full w-full max-w-sm bg-white z-50 shadow-2xl lg:hidden overflow-y-auto animate-slideInLeft"> */}
+          <div
+                className={`fixed top-0 left-0 h-full w-full max-w-sm bg-white z-50 shadow-2xl lg:hidden overflow-y-auto 
+                ${menuClosing ? "animate-slideOutLeft" : "animate-slideInLeft"}`}
+              >
+
             {/* Header du menu avec logo */}
             <div className="flex items-center justify-between px-6  py-4 border-b border-gray-200">
             <div className="w-6"></div>
@@ -147,12 +182,14 @@ export default function Header() {
                     <MenuButton 
                       icon={Plus} 
                       text="Déposer une annonce" 
+                      onClick={() => handleMenuAction("/deposer")}
                     />
 
                     {/* Rechercher */}
                     <MenuButton 
                       icon={Search} 
                       text="Rechercher" 
+                      onClick={() => handleMenuAction("/rechercher")}
                       hasBorder={true}
                     />
 
@@ -160,18 +197,21 @@ export default function Header() {
                     <MenuButton 
                       icon={MessageCircle} 
                       text="Messages" 
+                      onClick={() => handleMenuAction("/messages")}
                     />
 
                     {/* Favoris */}
                     <MenuButton 
                       icon={Heart} 
                       text="Favoris" 
+                      onClick={() => handleMenuAction("/favoris")}
                     />
 
                     {/* Recherches sauvegardées */}
                     <MenuButton 
                       icon={Bell} 
                       text="Recherches sauvegardées" 
+                      onClick={() => handleMenuAction("/recherches")}
                       hasBorder={true}
                     />
 
@@ -179,6 +219,7 @@ export default function Header() {
                     <MenuButton 
                       icon={Gift} 
                       text="Bons plans !" 
+                      onClick={() => handleMenuAction("/bonsplans")}
                       hasBorder={true}
                     />
 
@@ -188,7 +229,7 @@ export default function Header() {
                   Catégories
                 </h3>
                 <div className="px-4 py-2">
-                  <ListeCategorices isMobileMenu={true} />
+                  <ListeCategorices isMobileMenu={true}  onSelectItem={(path) => handleMenuAction(path)} />
                 </div>
               </div>
             </div>

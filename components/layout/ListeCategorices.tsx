@@ -6,9 +6,10 @@ import categories from "@/app/Data/categories";
 // Interface pour les props
 interface ListeCategoricesProps {
   isMobileMenu?: boolean;
+  onSelectItem?: (path: string) => void;
 }
 
-export default function ListeCategorices({ isMobileMenu = false }: ListeCategoricesProps) {
+export default function ListeCategorices({ isMobileMenu = false, onSelectItem }: ListeCategoricesProps) {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
 
 const generateCategoryLink = (name: string) => {
@@ -21,13 +22,17 @@ const generateCategoryLink = (name: string) => {
     return (
       <>
         {categories.map((cat, index) => (
-          <a
-            href={generateCategoryLink(cat.name)}
-            key={index}
-            className="flex items-center text-left py-2 hover:bg-gray-50 transition text-gray-700 font-medium text-sm"
-          >
-            {cat.name}
-          </a>
+              <a
+          key={index}
+          href={generateCategoryLink(cat.name)}
+          onClick={(e) => {
+            e.preventDefault(); // sinon le lien recharge la page !
+            if (onSelectItem) onSelectItem(generateCategoryLink(cat.name));
+          }}
+          className="flex items-center text-left py-2 hover:bg-gray-50 transition text-gray-700 font-medium text-sm"
+        >
+          {cat.name}
+        </a>
         ))}
       </>
     );
