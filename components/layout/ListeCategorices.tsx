@@ -12,9 +12,9 @@ interface ListeCategoricesProps {
 export default function ListeCategorices({ isMobileMenu = false, onSelectItem }: ListeCategoricesProps) {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
 
-const generateCategoryLink = (name: string) => {
-  return "/" + encodeURIComponent(name.toLowerCase());
-};
+  const generateCategoryLink = (name: string) => {
+    return "/" + encodeURIComponent(name.toLowerCase());
+  };
 
 
   // Si c'est pour le menu mobile latéral, afficher une liste verticale simple
@@ -22,17 +22,17 @@ const generateCategoryLink = (name: string) => {
     return (
       <>
         {categories.map((cat, index) => (
-              <a
-          key={index}
-          href={generateCategoryLink(cat.name)}
-          onClick={(e) => {
-            e.preventDefault(); // sinon le lien recharge la page !
-            if (onSelectItem) onSelectItem(generateCategoryLink(cat.name));
-          }}
-          className="flex items-center text-left py-2 hover:bg-gray-50 transition text-gray-700 font-medium text-sm"
-        >
-          {cat.name}
-        </a>
+          <a
+            key={index}
+            href={generateCategoryLink(cat.name)}
+            onClick={(e) => {
+              e.preventDefault(); // sinon le lien recharge la page !
+              if (onSelectItem) onSelectItem(generateCategoryLink(cat.name));
+            }}
+            className="flex items-center text-left py-2 hover:bg-gray-50 transition text-gray-700 font-medium text-sm"
+          >
+            {cat.name}
+          </a>
         ))}
       </>
     );
@@ -56,11 +56,10 @@ const generateCategoryLink = (name: string) => {
                 <a
                   href={generateCategoryLink(cat.name)}
 
-                  className={`px-3 py-1 transition-all duration-200 whitespace-nowrap relative ${
-                    activeCategory === index
-                      ? "text-gray-700 font-semibold"
-                      : "text-gray-700 font-normal hover:text-primary"
-                  }`}
+                  className={`px-3 py-1 transition-all duration-200 whitespace-nowrap relative ${activeCategory === index
+                    ? "text-gray-700 font-semibold"
+                    : "text-gray-700 font-normal hover:text-primary"
+                    }`}
                 >
                   {cat.name}
                   {activeCategory === index && (
@@ -88,9 +87,18 @@ const generateCategoryLink = (name: string) => {
                   {categories[activeCategory].sousCategories.map(
                     (souscat, idx) => (
                       <div key={idx} className="animate-slideDown min-w-[200px]">
-                        <h3 className="font-bold text-gray-700 mb-3 text-sm">
-                          {souscat.titre}
-                        </h3>
+                        {souscat.link ? (
+                          <a
+                            href={souscat.link}
+                            className="font-bold text-gray-700 mb-3 text-sm hover:text-primary block"
+                          >
+                            {souscat.titre}
+                          </a>
+                        ) : (
+                          <h3 className="font-bold text-gray-700 mb-3 text-sm">
+                            {souscat.titre}
+                          </h3>
+                        )}
                         {souscat.items.length > 0 && (
                           <ul className="space-y-2">
                             {souscat.items.map((item, itemIdx) => (
@@ -106,7 +114,7 @@ const generateCategoryLink = (name: string) => {
                           </ul>
                         )}
                         {/* Afficher un indicateur si pas d'items mais titre présent */}
-                        {souscat.items.length === 0 && (
+                        {souscat.items.length === 0 && !souscat.link && (
                           <a
                             href="#"
                             className="text-sm text-gray-600 hover:text-secondary transition-colors duration-200 block py-1"
@@ -118,12 +126,12 @@ const generateCategoryLink = (name: string) => {
                     )
                   )}
                 </div>
-             
+
               </div>
             </div>
           )}
       </nav>
-     
+
     </div>
   );
 }

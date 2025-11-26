@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import Image from "next/image";
 import { Plus, Bell, Heart, Mail, User, Search, Menu, X, MessageCircle, Gift } from "lucide-react";
@@ -10,38 +11,23 @@ import SearchBarre from "./searchBarre";
 import ListeCategorices from "./ListeCategorices";
 import MenuButton from "../ui/MenuButton";
 import IconButtonWithLabel from "../ui/IconButtonWithLabel";
-import Spinner from "../ui/Spinner";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
 
   const router = useRouter();
 
+  const handleMenuAction = (path: string) => {
+    setMenuClosing(true);
 
-    {isLoading && (
-      <div className="fixed inset-0 bg-white/60 z-[9999] flex items-center justify-center">
-        <Spinner size={40} />
-      </div>
-    )}
-
-     const handleMenuAction = (path: string) => {
-        setMenuClosing(true);   // démarre animation
-        setIsLoading(true);     // spinner
-
-        setTimeout(() => {
-            setIsMobileMenuOpen(false);  // ferme vraiment le menu
-            setMenuClosing(false);       // reset
-            router.push(path);           // navigation
-  }, 250); // 250ms ≈ durée de l'animation
-};
-
-
-
-
-
+    setTimeout(() => {
+      setIsMobileMenuOpen(false);
+      setMenuClosing(false);
+      router.push(path);
+    }, 250);
+  };
 
   return (
     <header className="w-full shadow-sm bg-white sticky top-0 z-30">
@@ -95,15 +81,16 @@ export default function Header() {
               className="cursor-pointer object-contain"
             />
 
-            <button className="bg-secondary cursor-pointer hover:bg-primary text-white font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
-              {/* <Plus size={20} /> */}
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <line x1="12" y1="8" x2="12" y2="16"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-              Déposer une annonce
-            </button>
+            <Link href="/deposer">
+              <button className="bg-secondary cursor-pointer hover:bg-primary text-white font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="12" y1="8" x2="12" y2="16" />
+                  <line x1="8" y1="12" x2="16" y2="12" />
+                </svg>
+                Déposer une annonce
+              </button>
+            </Link>
           </div>
 
           {/* Section milieu : barre de recherche */}
@@ -113,32 +100,30 @@ export default function Header() {
 
           {/* Section droite : menu utilisateur */}
           <div className="flex items-center space-x-6 text-gray-700">
-                <IconButtonWithLabel 
-                  icon={Bell} 
-                  label="Mes recherches" 
-                />
+            <IconButtonWithLabel
+              icon={Bell}
+              label="Mes recherches"
+            />
 
-                <IconButtonWithLabel 
-                  icon={Heart} 
-                  label="Favoris" 
-                />
+            <IconButtonWithLabel
+              icon={Heart}
+              label="Favoris"
+            />
 
-                <IconButtonWithLabel 
-                  icon={Mail} 
-                  label="Messages" 
-                />
+            <IconButtonWithLabel
+              icon={Mail}
+              label="Messages"
+            />
 
-                <IconButtonWithLabel 
-                  icon={User} 
-                  label="Se connecter" 
-                />
-              </div>
+            <IconButtonWithLabel
+              icon={User}
+              label="Se connecter"
+            />
+          </div>
         </div>
 
         {/* Catégories Desktop */}
-       <ListeCategorices />
-      
-      
+        <ListeCategorices />
       </div>
 
       {/* Menu latéral mobile - Style Leboncoin exact */}
@@ -149,15 +134,13 @@ export default function Header() {
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          {/* <div className="fixed top-0 left-0 h-full w-full max-w-sm bg-white z-50 shadow-2xl lg:hidden overflow-y-auto animate-slideInLeft"> */}
           <div
-                className={`fixed top-0 left-0 h-full w-full max-w-sm bg-white z-50 shadow-2xl lg:hidden overflow-y-auto 
-                ${menuClosing ? "animate-slideOutLeft" : "animate-slideInLeft"}`}
-              >
-
+            className={`fixed top-0 left-0 h-full w-full max-w-sm bg-white z-50 shadow-2xl lg:hidden overflow-y-auto 
+            ${menuClosing ? "animate-slideOutLeft" : "animate-slideInLeft"}`}
+          >
             {/* Header du menu avec logo */}
             <div className="flex items-center justify-between px-6  py-4 border-b border-gray-200">
-            <div className="w-6"></div>
+              <div className="w-6"></div>
 
               <Image
                 src={logo}
@@ -178,50 +161,49 @@ export default function Header() {
             {/* Menu principal */}
             <div className="py-2">
               {/* Déposer une annonce */}
-         
-                    <MenuButton 
-                      icon={Plus} 
-                      text="Déposer une annonce" 
-                      onClick={() => handleMenuAction("/deposer")}
-                    />
+              <MenuButton
+                icon={Plus}
+                text="Déposer une annonce"
+                onClick={() => handleMenuAction("/deposer")}
+              />
 
-                    {/* Rechercher */}
-                    <MenuButton 
-                      icon={Search} 
-                      text="Rechercher" 
-                      onClick={() => handleMenuAction("/rechercher")}
-                      hasBorder={true}
-                    />
+              {/* Rechercher */}
+              <MenuButton
+                icon={Search}
+                text="Rechercher"
+                onClick={() => handleMenuAction("/rechercher")}
+                hasBorder={true}
+              />
 
-                    {/* Messages */}
-                    <MenuButton 
-                      icon={MessageCircle} 
-                      text="Messages" 
-                      onClick={() => handleMenuAction("/messages")}
-                    />
+              {/* Messages */}
+              <MenuButton
+                icon={MessageCircle}
+                text="Messages"
+                onClick={() => handleMenuAction("/messages")}
+              />
 
-                    {/* Favoris */}
-                    <MenuButton 
-                      icon={Heart} 
-                      text="Favoris" 
-                      onClick={() => handleMenuAction("/favoris")}
-                    />
+              {/* Favoris */}
+              <MenuButton
+                icon={Heart}
+                text="Favoris"
+                onClick={() => handleMenuAction("/favoris")}
+              />
 
-                    {/* Recherches sauvegardées */}
-                    <MenuButton 
-                      icon={Bell} 
-                      text="Recherches sauvegardées" 
-                      onClick={() => handleMenuAction("/recherches")}
-                      hasBorder={true}
-                    />
+              {/* Recherches sauvegardées */}
+              <MenuButton
+                icon={Bell}
+                text="Recherches sauvegardées"
+                onClick={() => handleMenuAction("/recherches")}
+                hasBorder={true}
+              />
 
-                    {/* Bons plans */}
-                    <MenuButton 
-                      icon={Gift} 
-                      text="Bons plans !" 
-                      onClick={() => handleMenuAction("/bonsplans")}
-                      hasBorder={true}
-                    />
+              {/* Bons plans */}
+              <MenuButton
+                icon={Gift}
+                text="Bons plans !"
+                onClick={() => handleMenuAction("/bonsplans")}
+                hasBorder={true}
+              />
 
               {/* Section Catégories - Utilise le composant ListeCategorices */}
               <div className="pt-4 pb-2 ">
@@ -229,7 +211,7 @@ export default function Header() {
                   Catégories
                 </h3>
                 <div className="px-4 py-2">
-                  <ListeCategorices isMobileMenu={true}  onSelectItem={(path) => handleMenuAction(path)} />
+                  <ListeCategorices isMobileMenu={true} onSelectItem={(path) => handleMenuAction(path)} />
                 </div>
               </div>
             </div>
@@ -256,8 +238,6 @@ export default function Header() {
           </div>
         </div>
       )}
-
-    
     </header>
   );
 }
