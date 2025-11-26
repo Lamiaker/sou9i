@@ -1,14 +1,14 @@
 import { useState, useMemo, useCallback } from 'react';
 
-export function useFilter<T>(
+export function useFilter<T, F>(
     data: T[],
-    initialFilters: any,
-    filterLogic: (item: T, filters: any) => boolean
+    initialFilters: F,
+    filterLogic: (item: T, filters: F) => boolean
 ) {
-    const [filters, setFilters] = useState(initialFilters);
+    const [filters, setFilters] = useState<F>(initialFilters);
 
-    const updateFilter = useCallback((key: string, value: any) => {
-        setFilters((prev: any) => ({ ...prev, [key]: value }));
+    const updateFilter = useCallback((key: keyof F, value: any) => {
+        setFilters((prev) => ({ ...prev, [key]: value }));
     }, []);
 
     const resetFilters = useCallback(() => {
