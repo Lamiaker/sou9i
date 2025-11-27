@@ -118,6 +118,7 @@ export default function Header() {
             <IconButtonWithLabel
               icon={User}
               label="Se connecter"
+              href="/login"
             />
           </div>
         </div>
