@@ -172,7 +172,7 @@ export default function Header() {
               <MenuButton
                 icon={Search}
                 text="Rechercher"
-                onClick={() => handleMenuAction("/rechercher")}
+                onClick={() => handleMenuAction("/search")}
                 hasBorder={true}
               />
 
