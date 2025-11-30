@@ -45,13 +45,16 @@ export default function Header() {
           </button>
 
           {/* Logo centré */}
+
           <Image
             src={logo}
-            alt="leboncoin"
+            alt="FemMarket"
             width={130}
             height={36}
+            style={{ transform: "scale(1.5)" }}
             className="cursor-pointer object-contain"
           />
+
 
           {/* Espace vide pour équilibrer */}
           <div className="w-6"></div>
@@ -73,13 +76,16 @@ export default function Header() {
         <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-6">
           {/* Section gauche : logo + bouton */}
           <div className="flex items-center gap-4">
+
             <Image
               src={logo}
-              alt="logo"
-              width={100}
-              height={100}
+              alt="FemMarket"
+              width={130}
+              height={36}
+              style={{ transform: "scale(1)" }}
               className="cursor-pointer object-contain"
             />
+
 
             <Link href="/deposer">
               <button className="bg-secondary cursor-pointer hover:bg-primary text-white font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">

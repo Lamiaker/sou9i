@@ -1,12 +1,28 @@
 @import "tailwindcss";
 
-/* --- Variables globales --- */
-:root {
+/* --- Variables globales  orange du Boncoin --- */
+/* :root {
   --background: #ffffff;
   --foreground: #171717;
   --primary-color: #f97316;
   --secondary-color: #ea580c;
+} */
+/* --- Variables globales  Violet moderne --- */
+/* :root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary-color: #8b5cf6;
+  --secondary-color: #7c3aed;
+} */
+
+/* --- Variables globales   Rose pastel premium--- */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary-color: #ec4899;
+  --secondary-color: #db2777;
 }
+
 
 /* --- Intégration Tailwind du thème --- */
 @theme inline {
@@ -118,23 +134,23 @@ body {
   animation: slideOutLeft 0.25s ease forwards;
 }
 
-   .slider-blue::-webkit-slider-thumb {
-    appearance: none;
-    height: 20px;
-    width: 20px;
-    border-radius: 50%;
-    background: #3b82f6;
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
+.slider-blue::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
 
-  .slider-blue::-moz-range-thumb {
-    height: 20px;
-    width: 20px;
-    border-radius: 50%;
-    background: #3b82f6;
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
+.slider-blue::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

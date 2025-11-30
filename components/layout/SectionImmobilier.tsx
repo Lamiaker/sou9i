@@ -55,7 +55,7 @@ export default function SectionImmobilier({ title, viewAllLink, biens }: Section
             {biens.map((bien) => (
               <Link
                 key={bien.id}
-                href={`/immobilier/${bien.id}`}
+                href={`/annonces/${bien.id}`}
                 className="relative w-[280px] min-w-[280px] max-w-[280px] bg-white rounded-lg overflow-hidden cursor-pointer group snap-start shrink-0 hover:shadow-lg transition-shadow"
               >
                 {/* Image principale */}

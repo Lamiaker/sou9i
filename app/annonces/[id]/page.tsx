@@ -112,6 +112,21 @@ export default function AdDetailPage() {
                                 </div>
                             </div>
 
+                            {/* Specifications */}
+                            {adData.specs && (
+                                <div className="mb-8">
+                                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Caractéristiques</h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {Object.entries(adData.specs).map(([key, value]) => (
+                                            <div key={key} className="flex justify-between border-b border-gray-100 pb-2">
+                                                <span className="text-gray-500">{key}</span>
+                                                <span className="font-medium text-gray-900">{value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="mt-6">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Description</h2>
                                 <div className="prose prose-sm text-gray-700 whitespace-pre-line">

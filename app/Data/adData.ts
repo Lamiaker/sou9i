@@ -1,53 +1,64 @@
 export const adData = {
     id: 1,
-    title: "iPhone 14 Pro Max - 256GB - Comme neuf",
-    price: "180,000 DZD",
-    category: "Téléphones",
-    date: "Publiée le 27 Nov à 10:30",
+    title: "Plateau de Gâteaux Traditionnels (Baklawa, Makrout)",
+    price: "4,500 DZD",
+    category: "Gâteaux & Pâtisserie",
+    date: "Publiée le 30 Nov à 09:00",
     location: "Alger Centre, Alger",
-    description: `Je mets en vente mon iPhone 14 Pro Max 256GB en excellent état.
-  
-  - État de la batterie : 92%
-  - Aucune rayure, toujours protégé avec coque et verre trempé.
-  - Vendu avec sa boîte d'origine et le câble de chargement.
-  - Pas d'échange, vente uniquement.
-  
-  N'hésitez pas à me contacter pour plus d'informations.`,
+    description: `Je propose des plateaux de gâteaux traditionnels faits maison avec des ingrédients de premier choix (amandes, miel pur, beurre de qualité).
+
+Idéal pour vos fêtes, mariages, fiançailles ou simplement pour se faire plaisir.
+
+Le plateau comprend :
+- Baklawa aux amandes
+- Makrout el louz
+- Tcharek msaker
+- Knidlat
+
+Possibilité de commander des quantités personnalisées. Livraison disponible sur Alger et environs.`,
+    specs: {
+        "Type": "Gâteaux traditionnels",
+        "Quantité": "Plateau de 50 pièces",
+        "Ingrédients principaux": "Amandes, Miel, Beurre",
+        "Délai de commande": "48h à l'avance",
+        "Livraison": "Possible sur Alger",
+        "Événements": "Mariages, Fêtes"
+    },
     images: [
-        "https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1678685888260-2f8508c1d5f3?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1678685888290-b3c162608168?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1587241321921-9ac58f433800?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?auto=format&fit=crop&w=800&q=80",
     ],
     seller: {
-        name: "Amine S.",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80",
-        joined: "Membre depuis Jan 2024",
-        responseRate: "Répond généralement dans l'heure",
+        name: "Sarah Délices",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80",
+        joined: "Membre depuis Mars 2024",
+        responseRate: "Répond dans la journée",
         verified: true,
-        adsCount: 12,
+        adsCount: 8,
     },
 };
 
 export const similarAds = [
     {
         id: 2,
-        title: "iPhone 13 Pro 128GB",
-        price: "120,000 DZD",
+        title: "Layer Cake Personnalisé",
+        price: "6,500 DZD",
         location: "Oran",
-        image: "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&w=300&q=80",
+        image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=300&q=80",
     },
     {
         id: 3,
-        title: "Samsung S23 Ultra",
-        price: "190,000 DZD",
+        title: "Décoration Anniversaire Thème Princesse",
+        price: "12,000 DZD",
         location: "Blida",
-        image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=300&q=80",
+        image: "https://images.unsplash.com/photo-1530103862676-de3c9a59af57?auto=format&fit=crop&w=300&q=80",
     },
     {
         id: 4,
-        title: "iPhone 12 Mini",
-        price: "65,000 DZD",
-        location: "Alger",
-        image: "https://images.unsplash.com/photo-1603313011101-320f26a4f6f6?auto=format&fit=crop&w=300&q=80",
+        title: "Robe Kabyle Moderne",
+        price: "18,000 DZD",
+        location: "Tizi Ouzou",
+        image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80",
     },
 ];

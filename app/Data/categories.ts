@@ -1,4 +1,3 @@
-
 export interface SousCategorie {
   titre: string;
   items: string[];
@@ -13,113 +12,134 @@ export interface Categorie {
 
 export const categories: Categorie[] = [
   {
-    name: "Immobilier",
-    link: "/immobilier",
+    name: "Gâteaux & Pâtisserie",
+    link: "/gateaux",
     sousCategories: [
-      { titre: "Tout Immobilier", items: [] },
       {
-        titre: "Ventes immobilières",
-        items: ["Appartement", "Maison", "Terrain", "Voir tout"],
+        titre: "Gâteaux traditionnels",
+        items: ["Makrout", "Baklawa", "Ghribia", "Kefta", "Autres"]
       },
       {
-        titre: "Immobilier Neuf",
-        items: [
-          "Appartement",
-          "Maison",
-          "Programmes logements neufs",
-          "Promoteurs immobiliers",
-        ],
+        titre: "Gâteaux modernes",
+        items: ["Cupcakes", "Number Cake", "Layer Cake", "Brownies", "Autres"]
       },
       {
-        titre: "Locations",
-        items: ["Appartement", "Maison", "Parking", "Voir tout"],
+        titre: "Pâtisserie personnalisée",
+        items: ["Anniversaires", "Mariages", "Fiançailles", "Baptêmes", "Autres"]
+      }
+    ]
+  },
+
+  {
+    name: "Décoration & Événements",
+    link: "/decoration",
+    sousCategories: [
+      {
+        titre: "Décoration maison",
+        items: ["Salons", "Chambres", "Cuisine", "Objets déco", "Artisanat"]
       },
-      { titre: "Colocations", items: [] },
-      { titre: "Bureaux & Commerces", items: [] },
-      { titre: "Services de déménagement", items: [] },
-    ],
+      {
+        titre: "Organisation d’événements",
+        items: ["Mariage", "Fiançailles", "Baptême", "Anniversaire", "Baby Shower"]
+      },
+      {
+        titre: "Fêtes & accessoires",
+        items: ["Ballons", "Fleurs", "Tables décorées", "Backdrops", "Autres"]
+      }
+    ]
   },
+
   {
-    name: "Véhicules",
+    name: "Mode & Beauté",
+    link: "/mode",
     sousCategories: [
-      { titre: "Voitures", items: [] },
-      { titre: "Motos", items: [] },
-      { titre: "Caravaning", items: [] },
-      { titre: "Utilitaires", items: [] },
-      { titre: "Équipement Auto", items: [] },
-      { titre: "Équipement Moto", items: [] },
-      { titre: "Équipement Caravaning", items: [] },
-      { titre: "Nautisme", items: [] },
-      { titre: "Équipement Nautisme", items: [] },
-    ],
+      {
+        titre: "Vêtements femmes",
+        items: ["Robes", "Djellabas", "Tenues traditionnelles", "Casual", "Sport"]
+      },
+      {
+        titre: "Cosmétiques",
+        items: ["Maquillage", "Soins visage", "Corps & cheveux", "Parfums"]
+      },
+      {
+        titre: "Accessoires",
+        items: ["Sacs", "Bijoux", "Montres", "Voiles", "Chaussures"]
+      }
+    ]
   },
+
   {
-    name: "Vacances",
+    name: "Bébé & Enfants",
+    link: "/bebes",
     sousCategories: [
-      { titre: "Voyages", items: [] },
-      { titre: "Hotes", items: [] },
-      { titre: "Voyages et Hotes", items: [] },
-    ],
+      {
+        titre: "Vêtements enfants",
+        items: ["Garçon", "Fille", "Bébés", "Tenues spéciales"]
+      },
+      {
+        titre: "Articles bébé",
+        items: ["Poussettes", "Lits", "Turbulettes", "Tapis d’éveil"]
+      },
+      {
+        titre: "Événements enfants",
+        items: ["Décorations", "Gâteaux thème", "Animatrices"]
+      }
+    ]
   },
+
   {
-    name: "Emploi",
+    name: "Services Femmes",
+    link: "/services",
     sousCategories: [
-      { titre: "Offres d'emploi", items: [] },
-      { titre: "Candidatures", items: [] },
-    ],
+      {
+        titre: "Beauté & soins",
+        items: ["Coiffure", "Make-up", "Ongles", "Esthétique", "Hammam"]
+      },
+      {
+        titre: "Couture & retouches",
+        items: ["Couturières", "Tenues sur mesure", "Retouches", "Broderie"]
+      },
+      {
+        titre: "Formations & ateliers",
+        items: ["Pâtisserie", "Décoration", "Maquillage", "Couture", "Art"]
+      }
+    ]
   },
+
   {
-    name: "Mode",
+    name: "Maison & Artisanat",
+    link: "/maison",
     sousCategories: [
-      { titre: "Homme", items: [], link: "/vetements/categorie/homme" },
-      { titre: "Femme", items: [], link: "/vetements/categorie/femme" },
-      { titre: "Enfants", items: [], link: "/vetements/categorie/enfant" },
-    ],
+      {
+        titre: "Produits maison",
+        items: ["Bougies", "Savons", "Objets décoratifs", "Artisanat"]
+      },
+      {
+        titre: "Cuisine maison",
+        items: ["Plats cuisinés", "Conserves", "Confitures", "Epices maison"]
+      }
+    ]
   },
+
   {
-    name: "Maison & Jardin",
+    name: "Aides & Petites Annonces",
+    link: "/annonces",
     sousCategories: [
-      { titre: "Maison", items: [] },
-      { titre: "Jardin", items: [] },
-    ],
+      {
+        titre: "Échanges & dons",
+        items: ["Vêtements", "Accessoires", "Articles bébé", "Divers"]
+      },
+      {
+        titre: "Petites annonces",
+        items: ["Divers", "Matériel", "Autres"]
+      }
+    ]
   },
-  {
-    name: "Famille",
-    sousCategories: [
-      { titre: "Enfants", items: [] },
-      { titre: "Famille", items: [] },
-      { titre: "Famille & Enfants", items: [] },
-    ],
-  },
-  {
-    name: "Électronique",
-    sousCategories: [
-      { titre: "Ordinateurs", items: [] },
-      { titre: "Smartphones", items: [] },
-      { titre: "Tablettes", items: [] },
-      { titre: "Accessoires", items: [] },
-    ],
-  },
-  {
-    name: "Loisirs",
-    sousCategories: [
-      { titre: "Musique", items: [] },
-      { titre: "Loisirs", items: [] },
-      { titre: "Loisirs et Musique", items: [] },
-    ],
-  },
-  {
-    name: "Bons plans !",
-    sousCategories: [
-      { titre: "Bons plans", items: [] },
-      { titre: "Bons plans et Loisirs", items: [] },
-      { titre: "Bons plans et Musique", items: [] },
-    ],
-  },
+
   {
     name: "Autres",
-    sousCategories: [],
-  },
+    sousCategories: []
+  }
 ];
 
 export default categories;

@@ -7,51 +7,52 @@ import { MapPin, Heart, Filter, ChevronDown, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 
 // Mock Data (Expanded for search demo)
+// Mock Data (Expanded for search demo)
 const allAds = [
     {
         id: 1,
-        title: "iPhone 14 Pro Max - 256GB",
-        price: "180,000 DZD",
+        title: "Plateau de Baklawa aux amandes",
+        price: "4,500 DZD",
         location: "Alger Centre, Alger",
-        image: "https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?auto=format&fit=crop&w=300&q=80",
-        category: "Téléphones",
-        date: "Aujourd'hui, 10:30",
+        image: "https://images.unsplash.com/photo-1587241321921-9ac58f433800?auto=format&fit=crop&w=300&q=80",
+        category: "Gâteaux & Pâtisserie",
+        date: "Aujourd'hui, 09:00",
     },
     {
         id: 2,
-        title: "Appartement F3 - Alger Centre",
-        price: "25,000,000 DZD",
-        location: "Alger Centre, Alger",
-        image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=300&q=80",
-        category: "Immobilier",
+        title: "Décoration Mariage Bohème",
+        price: "Sur devis",
+        location: "Blida",
+        image: "https://images.unsplash.com/photo-1519225468063-3f721174a3b2?auto=format&fit=crop&w=300&q=80",
+        category: "Décoration & Événements",
         date: "Hier, 14:00",
     },
     {
         id: 3,
-        title: "Robe de soirée rouge",
-        price: "12,000 DZD",
-        location: "Oran",
+        title: "Robe Kabyle Moderne",
+        price: "15,000 DZD",
+        location: "Tizi Ouzou",
         image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80",
-        category: "Vêtements",
+        category: "Mode & Beauté",
         date: "20 Nov",
     },
     {
         id: 4,
-        title: "MacBook Pro M1",
-        price: "220,000 DZD",
-        location: "Blida",
-        image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca4?auto=format&fit=crop&w=300&q=80",
-        category: "Informatique",
-        date: "Aujourd'hui, 09:15",
+        title: "Trousseau Bébé Complet",
+        price: "12,000 DZD",
+        location: "Setif",
+        image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=300&q=80",
+        category: "Bébé & Enfants",
+        date: "Aujourd'hui, 11:15",
     },
     {
         id: 5,
-        title: "PlayStation 5",
-        price: "95,000 DZD",
+        title: "Maquillage Mariée",
+        price: "20,000 DZD",
         location: "Constantine",
-        image: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=300&q=80",
-        category: "Jeux vidéo",
-        date: "Hier, 18:30",
+        image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=300&q=80",
+        category: "Services Femmes",
+        date: "Hier, 10:00",
     },
 ];
 
@@ -59,6 +60,7 @@ export default function SearchPage() {
     const searchParams = useSearchParams();
     const query = searchParams.get("q") || "";
     const [results, setResults] = useState(allAds);
+    const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState({
         category: "Toutes",
         minPrice: "",
@@ -84,8 +86,17 @@ export default function SearchPage() {
 
                 <div className="flex flex-col lg:flex-row gap-8">
 
+                    {/* Mobile Filter Toggle */}
+                    <button
+                        className="lg:hidden flex items-center justify-center gap-2 w-full bg-white p-3 rounded-xl shadow-sm border border-gray-200 font-semibold text-gray-700"
+                        onClick={() => setShowFilters(!showFilters)}
+                    >
+                        <Filter size={20} />
+                        {showFilters ? "Masquer les filtres" : "Afficher les filtres"}
+                    </button>
+
                     {/* Filters Sidebar */}
-                    <aside className="w-full lg:w-64 space-y-6">
+                    <aside className={`w-full lg:w-64 space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <div className="flex items-center gap-2 mb-4 text-gray-900 font-semibold">
                                 <Filter size={20} />
@@ -101,11 +112,13 @@ export default function SearchPage() {
                                         onChange={(e) => setFilters({ ...filters, category: e.target.value })}
                                     >
                                         <option value="Toutes">Toutes les catégories</option>
-                                        <option value="Téléphones">Téléphones</option>
-                                        <option value="Immobilier">Immobilier</option>
-                                        <option value="Vêtements">Vêtements</option>
-                                        <option value="Informatique">Informatique</option>
-                                        <option value="Jeux vidéo">Jeux vidéo</option>
+                                        <option value="Gâteaux & Pâtisserie">Gâteaux & Pâtisserie</option>
+                                        <option value="Décoration & Événements">Décoration & Événements</option>
+                                        <option value="Mode & Beauté">Mode & Beauté</option>
+                                        <option value="Bébé & Enfants">Bébé & Enfants</option>
+                                        <option value="Services Femmes">Services Femmes</option>
+                                        <option value="Maison & Artisanat">Maison & Artisanat</option>
+                                        <option value="Aides & Petites Annonces">Aides & Petites Annonces</option>
                                     </select>
                                 </div>
 
