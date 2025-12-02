@@ -1,11 +1,16 @@
+"use client";
+
 import { ShoppingBag, Eye, MessageCircle, TrendingUp } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardPage() {
+    const { user } = useAuth();
+
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-                <p className="text-gray-500">Bienvenue dans votre espace vendeur.</p>
+                <p className="text-gray-500">Bienvenue dans votre espace vendeur, <span className="font-semibold text-primary">{user?.name}</span>.</p>
             </div>
 
             {/* Stats Cards */}
