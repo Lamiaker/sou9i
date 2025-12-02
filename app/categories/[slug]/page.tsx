@@ -5,39 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Heart, Filter, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useState, useEffect } from "react";
-import { categories } from "@/app/Data/categories";
-import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/app/Data/featuredCategories";
-import { vetementsProducts } from "@/app/Data/products-vetements";
+import { categories } from "@/lib/data/categories";
+import { getAllAds } from "@/lib/utils/productHelpers";
+import type { Ad } from "@/types";
 
-// Helper to assign random subcategories for demo purposes
-const assignSubcategories = (products: any[], categoryName: string) => {
-    const category = categories.find(c => c.name === categoryName);
-    const subcats = category?.sousCategories.map(s => s.titre) || [];
-
-    return products.map((p, index) => ({
-        id: p.id,
-        title: p.title,
-        price: p.price,
-        location: p.location || "Algérie",
-        image: p.photos?.[0] || p.image || "https://via.placeholder.com/300",
-        category: categoryName,
-        // Round-robin assignment of subcategories for demo
-        subcategory: subcats.length > 0 ? subcats[index % subcats.length] : "Autre",
-        date: p.postedTime || "Récemment",
-    }));
-};
-
-const getAllAds = () => {
-    return [
-        ...assignSubcategories(gateauxProducts, "Gâteaux & Pâtisserie"),
-        ...assignSubcategories(decorationProducts, "Décoration & Événements"),
-        ...assignSubcategories(beauteProducts, "Mode & Beauté"),
-        ...assignSubcategories(enfantProducts, "Bébé & Enfants"),
-        ...assignSubcategories(vetementsProducts.filter(p => p.category === "Femme"), "Mode & Beauté"),
-        ...assignSubcategories(vetementsProducts.filter(p => p.category === "Enfant"), "Bébé & Enfants"),
-    ];
-};
-
+// Récupérer toutes les annonces depuis la fonction helper centralisée
 const allAds = getAllAds();
 
 export default function CategoryPage() {
@@ -47,7 +19,7 @@ export default function CategoryPage() {
     // Find the current category based on the slug
     const currentCategory = categories.find(c => c.link === `/${slug}`);
 
-    const [ads, setAds] = useState<any[]>([]);
+    const [ads, setAds] = useState<Ad[]>([]);
     const [selectedSubcategory, setSelectedSubcategory] = useState("Tout");
     const [showFilters, setShowFilters] = useState(false);
 

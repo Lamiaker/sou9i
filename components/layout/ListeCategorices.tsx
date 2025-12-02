@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import categories from "@/app/Data/categories";
+import categories from "@/lib/data/categories";
 
 // Interface pour les props
 interface ListeCategoricesProps {

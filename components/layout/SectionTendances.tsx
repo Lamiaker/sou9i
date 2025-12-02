@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useRef } from "react";
 import ArrowButton from "../ui/ArrowButton";
-import { TendanceItem  } from "@/app/Data/tendances";
- interface SectionTendancesProps {
+import { TendanceItem } from "@/lib/data/tendances";
+interface SectionTendancesProps {
   title: string;
   items: TendanceItem[];
 }
@@ -42,19 +42,19 @@ export function SectionTendances({ title, items }: SectionTendancesProps) {
       {/* SLIDER */}
       <div className="relative ">
         {/* Boutons Prev / Next (desktop seulement) */}
-               <ArrowButton
-                      direction="left"
-                      onClick={scrollLeft}
-                      className="-left-4"
-                      ariaLabel="Précédent"
-                    />
-        
-                    <ArrowButton
-                      direction="right"
-                      onClick={scrollRight}
-                      className="-right-4"
-                      ariaLabel="Suivant"
-                    />
+        <ArrowButton
+          direction="left"
+          onClick={scrollLeft}
+          className="-left-4"
+          ariaLabel="Précédent"
+        />
+
+        <ArrowButton
+          direction="right"
+          onClick={scrollRight}
+          className="-right-4"
+          ariaLabel="Suivant"
+        />
 
         {/* Conteneur items */}
         <div

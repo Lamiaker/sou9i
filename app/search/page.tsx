@@ -5,9 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Heart, Filter, ChevronDown, Search } from "lucide-react";
 import { useState, useEffect } from "react";
-import { categories } from "@/app/Data/categories";
-import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/app/Data/featuredCategories";
-import { vetementsProducts } from "@/app/Data/products-vetements";
+import { categories } from "@/lib/data/categories";
+import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/lib/data/featuredCategories";
 
 // Combine all products into a single list for search
 const getAllAds = () => {
@@ -28,8 +27,7 @@ const getAllAds = () => {
         ...normalize(decorationProducts, "Décoration & Événements"),
         ...normalize(beauteProducts, "Mode & Beauté"),
         ...normalize(enfantProducts, "Bébé & Enfants"),
-        ...normalize(vetementsProducts.filter(p => p.category === "Femme"), "Mode & Beauté"),
-        ...normalize(vetementsProducts.filter(p => p.category === "Enfant"), "Bébé & Enfants"),
+
         // Add other mappings as needed
     ];
 };

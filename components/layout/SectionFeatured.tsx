@@ -1,7 +1,7 @@
 "use client";
 import { useRef } from "react";
 import ArrowButton from "@/components/ui/ArrowButton";
-import { ProductItem } from "@/app/Data/products-vetements";
+import { ProductItem } from "@/types";
 import Link from "next/link";
 
 export interface SectionFeaturedProps {

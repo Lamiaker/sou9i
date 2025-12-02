@@ -3,11 +3,11 @@ import Image from "next/image";
 import { SectionMomentDeVendre } from "@/components/layout/SectionMomentDeVendre";
 import { SectionPublicite } from "@/components/layout/SectionPublicite";
 import { SectionTendances } from "@/components/layout/SectionTendances";
-import { tendances } from "./Data/tendances";
+import { tendances } from "@/lib/data/tendances";
 import SectionFeatured from "@/components/layout/SectionFeatured";
-import { vetementsProducts } from "@/app/Data/products-vetements";
-import { categories } from "@/app/Data/categories";
-import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/app/Data/featuredCategories";
+
+import { categories } from "@/lib/data/categories";
+import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/lib/data/featuredCategories";
 
 
 export default function Home() {

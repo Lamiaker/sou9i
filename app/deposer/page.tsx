@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Camera, MapPin, Tag, FileText, DollarSign, User, Phone, Mail, ChevronDown } from "lucide-react";
-import { categories } from "@/app/Data/categories";
+import { categories } from "@/lib/data/categories";
 
 export default function DeposerAnnonce() {
     const [images, setImages] = useState<string[]>([]);

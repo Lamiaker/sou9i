@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MapPin, Phone, MessageCircle, Heart, Share2, Flag, Clock, ShieldCheck, ChevronRight, ChevronLeft } from "lucide-react";
-import { adData as defaultAdData, similarAds } from "@/app/Data/adData";
-import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/app/Data/featuredCategories";
-import { vetementsProducts } from "@/app/Data/products-vetements";
+import { adData as defaultAdData, similarAds } from "@/lib/data/adData";
+import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/lib/data/featuredCategories";
+
 
 // Helper to find ad by ID
 const findAdById = (id: string) => {
@@ -15,8 +15,7 @@ const findAdById = (id: string) => {
         ...gateauxProducts,
         ...decorationProducts,
         ...beauteProducts,
-        ...enfantProducts,
-        ...vetementsProducts
+        ...enfantProducts
     ];
     return allProducts.find(p => p.id === id);
 };
