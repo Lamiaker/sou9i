@@ -11,11 +11,13 @@ import SearchBar from "./SearchBar";
 import ListeCategorices from "./ListeCategorices";
 import MenuButton from "../ui/MenuButton";
 import IconButtonWithLabel from "../ui/IconButtonWithLabel";
+import { useFavorites } from "@/context/FavoritesContext";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
+  const { favorites } = useFavorites();
 
   const router = useRouter();
 
@@ -111,10 +113,18 @@ export default function Header() {
               label="Mes recherches"
             />
 
-            <IconButtonWithLabel
-              icon={Heart}
-              label="Favoris"
-            />
+            <div className="relative">
+              <IconButtonWithLabel
+                icon={Heart}
+                label="Favoris"
+                href="/dashboard/favoris"
+              />
+              {favorites.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {favorites.length}
+                </span>
+              )}
+            </div>
 
             <IconButtonWithLabel
               icon={Mail}
@@ -189,12 +199,19 @@ export default function Header() {
                 onClick={() => handleMenuAction("/messages")}
               />
 
-              {/* Favoris */}
-              <MenuButton
-                icon={Heart}
-                text="Favoris"
-                onClick={() => handleMenuAction("/favoris")}
-              />
+              {/* Favoris avec badge */}
+              <div className="relative">
+                <MenuButton
+                  icon={Heart}
+                  text="Favoris"
+                  onClick={() => handleMenuAction("/dashboard/favoris")}
+                />
+                {favorites.length > 0 && (
+                  <span className="absolute top-1/2 -translate-y-1/2 right-4 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+                    {favorites.length}
+                  </span>
+                )}
+              </div>
 
               {/* Recherches sauvegardées */}
               <MenuButton
@@ -218,7 +235,7 @@ export default function Header() {
                   Catégories
                 </h3>
                 <div className="px-4 py-2">
-                  <ListeCategorices isMobileMenu={true} onSelectItem={(path) => handleMenuAction(path)} />
+                  <ListeCategorices isMobileMenu={true} onSelectItem={(path: string) => handleMenuAction(path)} />
                 </div>
               </div>
             </div>

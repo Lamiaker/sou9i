@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Heart, Filter, ChevronDown, Search } from "lucide-react";
+import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useState, useEffect } from "react";
 import { categories } from "@/lib/data/categories";
 import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/lib/data/featuredCategories";
@@ -27,8 +28,6 @@ const getAllAds = () => {
         ...normalize(decorationProducts, "Décoration & Événements"),
         ...normalize(beauteProducts, "Mode & Beauté"),
         ...normalize(enfantProducts, "Bébé & Enfants"),
-
-        // Add other mappings as needed
     ];
 };
 
@@ -163,9 +162,9 @@ export default function SearchPage() {
                                                     fill
                                                     className="object-cover group-hover:scale-105 transition duration-300"
                                                 />
-                                                <button className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white rounded-full text-gray-500 hover:text-red-500 transition shadow-sm">
-                                                    <Heart size={18} />
-                                                </button>
+                                                <div className="absolute top-3 right-3">
+                                                    <FavoriteButton adId={ad.id} size={18} />
+                                                </div>
                                             </div>
                                             <div className="p-4 flex flex-col flex-1">
                                                 <div className="flex-1">

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MapPin, Phone, MessageCircle, Heart, Share2, Flag, Clock, ShieldCheck, ChevronRight, ChevronLeft } from "lucide-react";
+import FavoriteButton from "@/components/ui/FavoriteButton";
 import { adData as defaultAdData, similarAds } from "@/lib/data/adData";
 import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/lib/data/featuredCategories";
 
@@ -162,9 +163,7 @@ export default function AdDetailPage() {
                                     <p className="text-3xl font-bold text-primary">{ad.price}</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition">
-                                        <Heart size={24} />
-                                    </button>
+                                    <FavoriteButton adId={id} size={24} className="hover:bg-red-50" />
                                     <button className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition">
                                         <Share2 size={24} />
                                     </button>
