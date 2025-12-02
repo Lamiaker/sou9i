@@ -6,70 +6,39 @@ import Image from "next/image";
 import { MapPin, Heart, Filter, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { categories } from "@/app/Data/categories";
+import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/app/Data/featuredCategories";
+import { vetementsProducts } from "@/app/Data/products-vetements";
 
-// Mock Data for Category Pages
-const categoryAds = [
-    {
-        id: 101,
-        title: "Plateau de Baklawa aux amandes",
-        price: "4,500 DZD",
-        location: "Alger Centre",
-        image: "https://images.unsplash.com/photo-1587241321921-9ac58f433800?auto=format&fit=crop&w=400&q=80",
-        category: "Gâteaux & Pâtisserie",
-        subcategory: "Gâteaux traditionnels",
-        date: "Aujourd'hui, 09:00",
-    },
-    {
-        id: 102,
-        title: "Layer Cake Anniversaire",
-        price: "7,000 DZD",
-        location: "Oran",
-        image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=400&q=80",
-        category: "Gâteaux & Pâtisserie",
-        subcategory: "Gâteaux modernes",
-        date: "Hier, 15:30",
-    },
-    {
-        id: 103,
-        title: "Décoration Mariage Bohème",
-        price: "Sur devis",
-        location: "Blida",
-        image: "https://images.unsplash.com/photo-1519225468063-3f721174a3b2?auto=format&fit=crop&w=400&q=80",
-        category: "Décoration & Événements",
-        subcategory: "Organisation d’événements",
-        date: "28 Nov",
-    },
-    {
-        id: 104,
-        title: "Robe Kabyle Moderne",
-        price: "15,000 DZD",
-        location: "Tizi Ouzou",
-        image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=400&q=80",
-        category: "Mode & Beauté",
-        subcategory: "Vêtements femmes",
-        date: "Aujourd'hui, 11:15",
-    },
-    {
-        id: 105,
-        title: "Maquillage Mariée",
-        price: "20,000 DZD",
-        location: "Constantine",
-        image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80",
-        category: "Services Femmes",
-        subcategory: "Beauté & soins",
-        date: "Hier, 10:00",
-    },
-    {
-        id: 106,
-        title: "Trousseau Bébé Complet",
-        price: "12,000 DZD",
-        location: "Setif",
-        image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80",
-        category: "Bébé & Enfants",
-        subcategory: "Vêtements enfants",
-        date: "25 Nov",
-    },
-];
+// Helper to assign random subcategories for demo purposes
+const assignSubcategories = (products: any[], categoryName: string) => {
+    const category = categories.find(c => c.name === categoryName);
+    const subcats = category?.sousCategories.map(s => s.titre) || [];
+
+    return products.map((p, index) => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        location: p.location || "Algérie",
+        image: p.photos?.[0] || p.image || "https://via.placeholder.com/300",
+        category: categoryName,
+        // Round-robin assignment of subcategories for demo
+        subcategory: subcats.length > 0 ? subcats[index % subcats.length] : "Autre",
+        date: p.postedTime || "Récemment",
+    }));
+};
+
+const getAllAds = () => {
+    return [
+        ...assignSubcategories(gateauxProducts, "Gâteaux & Pâtisserie"),
+        ...assignSubcategories(decorationProducts, "Décoration & Événements"),
+        ...assignSubcategories(beauteProducts, "Mode & Beauté"),
+        ...assignSubcategories(enfantProducts, "Bébé & Enfants"),
+        ...assignSubcategories(vetementsProducts.filter(p => p.category === "Femme"), "Mode & Beauté"),
+        ...assignSubcategories(vetementsProducts.filter(p => p.category === "Enfant"), "Bébé & Enfants"),
+    ];
+};
+
+const allAds = getAllAds();
 
 export default function CategoryPage() {
     const params = useParams();
@@ -78,22 +47,22 @@ export default function CategoryPage() {
     // Find the current category based on the slug
     const currentCategory = categories.find(c => c.link === `/${slug}`);
 
-    const [ads, setAds] = useState(categoryAds);
+    const [ads, setAds] = useState<any[]>([]);
     const [selectedSubcategory, setSelectedSubcategory] = useState("Tout");
     const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
         if (currentCategory) {
             // Filter ads by the current category name
-            const filtered = categoryAds.filter(ad => ad.category === currentCategory.name);
+            const categoryAds = allAds.filter(ad => ad.category === currentCategory.name);
 
             if (selectedSubcategory !== "Tout") {
-                setAds(filtered.filter(ad => ad.subcategory === selectedSubcategory));
+                setAds(categoryAds.filter(ad => ad.subcategory === selectedSubcategory));
             } else {
-                setAds(filtered);
+                setAds(categoryAds);
             }
         }
-    }, [currentCategory, selectedSubcategory]);
+    }, [currentCategory, selectedSubcategory, slug]);
 
     if (!currentCategory) {
         return (

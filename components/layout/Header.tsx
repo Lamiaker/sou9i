@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Plus, Bell, Heart, Mail, User, Search, Menu, X, MessageCircle, Gift } from "lucide-react";
 import logo from "@/public/logo.png";
-import SearchBarre from "./searchBarre";
+import SearchBar from "./SearchBar";
 import ListeCategorices from "./ListeCategorices";
 import MenuButton from "../ui/MenuButton";
 import IconButtonWithLabel from "../ui/IconButtonWithLabel";
@@ -62,7 +62,7 @@ export default function Header() {
 
         {/* Barre de recherche mobile */}
         <div className="px-4 py-3 border-b border-gray-100">
-          <SearchBarre />
+          <SearchBar />
         </div>
 
         {/* Catégories scrollables horizontalement - Mobile */}
@@ -101,7 +101,7 @@ export default function Header() {
 
           {/* Section milieu : barre de recherche */}
           <div className="flex-1 max-w-xl mx-6 ">
-            <SearchBarre />
+            <SearchBar />
           </div>
 
           {/* Section droite : menu utilisateur */}
@@ -237,7 +237,7 @@ export default function Header() {
               <X size={24} />
             </button>
             <div className="flex-1">
-              <SearchBarre />
+              <SearchBar />
             </div>
           </div>
           <div className="p-4">

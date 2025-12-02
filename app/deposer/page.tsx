@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { Camera, MapPin, Tag, FileText, DollarSign, User, Phone, Mail, ChevronDown } from "lucide-react";
+import { categories } from "@/app/Data/categories";
 
 export default function DeposerAnnonce() {
     const [images, setImages] = useState<string[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState("");
+    const [selectedSubcategory, setSelectedSubcategory] = useState("");
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -49,19 +52,46 @@ export default function DeposerAnnonce() {
                                         <select
                                             id="category"
                                             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition appearance-none bg-white"
+                                            value={selectedCategory}
+                                            onChange={(e) => {
+                                                setSelectedCategory(e.target.value);
+                                                setSelectedSubcategory(""); // Reset subcategory when category changes
+                                            }}
                                         >
                                             <option value="">Choisir une catégorie</option>
-                                            <option value="immobilier">Immobilier</option>
-                                            <option value="vehicules">Véhicules</option>
-                                            <option value="electronique">Électronique</option>
-                                            <option value="maison">Maison & Jardin</option>
-                                            <option value="mode">Mode</option>
-                                            <option value="loisirs">Loisirs</option>
-                                            <option value="services">Services</option>
+                                            {categories.map((cat) => (
+                                                <option key={cat.name} value={cat.name}>
+                                                    {cat.name}
+                                                </option>
+                                            ))}
                                         </select>
                                         <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
                                     </div>
                                 </div>
+
+                                {selectedCategory && (
+                                    <div>
+                                        <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-1">Sous-catégorie</label>
+                                        <div className="relative">
+                                            <select
+                                                id="subcategory"
+                                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition appearance-none bg-white"
+                                                value={selectedSubcategory}
+                                                onChange={(e) => setSelectedSubcategory(e.target.value)}
+                                            >
+                                                <option value="">Choisir une sous-catégorie</option>
+                                                {categories
+                                                    .find((c) => c.name === selectedCategory)
+                                                    ?.sousCategories.map((sub, idx) => (
+                                                        <option key={idx} value={sub.titre}>
+                                                            {sub.titre}
+                                                        </option>
+                                                    ))}
+                                            </select>
+                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div>
                                     <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>

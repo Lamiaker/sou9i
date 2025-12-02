@@ -4,18 +4,17 @@ import ArrowButton from "@/components/ui/ArrowButton";
 import { ProductItem } from "@/app/Data/products-vetements";
 import Link from "next/link";
 
-export interface SectionVetementsProps {
+export interface SectionFeaturedProps {
   title?: string;
   viewAllLink?: string;
   products?: ProductItem[];
 }
 
-
-export default function SectionVetements({
+export default function SectionFeatured({
   title,
   viewAllLink,
   products,
-}: SectionVetementsProps) {
+}: SectionFeaturedProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const scrollLeft = () => {
@@ -37,7 +36,7 @@ export default function SectionVetements({
   };
 
   return (
-    <section className="w-full mb-12  py-8 px-4">
+    <section className="w-full mb-12 py-8 px-4">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
@@ -87,7 +86,7 @@ export default function SectionVetements({
               <Link
                 key={product.id}
                 href={`/annonces/${product.id}`}
-                className="relative w-[280px] min-w-[280px] max-w-[280px] bg-white rounded-lg overflow-hidden cursor-pointer group snap-start shrink-0 hover:shadow-lg transition-shadow"
+                className="relative w-[60vw] min-w-[60vw] sm:w-[280px] sm:min-w-[280px] sm:max-w-[280px] bg-white rounded-lg overflow-hidden cursor-pointer group snap-start shrink-0 hover:shadow-lg transition-shadow"
               >
                 {/* Seller info */}
                 <div className="flex items-center gap-2 p-3 border-b border-gray-100">
@@ -159,12 +158,9 @@ export default function SectionVetements({
                 </div>
               </Link>
             ))}
-
           </div>
         </div>
       </div>
-
-
     </section>
   );
 }

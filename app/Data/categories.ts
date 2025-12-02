@@ -7,6 +7,7 @@ export interface SousCategorie {
 export interface Categorie {
   name: string;
   link?: string;
+  image?: string;
   sousCategories: SousCategorie[];
 }
 
@@ -14,6 +15,7 @@ export const categories: Categorie[] = [
   {
     name: "Gâteaux & Pâtisserie",
     link: "/gateaux",
+    image: "https://images.unsplash.com/photo-1587241321921-9ac58f433800?auto=format&fit=crop&w=400&q=80",
     sousCategories: [
       {
         titre: "Gâteaux traditionnels",
@@ -33,6 +35,7 @@ export const categories: Categorie[] = [
   {
     name: "Décoration & Événements",
     link: "/decoration",
+    image: "https://images.unsplash.com/photo-1519225468063-3f721174a3b2?auto=format&fit=crop&w=400&q=80",
     sousCategories: [
       {
         titre: "Décoration maison",
@@ -52,6 +55,7 @@ export const categories: Categorie[] = [
   {
     name: "Mode & Beauté",
     link: "/mode",
+    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=400&q=80",
     sousCategories: [
       {
         titre: "Vêtements femmes",
@@ -71,6 +75,7 @@ export const categories: Categorie[] = [
   {
     name: "Bébé & Enfants",
     link: "/bebes",
+    image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80",
     sousCategories: [
       {
         titre: "Vêtements enfants",
@@ -90,6 +95,7 @@ export const categories: Categorie[] = [
   {
     name: "Services Femmes",
     link: "/services",
+    image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80",
     sousCategories: [
       {
         titre: "Beauté & soins",
@@ -109,6 +115,7 @@ export const categories: Categorie[] = [
   {
     name: "Maison & Artisanat",
     link: "/maison",
+    image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4f9d?auto=format&fit=crop&w=400&q=80",
     sousCategories: [
       {
         titre: "Produits maison",
@@ -124,6 +131,7 @@ export const categories: Categorie[] = [
   {
     name: "Aides & Petites Annonces",
     link: "/annonces",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80",
     sousCategories: [
       {
         titre: "Échanges & dons",

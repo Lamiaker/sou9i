@@ -5,56 +5,36 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Heart, Filter, ChevronDown, Search } from "lucide-react";
 import { useState, useEffect } from "react";
+import { categories } from "@/app/Data/categories";
+import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/app/Data/featuredCategories";
+import { vetementsProducts } from "@/app/Data/products-vetements";
 
-// Mock Data (Expanded for search demo)
-// Mock Data (Expanded for search demo)
-const allAds = [
-    {
-        id: 1,
-        title: "Plateau de Baklawa aux amandes",
-        price: "4,500 DZD",
-        location: "Alger Centre, Alger",
-        image: "https://images.unsplash.com/photo-1587241321921-9ac58f433800?auto=format&fit=crop&w=300&q=80",
-        category: "Gâteaux & Pâtisserie",
-        date: "Aujourd'hui, 09:00",
-    },
-    {
-        id: 2,
-        title: "Décoration Mariage Bohème",
-        price: "Sur devis",
-        location: "Blida",
-        image: "https://images.unsplash.com/photo-1519225468063-3f721174a3b2?auto=format&fit=crop&w=300&q=80",
-        category: "Décoration & Événements",
-        date: "Hier, 14:00",
-    },
-    {
-        id: 3,
-        title: "Robe Kabyle Moderne",
-        price: "15,000 DZD",
-        location: "Tizi Ouzou",
-        image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80",
-        category: "Mode & Beauté",
-        date: "20 Nov",
-    },
-    {
-        id: 4,
-        title: "Trousseau Bébé Complet",
-        price: "12,000 DZD",
-        location: "Setif",
-        image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=300&q=80",
-        category: "Bébé & Enfants",
-        date: "Aujourd'hui, 11:15",
-    },
-    {
-        id: 5,
-        title: "Maquillage Mariée",
-        price: "20,000 DZD",
-        location: "Constantine",
-        image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=300&q=80",
-        category: "Services Femmes",
-        date: "Hier, 10:00",
-    },
-];
+// Combine all products into a single list for search
+const getAllAds = () => {
+    const normalize = (products: any[], categoryName: string) => {
+        return products.map(p => ({
+            id: p.id,
+            title: p.title,
+            price: p.price,
+            location: p.location || "Algérie",
+            image: p.photos?.[0] || p.image || "https://via.placeholder.com/300",
+            category: categoryName,
+            date: p.postedTime || "Récemment",
+        }));
+    };
+
+    return [
+        ...normalize(gateauxProducts, "Gâteaux & Pâtisserie"),
+        ...normalize(decorationProducts, "Décoration & Événements"),
+        ...normalize(beauteProducts, "Mode & Beauté"),
+        ...normalize(enfantProducts, "Bébé & Enfants"),
+        ...normalize(vetementsProducts.filter(p => p.category === "Femme"), "Mode & Beauté"),
+        ...normalize(vetementsProducts.filter(p => p.category === "Enfant"), "Bébé & Enfants"),
+        // Add other mappings as needed
+    ];
+};
+
+const allAds = getAllAds();
 
 export default function SearchPage() {
     const searchParams = useSearchParams();
@@ -74,8 +54,16 @@ export default function SearchPage() {
             const matchesQuery = ad.title.toLowerCase().includes(query.toLowerCase());
             const matchesCategory = filters.category === "Toutes" || ad.category === filters.category;
             const matchesLocation = !filters.location || ad.location.toLowerCase().includes(filters.location.toLowerCase());
-            // Price filtering would require parsing the price string, skipping for this mock
-            return matchesQuery && matchesCategory && matchesLocation;
+
+            // Basic price filtering (parsing "4,500 DZD" -> 4500)
+            let matchesPrice = true;
+            if (filters.minPrice || filters.maxPrice) {
+                const priceValue = parseInt(ad.price.toString().replace(/[^0-9]/g, '')) || 0;
+                if (filters.minPrice && priceValue < parseInt(filters.minPrice)) matchesPrice = false;
+                if (filters.maxPrice && priceValue > parseInt(filters.maxPrice)) matchesPrice = false;
+            }
+
+            return matchesQuery && matchesCategory && matchesLocation && matchesPrice;
         });
         setResults(filtered);
     }, [query, filters]);
@@ -112,13 +100,11 @@ export default function SearchPage() {
                                         onChange={(e) => setFilters({ ...filters, category: e.target.value })}
                                     >
                                         <option value="Toutes">Toutes les catégories</option>
-                                        <option value="Gâteaux & Pâtisserie">Gâteaux & Pâtisserie</option>
-                                        <option value="Décoration & Événements">Décoration & Événements</option>
-                                        <option value="Mode & Beauté">Mode & Beauté</option>
-                                        <option value="Bébé & Enfants">Bébé & Enfants</option>
-                                        <option value="Services Femmes">Services Femmes</option>
-                                        <option value="Maison & Artisanat">Maison & Artisanat</option>
-                                        <option value="Aides & Petites Annonces">Aides & Petites Annonces</option>
+                                        {categories.map((cat) => (
+                                            <option key={cat.name} value={cat.name}>
+                                                {cat.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 

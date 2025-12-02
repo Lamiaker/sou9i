@@ -4,6 +4,8 @@ import "./globals.css";
 
 import Header from "@/components/layout/Header";
 
+import Footer from "@/components/layout/Footer";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -21,10 +23,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
 
         <Header />
-        {children}
+        <main className="flex-grow">
+          {children}
+        </main>
+        <Footer />
 
       </body>
     </html>
