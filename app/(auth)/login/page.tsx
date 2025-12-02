@@ -1,15 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
-export default function LoginPage() {
+function LoginForm() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { login, isLoading: isAuthLoading } = useAuth();
+
     const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const redirectPath = searchParams.get("redirect");
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+
+        try {
+            await login(email, password);
+            // Redirection après connexion réussie
+            router.push(redirectPath || "/");
+        } catch (err) {
+            setError("Identifiants incorrects. Veuillez réessayer.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className=" bg-gray-50 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md ">
+        <div className="bg-gray-50 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 className="mt-4 text-center text-3xl font-extrabold text-gray-900">
                     Bonjour !
                 </h2>
@@ -18,9 +46,28 @@ export default function LoginPage() {
                 </p>
             </div>
 
-            <div className=" sm:mx-auto sm:w-full sm:max-w-md ">
-                <div className="m-3 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 ">
-                    <form className="space-y-6">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md mt-8">
+                {/* Message d'alerte si redirection */}
+                {redirectPath && (
+                    <div className="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md shadow-sm mx-3 sm:mx-0">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <AlertCircle className="h-5 w-5 text-orange-500" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-orange-700 font-medium">
+                                    Vous devez être connecté pour accéder à cette page.
+                                </p>
+                                <p className="text-xs text-orange-600 mt-1">
+                                    Veuillez vous connecter ou créer un compte.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 mx-3 sm:mx-0">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                 Adresse email
@@ -35,6 +82,8 @@ export default function LoginPage() {
                                     type="email"
                                     autoComplete="email"
                                     required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 outline-none border transition"
                                     placeholder="votre@email.com"
                                 />
@@ -55,6 +104,8 @@ export default function LoginPage() {
                                     type={showPassword ? "text" : "password"}
                                     autoComplete="current-password"
                                     required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     className="focus:ring-primary focus:border-primary block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-lg py-3 outline-none border transition"
                                     placeholder="••••••••"
                                 />
@@ -91,9 +142,10 @@ export default function LoginPage() {
                         <div>
                             <button
                                 type="submit"
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition"
+                                disabled={loading || isAuthLoading}
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                Se connecter
+                                {loading ? "Connexion..." : "Se connecter"}
                             </button>
                         </div>
                     </form>
@@ -120,5 +172,13 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Chargement...</div>}>
+            <LoginForm />
+        </Suspense>
     );
 }

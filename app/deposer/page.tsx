@@ -1,13 +1,24 @@
 "use client";
-
-import { useState } from "react";
-import { Camera, MapPin, Tag, FileText, DollarSign, User, Phone, Mail, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Camera, MapPin, Tag, DollarSign, User, ChevronDown } from "lucide-react";
 import { categories } from "@/lib/data/categories";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DeposerAnnonce() {
+    const { user, isAuthenticated, isLoading } = useAuth();
+    const router = useRouter();
+
     const [images, setImages] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState("");
     const [selectedSubcategory, setSelectedSubcategory] = useState("");
+
+    // Protection de la route
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            router.push("/login?redirect=/deposer");
+        }
+    }, [isLoading, isAuthenticated, router]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -16,6 +27,14 @@ export default function DeposerAnnonce() {
         }
     };
 
+    if (isLoading) {
+        return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+    }
+
+    if (!isAuthenticated) {
+        return null; // Redirection en cours
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
@@ -23,10 +42,10 @@ export default function DeposerAnnonce() {
                     {/* Header */}
                     <div className="bg-primary px-6 py-8 text-white">
                         <h1 className="text-3xl font-bold">Déposer une annonce</h1>
-                        <p className="mt-2 text-orange-100">Vendez, louez, ou proposez vos services en quelques clics.</p>
+                        <p className="mt-2 text-orange-100">Bonjour {user?.name}, vendez vos articles en quelques clics.</p>
                     </div>
 
-                    <form className="p-6 sm:p-8 space-y-8">
+                    <form className="p-6 sm:p-8 space-y-8" onSubmit={(e) => e.preventDefault()}>
 
                         {/* Section: Détails de l'annonce */}
                         <div className="space-y-6">
@@ -55,7 +74,7 @@ export default function DeposerAnnonce() {
                                             value={selectedCategory}
                                             onChange={(e) => {
                                                 setSelectedCategory(e.target.value);
-                                                setSelectedSubcategory(""); // Reset subcategory when category changes
+                                                setSelectedSubcategory("");
                                             }}
                                         >
                                             <option value="">Choisir une catégorie</option>
@@ -163,6 +182,7 @@ export default function DeposerAnnonce() {
                                     <input
                                         type="text"
                                         id="city"
+                                        defaultValue={user?.location}
                                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                         placeholder="Ex: Alger"
                                     />
@@ -181,58 +201,19 @@ export default function DeposerAnnonce() {
 
                         <hr className="border-gray-100" />
 
-                        {/* Section: Vos coordonnées */}
-                        <div className="space-y-6">
-                            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                                <User className="text-primary" size={24} />
-                                Vos coordonnées
-                            </h2>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <User className="text-gray-400" size={20} />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            id="name"
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                            placeholder="Votre nom"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Mail className="text-gray-400" size={20} />
-                                        </div>
-                                        <input
-                                            type="email"
-                                            id="email"
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                            placeholder="votre@email.com"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="sm:col-span-2">
-                                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Phone className="text-gray-400" size={20} />
-                                        </div>
-                                        <input
-                                            type="tel"
-                                            id="phone"
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                            placeholder="05 XX XX XX XX"
-                                        />
-                                    </div>
-                                </div>
+                        {/* Section: Vendeur (Info automatique) */}
+                        <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-4 border border-gray-200">
+                            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                {user?.avatar ? (
+                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="text-gray-500" size={24} />
+                                )}
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-900">Publier en tant que</p>
+                                <p className="text-lg font-bold text-primary">{user?.name}</p>
+                                <p className="text-xs text-gray-500">{user?.email} • {user?.phone}</p>
                             </div>
                         </div>
 

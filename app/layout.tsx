@@ -6,6 +6,8 @@ import Header from "@/components/layout/Header";
 
 import Footer from "@/components/layout/Footer";
 
+import { AuthProvider } from "@/context/AuthContext";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -24,13 +26,13 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
-
-        <Header />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
-
+        <AuthProvider>
+          <Header />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
