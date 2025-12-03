@@ -3,9 +3,15 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { UserService } from '@/services'
+import { loginSchema } from '@/lib/validations/auth'
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
+    session: {
+        strategy: 'jwt',
+        maxAge: 30 * 24 * 60 * 60, // 30 jours
+        updateAge: 24 * 60 * 60, // Mise à jour toutes les 24h
+    },
     providers: [
         CredentialsProvider({
             name: 'Credentials',
@@ -14,28 +20,34 @@ export const authOptions: NextAuthOptions = {
                 password: { label: 'Password', type: 'password' },
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
-                    throw new Error('Email et mot de passe requis')
+                // 1. Validation stricte des inputs avec Zod
+                const parsedCredentials = loginSchema.safeParse(credentials)
+
+                if (!parsedCredentials.success) {
+                    throw new Error('Format d\'email ou mot de passe invalide')
                 }
 
-                // Récupérer l'utilisateur
-                const user = await UserService.getUserByEmail(credentials.email)
+                const { email, password } = parsedCredentials.data
+
+                // 2. Récupération de l'utilisateur
+                const user = await UserService.getUserByEmail(email)
 
                 if (!user) {
-                    throw new Error('Email ou mot de passe incorrect')
+                    // Message générique pour éviter l'énumération des utilisateurs
+                    throw new Error('Identifiants invalides')
                 }
 
-                // Vérifier le mot de passe
+                // 3. Vérification du mot de passe
                 const isValidPassword = await UserService.verifyPassword(
-                    credentials.password,
+                    password,
                     user.password
                 )
 
                 if (!isValidPassword) {
-                    throw new Error('Email ou mot de passe incorrect')
+                    throw new Error('Identifiants invalides')
                 }
 
-                // Retourner l'utilisateur (sans le password)
+                // 4. Retourner l'utilisateur (sans données sensibles)
                 return {
                     id: user.id,
                     email: user.email,
@@ -45,10 +57,6 @@ export const authOptions: NextAuthOptions = {
             },
         }),
     ],
-    session: {
-        strategy: 'jwt',
-        maxAge: 30 * 24 * 60 * 60, // 30 jours
-    },
     pages: {
         signIn: '/login',
         signOut: '/login',
@@ -68,5 +76,19 @@ export const authOptions: NextAuthOptions = {
             return session
         },
     },
+    // 5. Configuration des cookies sécurisés
+    cookies: {
+        sessionToken: {
+            name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
+    },
+    // 6. Secret fort requis
     secret: process.env.NEXTAUTH_SECRET,
+    debug: process.env.NODE_ENV === 'development',
 }

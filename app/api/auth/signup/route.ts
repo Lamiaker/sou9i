@@ -1,46 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UserService } from '@/services'
+import { registerSchema } from '@/lib/validations/auth'
+import { rateLimit } from '@/lib/rate-limit'
+
+// Limiteur : 5 tentatives par heure par IP
+const limiter = rateLimit({
+    interval: 60 * 60 * 1000, // 1 heure
+    uniqueTokenPerInterval: 500, // Max 500 IPs suivies
+})
 
 export async function POST(request: NextRequest) {
     try {
+        // 1. Rate Limiting
+        const ip = request.headers.get('x-forwarded-for') || 'anonymous'
+        try {
+            await limiter.check(5, ip) // 5 requêtes max par heure
+        } catch {
+            return NextResponse.json(
+                { success: false, error: 'Trop de tentatives. Veuillez réessayer plus tard.' },
+                { status: 429 }
+            )
+        }
+
         const body = await request.json()
-        const { email, name, password, phone, city } = body
 
-        // Validation
-        if (!email || !name || !password || !phone || !city) {
+        // 2. Validation Zod
+        const parsedBody = registerSchema.safeParse(body)
+
+        if (!parsedBody.success) {
+            // Retourner la première erreur trouvée
             return NextResponse.json(
-                { success: false, error: 'Tous les champs sont requis' },
+                { success: false, error: parsedBody.error.issues[0].message },
                 { status: 400 }
             )
         }
 
-        // Validation email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(email)) {
-            return NextResponse.json(
-                { success: false, error: 'Email invalide' },
-                { status: 400 }
-            )
-        }
+        const { email, name, password, phone, city } = parsedBody.data
 
-        // Validation mot de passe
-        if (password.length < 8) {
-            return NextResponse.json(
-                { success: false, error: 'Le mot de passe doit contenir au moins 8 caractères' },
-                { status: 400 }
-            )
-        }
-
-        // Validation téléphone (format algérien)
-        const phoneRegex = /^(05|06|07)[0-9]{8}$/
-        if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-            return NextResponse.json(
-                { success: false, error: 'Numéro de téléphone invalide' },
-                { status: 400 }
-            )
-        }
-
-        // Créer l'utilisateur
+        // 3. Créer l'utilisateur
         const user = await UserService.createUser({
             email,
             name,
