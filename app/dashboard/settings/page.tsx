@@ -1,17 +1,106 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Bell, Trash2, Save, Smartphone, Mail, LogOut, User as UserIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { useAuth } from "@/hooks/useAuth";
+import { Lock, Bell, Trash2, Smartphone, Mail, Eye, EyeOff, Check, AlertCircle } from "lucide-react";
 
 export default function SettingsPage() {
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [notifications, setNotifications] = useState({
         emailMessages: true,
         emailPromos: false,
         smsAlerts: true,
     });
+
+    // État pour le formulaire de mot de passe
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+    });
+
+    const [showPasswords, setShowPasswords] = useState({
+        current: false,
+        new: false,
+        confirm: false,
+    });
+
+    const [passwordError, setPasswordError] = useState("");
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setPasswordForm(prev => ({ ...prev, [name]: value }));
+        setPasswordError(""); // Clear error on change
+        setPasswordSuccess(false);
+    };
+
+    const handlePasswordSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setPasswordError("");
+        setPasswordSuccess(false);
+
+        // Validation
+        if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+            setPasswordError("Tous les champs sont requis");
+            return;
+        }
+
+        if (passwordForm.newPassword.length < 8) {
+            setPasswordError("Le nouveau mot de passe doit contenir au moins 8 caractères");
+            return;
+        }
+
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            setPasswordError("Les mots de passe ne correspondent pas");
+            return;
+        }
+
+        if (passwordForm.currentPassword === passwordForm.newPassword) {
+            setPasswordError("Le nouveau mot de passe doit être différent de l'ancien");
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('/api/user/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPassword: passwordForm.currentPassword,
+                    newPassword: passwordForm.newPassword,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setPasswordError(data.error || 'Une erreur est survenue');
+                return;
+            }
+
+            // Succès
+            setPasswordSuccess(true);
+            setPasswordForm({
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            });
+
+            // Déconnecter l'utilisateur après 3 secondes pour qu'il se reconnecte avec le nouveau mot de passe
+            setTimeout(() => {
+                signOut({ callbackUrl: '/login?message=password-changed' });
+            }, 3000);
+        } catch (error) {
+            console.error('Erreur:', error);
+            setPasswordError('Une erreur est survenue. Veuillez réessayer.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSave = () => {
         setIsLoading(true);
@@ -39,43 +128,125 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-500 mt-1">Mettez à jour votre mot de passe pour sécuriser votre compte.</p>
                 </div>
 
-                <div className="p-6 space-y-4">
+                <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+                    {/* Messages d'erreur et succès */}
+                    {passwordError && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={18} />
+                            <p className="text-sm text-red-800">{passwordError}</p>
+                        </div>
+                    )}
+
+                    {passwordSuccess && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2">
+                            <Check className="text-green-600 flex-shrink-0 mt-0.5" size={18} />
+                            <div>
+                                <p className="text-sm font-semibold text-green-800">Mot de passe mis à jour avec succès !</p>
+                                <p className="text-xs text-green-700 mt-1">Vous allez être déconnecté pour vous reconnecter avec votre nouveau mot de passe...</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Mot de passe actuel */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-                        <input
-                            type="password"
-                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                            placeholder="••••••••"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPasswords.current ? "text" : "password"}
+                                name="currentPassword"
+                                value={passwordForm.currentPassword}
+                                onChange={handlePasswordChange}
+                                className="w-full px-4 py-2.5 pr-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                placeholder="••••••••"
+                                disabled={isLoading}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                {showPasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Nouveau mot de passe */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
-                            <input
-                                type="password"
-                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                placeholder="••••••••"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPasswords.new ? "text" : "password"}
+                                    name="newPassword"
+                                    value={passwordForm.newPassword}
+                                    onChange={handlePasswordChange}
+                                    className="w-full px-4 py-2.5 pr-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    placeholder="••••••••"
+                                    disabled={isLoading}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                            {passwordForm.newPassword && (
+                                <p className={`text-xs mt-1 ${passwordForm.newPassword.length >= 8 ? 'text-green-600' : 'text-gray-500'}`}>
+                                    {passwordForm.newPassword.length >= 8 ? '✓' : '•'} Minimum 8 caractères
+                                </p>
+                            )}
                         </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
-                            <input
-                                type="password"
-                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                placeholder="••••••••"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPasswords.confirm ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={passwordForm.confirmPassword}
+                                    onChange={handlePasswordChange}
+                                    className="w-full px-4 py-2.5 pr-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    placeholder="••••••••"
+                                    disabled={isLoading}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                            {passwordForm.confirmPassword && (
+                                <p className={`text-xs mt-1 ${passwordForm.newPassword === passwordForm.confirmPassword && passwordForm.confirmPassword ? 'text-green-600' : 'text-gray-500'}`}>
+                                    {passwordForm.newPassword === passwordForm.confirmPassword && passwordForm.confirmPassword ? '✓ Correspond' : '• Doit correspondre'}
+                                </p>
+                            )}
                         </div>
                     </div>
+
                     <div className="pt-2 flex justify-end">
                         <button
-                            onClick={handleSave}
+                            type="submit"
                             disabled={isLoading}
-                            className="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-70"
+                            className="bg-gray-900 hover:bg-black text-white px-6 py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
-                            {isLoading ? "Mise à jour..." : "Mettre à jour le mot de passe"}
+                            {isLoading ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Mise à jour...
+                                </>
+                            ) : (
+                                <>
+                                    <Lock size={16} />
+                                    Mettre à jour le mot de passe
+                                </>
+                            )}
                         </button>
                     </div>
-                </div>
+                </form>
             </div>
 
             {/* Notifications */}
@@ -140,33 +311,6 @@ export default function SettingsPage() {
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notifications.smsAlerts ? 'bg-primary' : 'bg-gray-200'}`}
                         >
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notifications.smsAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Compte */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <UserIcon className="text-primary" size={20} />
-                        Compte
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">Gérez votre compte et vos sessions.</p>
-                </div>
-
-                <div className="p-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div>
-                            <p className="font-medium text-gray-900">Se déconnecter</p>
-                            <p className="text-sm text-gray-500">Vous serez déconnecté de cette session.</p>
-                        </div>
-                        <button
-                            onClick={() => signOut({ callbackUrl: '/login' })}
-                            className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white font-medium rounded-lg transition flex items-center gap-2 whitespace-nowrap"
-                        >
-                            <LogOut size={18} />
-                            Se déconnecter
                         </button>
                     </div>
                 </div>

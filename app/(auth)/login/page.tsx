@@ -3,7 +3,7 @@
 import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Check } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 
 function LoginForm() {
@@ -20,6 +20,7 @@ function LoginForm() {
 
     const { data: session, status } = useSession();
     const redirectPath = searchParams.get("redirect");
+    const message = searchParams.get("message");
 
     useEffect(() => {
         if (status === 'authenticated') {
@@ -81,6 +82,25 @@ function LoginForm() {
             </div>
 
             <div className=" sm:mx-auto  sm:w-full sm:max-w-md mt-8">
+                {/* Message après changement de mot de passe */}
+                {message === 'password-changed' && (
+                    <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-md shadow-sm mx-3 sm:mx-0">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <Check className="h-5 w-5 text-green-500" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-green-700 font-medium">
+                                    Mot de passe modifié avec succès !
+                                </p>
+                                <p className="text-xs text-green-600 mt-1">
+                                    Veuillez vous reconnecter avec votre nouveau mot de passe.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Message d'alerte si redirection */}
                 {redirectPath && (
                     <div className="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md shadow-sm mx-3 sm:mx-0">

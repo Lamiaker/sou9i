@@ -149,6 +149,25 @@ export class UserService {
     }
 
     /**
+     * Mettre à jour le mot de passe (sans vérification de l'ancien)
+     * Utilisé après vérification externe
+     */
+    static async updatePassword(id: string, newPassword: string) {
+        // Hasher le nouveau mot de passe
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+        return prisma.user.update({
+            where: { id },
+            data: { password: hashedPassword },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+            },
+        })
+    }
+
+    /**
      * Supprimer un utilisateur
      */
     static async deleteUser(id: string) {
