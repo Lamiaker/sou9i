@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, MapPin, Tag, DollarSign, User, ChevronDown } from "lucide-react";
 import { categories } from "@/lib/data/categories";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DeposerAnnonce() {
     const { user, isAuthenticated, isLoading } = useAuth();
@@ -14,12 +14,6 @@ export default function DeposerAnnonce() {
     const [selectedSubcategory, setSelectedSubcategory] = useState("");
 
     // Protection de la route
-    useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.push("/login?redirect=/deposer");
-        }
-    }, [isLoading, isAuthenticated, router]);
-
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const newImages = Array.from(e.target.files).map((file) => URL.createObjectURL(file));
@@ -31,9 +25,7 @@ export default function DeposerAnnonce() {
         return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
     }
 
-    if (!isAuthenticated) {
-        return null; // Redirection en cours
-    }
+    // Le middleware protège déjà cette route. Si on est ici, c'est qu'on est authentifié ou en cours de synchro.
 
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -182,7 +174,6 @@ export default function DeposerAnnonce() {
                                     <input
                                         type="text"
                                         id="city"
-                                        defaultValue={user?.location}
                                         className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                         placeholder="Ex: Alger"
                                     />
@@ -204,8 +195,8 @@ export default function DeposerAnnonce() {
                         {/* Section: Vendeur (Info automatique) */}
                         <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-4 border border-gray-200">
                             <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                {user?.avatar ? (
-                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                {user?.image ? (
+                                    <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
                                 ) : (
                                     <User className="text-gray-500" size={24} />
                                 )}
@@ -213,7 +204,7 @@ export default function DeposerAnnonce() {
                             <div>
                                 <p className="text-sm font-medium text-gray-900">Publier en tant que</p>
                                 <p className="text-lg font-bold text-primary">{user?.name}</p>
-                                <p className="text-xs text-gray-500">{user?.email} • {user?.phone}</p>
+                                <p className="text-xs text-gray-500">{user?.email}</p>
                             </div>
                         </div>
 

@@ -12,6 +12,7 @@ import ListeCategorices from "./ListeCategorices";
 import MenuButton from "../ui/MenuButton";
 import IconButtonWithLabel from "../ui/IconButtonWithLabel";
 import { useFavorites } from "@/context/FavoritesContext";
+import UserMenu from "./UserMenu";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -35,7 +36,7 @@ export default function Header() {
     <header className="w-full shadow-sm bg-white sticky top-0 z-30">
       {/* Header Mobile */}
       <div className="lg:hidden">
-        {/* Première ligne : Menu + Logo */}
+        {/* Première ligne : Menu + Logo + Bouton User */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
           {/* Bouton Menu */}
           <button
@@ -47,7 +48,6 @@ export default function Header() {
           </button>
 
           {/* Logo centré */}
-
           <Image
             src={logo}
             alt="FemMarket"
@@ -57,9 +57,8 @@ export default function Header() {
             className="cursor-pointer object-contain"
           />
 
-
-          {/* Espace vide pour équilibrer */}
-          <div className="w-6"></div>
+          {/* Bouton Connexion/Déconnexion Mobile */}
+          <UserMenu />
         </div>
 
         {/* Barre de recherche mobile */}
@@ -78,7 +77,6 @@ export default function Header() {
         <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-6">
           {/* Section gauche : logo + bouton */}
           <div className="flex items-center gap-4">
-
             <Image
               src={logo}
               alt="FemMarket"
@@ -87,7 +85,6 @@ export default function Header() {
               style={{ transform: "scale(1)" }}
               className="cursor-pointer object-contain"
             />
-
 
             <Link href="/deposer">
               <button className="bg-secondary cursor-pointer hover:bg-primary text-white font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
@@ -102,7 +99,7 @@ export default function Header() {
           </div>
 
           {/* Section milieu : barre de recherche */}
-          <div className="flex-1 max-w-xl mx-6 ">
+          <div className="flex-1 max-w-xl mx-6">
             <SearchBar />
           </div>
 
@@ -131,11 +128,8 @@ export default function Header() {
               label="Messages"
             />
 
-            <IconButtonWithLabel
-              icon={User}
-              label="Se connecter"
-              href="/login"
-            />
+            {/* UserMenu component */}
+            <UserMenu />
           </div>
         </div>
 

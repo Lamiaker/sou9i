@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Bell, Trash2, Save, Smartphone, Mail } from "lucide-react";
+import { Lock, Bell, Trash2, Save, Smartphone, Mail, LogOut, User as UserIcon } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function SettingsPage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -138,6 +140,33 @@ export default function SettingsPage() {
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notifications.smsAlerts ? 'bg-primary' : 'bg-gray-200'}`}
                         >
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notifications.smsAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Compte */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                    <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <UserIcon className="text-primary" size={20} />
+                        Compte
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">Gérez votre compte et vos sessions.</p>
+                </div>
+
+                <div className="p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <p className="font-medium text-gray-900">Se déconnecter</p>
+                            <p className="text-sm text-gray-500">Vous serez déconnecté de cette session.</p>
+                        </div>
+                        <button
+                            onClick={() => signOut({ callbackUrl: '/login' })}
+                            className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white font-medium rounded-lg transition flex items-center gap-2 whitespace-nowrap"
+                        >
+                            <LogOut size={18} />
+                            Se déconnecter
                         </button>
                     </div>
                 </div>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardLayout({
     children,
@@ -13,19 +13,17 @@ export default function DashboardLayout({
     const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
 
-    useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.push("/login?redirect=/dashboard");
-        }
-    }, [isLoading, isAuthenticated, router]);
+    // Le middleware protège déjà cette route, donc on peut afficher le contenu
+    // ou un loader pendant que la session client se synchronise.
 
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
     }
 
-    if (!isAuthenticated) {
-        return null;
-    }
+    // Si on n'est pas authentifié côté client mais que le middleware a laissé passer,
+    // c'est peut-être un délai de synchro. On affiche quand même le layout
+    // ou on laisse le contenu gérer ses propres vérifications si besoin.
+    // Pour l'instant, on rend le children, car Sidebar gère aussi l'affichage.
 
     return (
         <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">

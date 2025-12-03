@@ -1,7 +1,7 @@
 "use client";
 
 import { ShoppingBag, Eye, MessageCircle, TrendingUp } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardPage() {
     const { user } = useAuth();

@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MODÈLES UTILISATEUR
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  phone         String?
+  password      String    // Hashé avec bcrypt
+  avatar        String?   // URL de l'image de profil
+  city          String?
+  emailVerified DateTime?
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  ads           Ad[]
+  favorites     Favorite[]
+  conversations Conversation[]
+  messages      Message[]
+  sentReviews   Review[]       @relation("ReviewAuthor")
+  receivedReviews Review[]     @relation("ReviewReceiver")
+
+  @@index([email])
+}
+
+// ============================================
+// MODÈLES ANNONCES
+// ============================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  icon        String?
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  ads         Ad[]
+
+  @@index([slug])
+}
+
+model Ad {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  price       Float
+  condition   String?  // "Neuf", "Très bon état", "Bon état", "Satisfaisant"
+  brand       String?
+  size        String?
+  location    String   // Ville
+  status      String   @default("active") // "active", "sold", "archived"
+  views       Int      @default(0)
+  
+  // Images (array de URLs)
+  images      String[] @default([])
+  
+  // Options
+  deliveryAvailable Boolean @default(false)
+  negotiable        Boolean @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  favorites   Favorite[]
+  reviews     Review[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// MODÈLES FAVORIS
+// ============================================
+
+model Favorite {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adId      String
+  ad        Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, adId])
+  @@index([userId])
+  @@index([adId])
+}
+
+// ============================================
+// MODÈLES MESSAGERIE
+// ============================================
+
+model Conversation {
+  id        String    @id @default(cuid())
+  adTitle   String?   // Titre de l'annonce concernée
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  participants User[]
+  messages     Message[]
+
+  @@index([updatedAt])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  senderId       String
+  sender         User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// ============================================
+// MODÈLES AVIS & NOTES
+// ============================================
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5 étoiles
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  // Relations
+  authorId   String
+  author     User   @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User   @relation("ReviewReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  adId       String?
+  ad         Ad?    @relation(fields: [adId], references: [id], onDelete: SetNull)
+
+  @@index([receiverId])
+  @@index([authorId])
+}

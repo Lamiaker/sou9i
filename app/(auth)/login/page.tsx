@@ -1,23 +1,45 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { signIn, useSession } from "next-auth/react";
 
 function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { login, isLoading: isAuthLoading } = useAuth();
 
     const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+    });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    const { data: session, status } = useSession();
     const redirectPath = searchParams.get("redirect");
+
+    useEffect(() => {
+        if (status === 'authenticated') {
+            router.replace(redirectPath || "/"); // Utilisez replace pour éviter de revenir en arrière sur login
+        }
+    }, [status, router, redirectPath]);
+
+    if (status === 'loading' || status === 'authenticated') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (error) setError(""); // Clear error on typing
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,19 +47,31 @@ function LoginForm() {
         setLoading(true);
 
         try {
-            await login(email, password);
-            // Redirection après connexion réussie
+            const result = await signIn('credentials', {
+                email: formData.email,
+                password: formData.password,
+                redirect: false,
+            });
+
+            if (result?.error) {
+                setError("Email ou mot de passe incorrect");
+                return;
+            }
+
+            // Succès ! Redirection
             router.push(redirectPath || "/");
+            router.refresh(); // Refresh pour mettre à jour la session
         } catch (err) {
-            setError("Identifiants incorrects. Veuillez réessayer.");
+            setError("Une erreur est survenue. Veuillez réessayer.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="bg-gray-50 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="w-full bg- min-h-screen">
+
+            <div className="  sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 className="mt-4 text-center text-3xl font-extrabold text-gray-900">
                     Bonjour !
                 </h2>
@@ -46,7 +80,7 @@ function LoginForm() {
                 </p>
             </div>
 
-            <div className="sm:mx-auto sm:w-full sm:max-w-md mt-8">
+            <div className=" sm:mx-auto  sm:w-full sm:max-w-md mt-8">
                 {/* Message d'alerte si redirection */}
                 {redirectPath && (
                     <div className="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md shadow-sm mx-3 sm:mx-0">
@@ -68,6 +102,14 @@ function LoginForm() {
 
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 mx-3 sm:mx-0">
                     <form className="space-y-6" onSubmit={handleSubmit}>
+                        {/* Message d'erreur */}
+                        {error && (
+                            <div className="rounded-md bg-red-50 p-3">
+                                <p className="text-sm text-red-800">{error}</p>
+                            </div>
+                        )}
+
+                        {/* Email */}
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                 Adresse email
@@ -82,14 +124,15 @@ function LoginForm() {
                                     type="email"
                                     autoComplete="email"
                                     required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    value={formData.email}
+                                    onChange={handleChange}
                                     className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 outline-none border transition"
                                     placeholder="votre@email.com"
                                 />
                             </div>
                         </div>
 
+                        {/* Mot de passe */}
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                 Mot de passe
@@ -102,10 +145,9 @@ function LoginForm() {
                                     id="password"
                                     name="password"
                                     type={showPassword ? "text" : "password"}
-                                    autoComplete="current-password"
                                     required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     className="focus:ring-primary focus:border-primary block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-lg py-3 outline-none border transition"
                                     placeholder="••••••••"
                                 />
@@ -119,31 +161,24 @@ function LoginForm() {
                             </div>
                         </div>
 
+                        {/* Mot de passe oublié */}
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    id="remember-me"
-                                    name="remember-me"
-                                    type="checkbox"
-                                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                                />
-                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                                    Se souvenir de moi
-                                </label>
-                            </div>
-
                             <div className="text-sm">
-                                <a href="#" className="font-medium text-primary hover:text-secondary">
+                                <a href="#" className="font-medium text-primary hover:text-secondary transition">
                                     Mot de passe oublié ?
                                 </a>
                             </div>
                         </div>
 
+                        {/* Submit button */}
                         <div>
                             <button
                                 type="submit"
-                                disabled={loading || isAuthLoading}
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition disabled:opacity-70 disabled:cursor-not-allowed"
+                                disabled={loading}
+                                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition ${loading
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                                    }`}
                             >
                                 {loading ? "Connexion..." : "Se connecter"}
                             </button>
@@ -171,13 +206,14 @@ function LoginForm() {
                     </div>
                 </div>
             </div>
+
         </div>
     );
 }
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div>Chargement...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
             <LoginForm />
         </Suspense>
     );
