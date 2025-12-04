@@ -1,153 +1,73 @@
-export interface SousCategorie {
-  titre: string;
-  items: string[];
-  link?: string;
-}
+/**
+ * Types et utilitaires pour les catégories
+ * Les catégories sont chargées dynamiquement depuis l'API
+ * Utilisez le hook useCategories() dans vos composants
+ */
 
-export interface Categorie {
+export interface Category {
+  id: string;
   name: string;
-  link?: string;
-  image?: string;
-  sousCategories: SousCategorie[];
+  slug: string;
+  icon?: string | null;
+  description?: string | null;
+  order: number;
+  parentId?: string | null;
+  createdAt: string;
+  parent?: Category | null;
+  children?: Category[];
+  _count?: {
+    ads: number;
+    children: number;
+  };
 }
 
-export const categories: Categorie[] = [
-  {
-    name: "Gâteaux & Pâtisserie",
-    link: "/gateaux",
-    image: "https://images.unsplash.com/photo-1587241321921-9ac58f433800?auto=format&fit=crop&w=400&q=80",
-    sousCategories: [
-      {
-        titre: "Gâteaux traditionnels",
-        items: ["Makrout", "Baklawa", "Ghribia", "Kefta", "Autres"]
-      },
-      {
-        titre: "Gâteaux modernes",
-        items: ["Cupcakes", "Number Cake", "Layer Cake", "Brownies", "Autres"]
-      },
-      {
-        titre: "Pâtisserie personnalisée",
-        items: ["Anniversaires", "Mariages", "Fiançailles", "Baptêmes", "Autres"]
-      }
-    ]
-  },
+// Fonction utilitaire pour transformer les catégories en format hiérarchique
+export function buildCategoryHierarchy(flatCategories: Category[]): Category[] {
+  const parents = flatCategories.filter(cat => !cat.parentId);
+  const children = flatCategories.filter(cat => cat.parentId);
 
-  {
-    name: "Décoration & Événements",
-    link: "/decoration",
-    image: "https://images.unsplash.com/photo-1519225468063-3f721174a3b2?auto=format&fit=crop&w=400&q=80",
-    sousCategories: [
-      {
-        titre: "Décoration maison",
-        items: ["Salons", "Chambres", "Cuisine", "Objets déco", "Artisanat"]
-      },
-      {
-        titre: "Organisation d’événements",
-        items: ["Mariage", "Fiançailles", "Baptême", "Anniversaire", "Baby Shower"]
-      },
-      {
-        titre: "Fêtes & accessoires",
-        items: ["Ballons", "Fleurs", "Tables décorées", "Backdrops", "Autres"]
-      }
-    ]
-  },
+  return parents.map(parent => ({
+    ...parent,
+    children: children.filter(child => child.parentId === parent.id),
+  }));
+}
 
-  {
-    name: "Mode & Beauté",
-    link: "/mode",
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=400&q=80",
-    sousCategories: [
-      {
-        titre: "Vêtements femmes",
-        items: ["Robes", "Djellabas", "Tenues traditionnelles", "Casual", "Sport"]
-      },
-      {
-        titre: "Cosmétiques",
-        items: ["Maquillage", "Soins visage", "Corps & cheveux", "Parfums"]
-      },
-      {
-        titre: "Accessoires",
-        items: ["Sacs", "Bijoux", "Montres", "Voiles", "Chaussures"]
-      }
-    ]
-  },
-
-  {
-    name: "Bébé & Enfants",
-    link: "/bebes",
-    image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80",
-    sousCategories: [
-      {
-        titre: "Vêtements enfants",
-        items: ["Garçon", "Fille", "Bébés", "Tenues spéciales"]
-      },
-      {
-        titre: "Articles bébé",
-        items: ["Poussettes", "Lits", "Turbulettes", "Tapis d’éveil"]
-      },
-      {
-        titre: "Événements enfants",
-        items: ["Décorations", "Gâteaux thème", "Animatrices"]
-      }
-    ]
-  },
-
-  {
-    name: "Services Femmes",
-    link: "/services",
-    image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80",
-    sousCategories: [
-      {
-        titre: "Beauté & soins",
-        items: ["Coiffure", "Make-up", "Ongles", "Esthétique", "Hammam"]
-      },
-      {
-        titre: "Couture & retouches",
-        items: ["Couturières", "Tenues sur mesure", "Retouches", "Broderie"]
-      },
-      {
-        titre: "Formations & ateliers",
-        items: ["Pâtisserie", "Décoration", "Maquillage", "Couture", "Art"]
-      }
-    ]
-  },
-
-  {
-    name: "Maison & Artisanat",
-    link: "/maison",
-    image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4f9d?auto=format&fit=crop&w=400&q=80",
-    sousCategories: [
-      {
-        titre: "Produits maison",
-        items: ["Bougies", "Savons", "Objets décoratifs", "Artisanat"]
-      },
-      {
-        titre: "Cuisine maison",
-        items: ["Plats cuisinés", "Conserves", "Confitures", "Epices maison"]
-      }
-    ]
-  },
-
-  {
-    name: "Aides & Petites Annonces",
-    link: "/annonces",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80",
-    sousCategories: [
-      {
-        titre: "Échanges & dons",
-        items: ["Vêtements", "Accessoires", "Articles bébé", "Divers"]
-      },
-      {
-        titre: "Petites annonces",
-        items: ["Divers", "Matériel", "Autres"]
-      }
-    ]
-  },
-
-  {
-    name: "Autres",
-    sousCategories: []
+// Fonction pour trouver une catégorie par slug
+export function findCategoryBySlug(categories: Category[], slug: string): Category | undefined {
+  for (const category of categories) {
+    if (category.slug === slug) {
+      return category;
+    }
+    if (category.children) {
+      const found = findCategoryBySlug(category.children, slug);
+      if (found) return found;
+    }
   }
-];
+  return undefined;
+}
 
-export default categories;
+// Fonction pour obtenir le chemin complet d'une catégorie
+export function getCategoryPath(categories: Category[], categoryId: string): Category[] {
+  const path: Category[] = [];
+
+  function findPath(cats: Category[], targetId: string, currentPath: Category[]): boolean {
+    for (const cat of cats) {
+      const newPath = [...currentPath, cat];
+
+      if (cat.id === targetId) {
+        path.push(...newPath);
+        return true;
+      }
+
+      if (cat.children && findPath(cat.children, targetId, newPath)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  findPath(categories, categoryId, []);
+  return path;
+}
+
+export default Category;

@@ -3,45 +3,135 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Heart, Filter, ChevronDown, SlidersHorizontal } from "lucide-react";
-import { useState, useEffect } from "react";
-import { categories } from "@/lib/data/categories";
-import { getAllAds } from "@/lib/utils/productHelpers";
-import type { Ad } from "@/types";
+import { MapPin, Heart, Filter, ChevronDown, SlidersHorizontal, ArrowLeft } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { useCategory } from "@/hooks/useCategories";
+import FavoriteButton from "@/components/ui/FavoriteButton";
 
-// Récupérer toutes les annonces depuis la fonction helper centralisée
-const allAds = getAllAds();
+interface Ad {
+    id: string;
+    title: string;
+    description?: string;
+    price: number;
+    location: string;
+    images: string[];
+    categoryId: string;
+    status: string;
+    createdAt: string;
+    category?: {
+        id: string;
+        name: string;
+        slug: string;
+    };
+}
 
 export default function CategoryPage() {
     const params = useParams();
     const slug = params.slug as string;
 
-    // Find the current category based on the slug
-    const currentCategory = categories.find(c => c.link === `/${slug}`);
+    // Récupérer la catégorie depuis l'API
+    const { category, loading: categoryLoading, error: categoryError } = useCategory(slug);
 
+    // States
     const [ads, setAds] = useState<Ad[]>([]);
-    const [selectedSubcategory, setSelectedSubcategory] = useState("Tout");
+    const [adsLoading, setAdsLoading] = useState(true);
+    const [adsError, setAdsError] = useState<string | null>(null);
+    const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
+    const [sortBy, setSortBy] = useState<'recent' | 'price-asc' | 'price-desc'>('recent');
+    const [priceMin, setPriceMin] = useState<string>('');
+    const [priceMax, setPriceMax] = useState<string>('');
+    const [locationFilter, setLocationFilter] = useState<string>('');
 
+    // Récupérer les annonces de la catégorie
     useEffect(() => {
-        if (currentCategory) {
-            // Filter ads by the current category name
-            const categoryAds = allAds.filter(ad => ad.category === currentCategory.name);
+        const fetchAds = async () => {
+            if (!category) return;
 
-            if (selectedSubcategory !== "Tout") {
-                setAds(categoryAds.filter(ad => ad.subcategory === selectedSubcategory));
-            } else {
-                setAds(categoryAds);
+            try {
+                setAdsLoading(true);
+                setAdsError(null);
+
+                // Construire les paramètres de requête
+                const params = new URLSearchParams();
+                params.append('categoryId', category.id);
+                if (selectedSubcategory) params.append('subcategoryId', selectedSubcategory);
+                if (priceMin) params.append('minPrice', priceMin);
+                if (priceMax) params.append('maxPrice', priceMax);
+                if (locationFilter) params.append('location', locationFilter);
+                params.append('status', 'active');
+                params.append('sortBy', sortBy);
+
+                const response = await fetch(`/api/ads?${params.toString()}`);
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des annonces');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setAds(data.data.ads || []);
+                } else {
+                    throw new Error(data.error || 'Erreur inconnue');
+                }
+            } catch (err) {
+                setAdsError(err instanceof Error ? err.message : 'Une erreur est survenue');
+                console.error('Error fetching ads:', err);
+            } finally {
+                setAdsLoading(false);
             }
-        }
-    }, [currentCategory, selectedSubcategory, slug]);
+        };
 
-    if (!currentCategory) {
+        fetchAds();
+    }, [category, selectedSubcategory, sortBy, priceMin, priceMax, locationFilter]);
+
+    // Filtrer les annonces côté client (pour un rendu plus rapide)
+    const filteredAds = useMemo(() => {
+        let result = [...ads];
+
+        // Tri
+        switch (sortBy) {
+            case 'price-asc':
+                result.sort((a, b) => a.price - b.price);
+                break;
+            case 'price-desc':
+                result.sort((a, b) => b.price - a.price);
+                break;
+            case 'recent':
+            default:
+                result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+
+        return result;
+    }, [ads, sortBy]);
+
+    // Loading states
+    if (categoryLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-gray-500">Chargement de la catégorie...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (categoryError || !category) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">Catégorie non trouvée</h1>
-                    <Link href="/" className="text-primary hover:underline">Retour à l'accueil</Link>
+                    <p className="text-gray-500 mb-4">{categoryError || 'Cette catégorie n\'existe pas.'}</p>
+                    <Link
+                        href="/categories"
+                        className="inline-flex items-center gap-2 text-primary hover:text-secondary transition"
+                    >
+                        <ArrowLeft size={20} />
+                        Retour aux catégories
+                    </Link>
                 </div>
             </div>
         );
@@ -51,16 +141,33 @@ export default function CategoryPage() {
         <div className="bg-gray-50 min-h-screen py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                {/* Header Section */}
+                {/* Breadcrumb */}
                 <div className="mb-8">
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                        <Link href="/" className="hover:text-primary">Accueil</Link>
+                        <Link href="/" className="hover:text-primary transition">Accueil</Link>
                         <span>/</span>
-                        <span className="text-gray-900 font-medium">{currentCategory.name}</span>
+                        <Link href="/categories" className="hover:text-primary transition">Catégories</Link>
+                        <span>/</span>
+                        {category.parent && (
+                            <>
+                                <Link href={`/categories/${category.parent.slug}`} className="hover:text-primary transition">
+                                    {category.parent.name}
+                                </Link>
+                                <span>/</span>
+                            </>
+                        )}
+                        <span className="text-gray-900 font-medium">{category.name}</span>
                     </div>
 
-                    <h1 className="text-3xl font-bold text-gray-900">{currentCategory.name}</h1>
-                    <p className="text-gray-500 mt-2">Découvrez les meilleures annonces pour {currentCategory.name.toLowerCase()}.</p>
+                    <h1 className="text-3xl font-bold text-gray-900">{category.name}</h1>
+                    {category.description && (
+                        <p className="text-gray-500 mt-2">{category.description}</p>
+                    )}
+                    {category._count && (
+                        <p className="text-sm text-gray-600 mt-2">
+                            {category._count.ads} annonce{category._count.ads > 1 ? 's' : ''} disponible{category._count.ads > 1 ? 's' : ''}
+                        </p>
+                    )}
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8">
@@ -77,61 +184,74 @@ export default function CategoryPage() {
                     {/* Sidebar Filters */}
                     <aside className={`w-full lg:w-64 space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
 
-                        {/* Subcategories Filter */}
-                        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <SlidersHorizontal size={18} />
-                                Sous-catégories
-                            </h3>
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
-                                        type="radio"
-                                        name="subcategory"
-                                        className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
-                                        checked={selectedSubcategory === "Tout"}
-                                        onChange={() => setSelectedSubcategory("Tout")}
-                                    />
-                                    <span className={`text-sm group-hover:text-primary transition ${selectedSubcategory === "Tout" ? "text-gray-900 font-medium" : "text-gray-600"}`}>
-                                        Tout voir
-                                    </span>
-                                </label>
-
-                                {currentCategory.sousCategories.map((sub, idx) => (
-                                    <label key={idx} className="flex items-center gap-2 cursor-pointer group">
+                        {/* Sous-catégories */}
+                        {category.children && category.children.length > 0 && (
+                            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <SlidersHorizontal size={18} />
+                                    Sous-catégories
+                                </h3>
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-2 cursor-pointer group">
                                         <input
                                             type="radio"
                                             name="subcategory"
                                             className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
-                                            checked={selectedSubcategory === sub.titre}
-                                            onChange={() => setSelectedSubcategory(sub.titre)}
+                                            checked={selectedSubcategory === null}
+                                            onChange={() => setSelectedSubcategory(null)}
                                         />
-                                        <span className={`text-sm group-hover:text-primary transition ${selectedSubcategory === sub.titre ? "text-gray-900 font-medium" : "text-gray-600"}`}>
-                                            {sub.titre}
+                                        <span className={`text-sm group-hover:text-primary transition ${selectedSubcategory === null ? "text-gray-900 font-medium" : "text-gray-600"
+                                            }`}>
+                                            Tout voir
                                         </span>
                                     </label>
-                                ))}
-                            </div>
-                        </div>
 
-                        {/* Price Filter (Mock) */}
+                                    {category.children.map((child) => (
+                                        <label key={child.id} className="flex items-center justify-between gap-2 cursor-pointer group">
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="radio"
+                                                    name="subcategory"
+                                                    className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+                                                    checked={selectedSubcategory === child.id}
+                                                    onChange={() => setSelectedSubcategory(child.id)}
+                                                />
+                                                <span className={`text-sm group-hover:text-primary transition ${selectedSubcategory === child.id ? "text-gray-900 font-medium" : "text-gray-600"
+                                                    }`}>
+                                                    {child.name}
+                                                </span>
+                                            </div>
+                                            {child._count && child._count.ads > 0 && (
+                                                <span className="text-xs text-gray-400">({child._count.ads})</span>
+                                            )}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Price Filter */}
                         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                            <h3 className="font-semibold text-gray-900 mb-4">Prix</h3>
+                            <h3 className="font-semibold text-gray-900 mb-4">Prix (DZD)</h3>
                             <div className="flex gap-2">
                                 <input
                                     type="number"
                                     placeholder="Min"
+                                    value={priceMin}
+                                    onChange={(e) => setPriceMin(e.target.value)}
                                     className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary bg-gray-50"
                                 />
                                 <input
                                     type="number"
                                     placeholder="Max"
+                                    value={priceMax}
+                                    onChange={(e) => setPriceMax(e.target.value)}
                                     className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary bg-gray-50"
                                 />
                             </div>
                         </div>
 
-                        {/* Location Filter (Mock) */}
+                        {/* Location Filter */}
                         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                             <h3 className="font-semibold text-gray-900 mb-4">Localisation</h3>
                             <div className="relative">
@@ -139,10 +259,27 @@ export default function CategoryPage() {
                                 <input
                                     type="text"
                                     placeholder="Ville ou Wilaya"
+                                    value={locationFilter}
+                                    onChange={(e) => setLocationFilter(e.target.value)}
                                     className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary bg-gray-50"
                                 />
                             </div>
                         </div>
+
+                        {/* Reset Filters */}
+                        {(selectedSubcategory || priceMin || priceMax || locationFilter) && (
+                            <button
+                                onClick={() => {
+                                    setSelectedSubcategory(null);
+                                    setPriceMin('');
+                                    setPriceMax('');
+                                    setLocationFilter('');
+                                }}
+                                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-lg transition"
+                            >
+                                Réinitialiser les filtres
+                            </button>
+                        )}
 
                     </aside>
 
@@ -152,34 +289,55 @@ export default function CategoryPage() {
                         {/* Results Count & Sort */}
                         <div className="flex justify-between items-center mb-6">
                             <span className="text-gray-500 text-sm">
-                                <strong>{ads.length}</strong> annonces trouvées
+                                {adsLoading ? (
+                                    'Chargement...'
+                                ) : (
+                                    <>
+                                        <strong>{filteredAds.length}</strong> annonce{filteredAds.length > 1 ? 's' : ''} trouvée{filteredAds.length > 1 ? 's' : ''}
+                                    </>
+                                )}
                             </span>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-500 hidden sm:inline">Trier par:</span>
-                                <button className="flex items-center gap-1 text-sm font-medium text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50">
-                                    Plus récents <ChevronDown size={14} />
-                                </button>
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as any)}
+                                    className="text-sm font-medium text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 outline-none focus:border-primary"
+                                >
+                                    <option value="recent">Plus récents</option>
+                                    <option value="price-asc">Prix croissant</option>
+                                    <option value="price-desc">Prix décroissant</option>
+                                </select>
                             </div>
                         </div>
 
                         {/* Ads Grid */}
-                        {ads.length > 0 ? (
+                        {adsLoading ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {ads.map((ad) => (
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+                                        <div className="aspect-[4/3] bg-gray-200"></div>
+                                        <div className="p-4 space-y-3">
+                                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : filteredAds.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredAds.map((ad) => (
                                     <Link href={`/annonces/${ad.id}`} key={ad.id} className="group">
                                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition h-full flex flex-col">
                                             <div className="aspect-[4/3] relative bg-gray-100">
                                                 <Image
-                                                    src={ad.image}
+                                                    src={ad.images[0] || '/placeholder-ad.jpg'}
                                                     alt={ad.title}
                                                     fill
                                                     className="object-cover group-hover:scale-105 transition duration-300"
                                                 />
-                                                <button className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white rounded-full text-gray-500 hover:text-red-500 transition shadow-sm">
-                                                    <Heart size={18} />
-                                                </button>
-                                                <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md">
-                                                    {ad.subcategory}
+                                                <div className="absolute top-3 right-3">
+                                                    <FavoriteButton adId={ad.id} size={18} />
                                                 </div>
                                             </div>
                                             <div className="p-4 flex flex-col flex-1">
@@ -187,14 +345,16 @@ export default function CategoryPage() {
                                                     <h3 className="font-medium text-gray-900 line-clamp-2 group-hover:text-primary transition mb-1">
                                                         {ad.title}
                                                     </h3>
-                                                    <p className="text-lg font-bold text-primary">{ad.price}</p>
+                                                    <p className="text-lg font-bold text-primary">
+                                                        {ad.price.toLocaleString('fr-DZ')} DZD
+                                                    </p>
                                                 </div>
                                                 <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
                                                     <div className="flex items-center gap-1">
                                                         <MapPin size={12} />
                                                         {ad.location}
                                                     </div>
-                                                    <span>{ad.date}</span>
+                                                    <span>{new Date(ad.createdAt).toLocaleDateString('fr-FR')}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -207,7 +367,11 @@ export default function CategoryPage() {
                                     <Filter size={32} className="text-gray-400" />
                                 </div>
                                 <h3 className="text-lg font-semibold text-gray-900">Aucune annonce trouvée</h3>
-                                <p className="text-gray-500 mt-2">Essayez de changer les filtres ou revenez plus tard.</p>
+                                <p className="text-gray-500 mt-2">
+                                    {selectedSubcategory || priceMin || priceMax || locationFilter
+                                        ? 'Essayez de changer les filtres ou revenez plus tard.'
+                                        : 'Aucune annonce n\'est disponible dans cette catégorie pour le moment.'}
+                                </p>
                             </div>
                         )}
                     </main>

@@ -41,21 +41,26 @@ model User {
 // ============================================
 // MODÈLES ANNONCES
 // ============================================
-
 model Category {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  slug        String   @unique
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
   icon        String?
   description String?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
 
-  // Relations
+  parentId    String?
+  parent      Category?   @relation("CategoryChildren", fields: [parentId], references: [id])
+  children    Category[]  @relation("CategoryChildren")
+
   ads         Ad[]
 
   @@index([slug])
+  @@index([parentId])
 }
+
+
 
 model Ad {
   id          String   @id @default(cuid())

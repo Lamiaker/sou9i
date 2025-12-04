@@ -1,13 +1,14 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, MapPin, Tag, DollarSign, User, ChevronDown } from "lucide-react";
-import { categories } from "@/lib/data/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function DeposerAnnonce() {
     const { user, isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
+    const { categories, loading: categoriesLoading } = useCategories({ type: 'hierarchy', withCount: false });
 
     const [images, setImages] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState("");
@@ -21,11 +22,12 @@ export default function DeposerAnnonce() {
         }
     };
 
-    if (isLoading) {
+    if (isLoading || categoriesLoading) {
         return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
     }
 
-    // Le middleware protège déjà cette route. Si on est ici, c'est qu'on est authentifié ou en cours de synchro.
+    // Trouver la catégorie sélectionnée
+    const selectedCat = categories.find((cat) => cat.id === selectedCategory);
 
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -71,7 +73,7 @@ export default function DeposerAnnonce() {
                                         >
                                             <option value="">Choisir une catégorie</option>
                                             {categories.map((cat) => (
-                                                <option key={cat.name} value={cat.name}>
+                                                <option key={cat.id} value={cat.id}>
                                                     {cat.name}
                                                 </option>
                                             ))}
@@ -80,7 +82,7 @@ export default function DeposerAnnonce() {
                                     </div>
                                 </div>
 
-                                {selectedCategory && (
+                                {selectedCategory && selectedCat && selectedCat.children && selectedCat.children.length > 0 && (
                                     <div>
                                         <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-1">Sous-catégorie</label>
                                         <div className="relative">
@@ -91,13 +93,11 @@ export default function DeposerAnnonce() {
                                                 onChange={(e) => setSelectedSubcategory(e.target.value)}
                                             >
                                                 <option value="">Choisir une sous-catégorie</option>
-                                                {categories
-                                                    .find((c) => c.name === selectedCategory)
-                                                    ?.sousCategories.map((sub, idx) => (
-                                                        <option key={idx} value={sub.titre}>
-                                                            {sub.titre}
-                                                        </option>
-                                                    ))}
+                                                {selectedCat.children.map((child) => (
+                                                    <option key={child.id} value={child.id}>
+                                                        {child.name}
+                                                    </option>
+                                                ))}
                                             </select>
                                             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
                                         </div>
@@ -196,7 +196,7 @@ export default function DeposerAnnonce() {
                         <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-4 border border-gray-200">
                             <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                                 {user?.image ? (
-                                    <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                                    <img src={user.image} alt={user.name || 'User'} className="w-full h-full object-cover" />
                                 ) : (
                                     <User className="text-gray-500" size={24} />
                                 )}

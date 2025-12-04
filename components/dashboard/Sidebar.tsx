@@ -43,13 +43,6 @@ export default function Sidebar() {
                         })}
                     </nav>
                 </div>
-
-                <div className="mt-auto p-6 border-t border-gray-200">
-                    <button className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors w-full">
-                        <LogOut size={20} />
-                        Se déconnecter
-                    </button>
-                </div>
             </aside>
         </>
     );

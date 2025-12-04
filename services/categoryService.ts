@@ -2,10 +2,14 @@ import { prisma } from '@/lib/prisma'
 
 export class CategoryService {
     /**
-     * Récupérer toutes les catégories
+     * Récupérer toutes les catégories avec leur hiérarchie
      */
     static async getAllCategories() {
         return prisma.category.findMany({
+            include: {
+                parent: true,
+                children: true,
+            },
             orderBy: {
                 order: 'asc',
             },
@@ -13,11 +17,88 @@ export class CategoryService {
     }
 
     /**
-     * Récupérer une catégorie par ID
+     * Récupérer toutes les catégories parentes (sans parent)
      */
-    static async getCategoryById(id: string) {
+    static async getParentCategories() {
+        return prisma.category.findMany({
+            where: {
+                parentId: null,
+            },
+            include: {
+                children: {
+                    orderBy: {
+                        name: 'asc',
+                    },
+                },
+                _count: {
+                    select: {
+                        ads: true,
+                        children: true,
+                    },
+                },
+            },
+            orderBy: {
+                order: 'asc',
+            },
+        })
+    }
+
+    /**
+     * Récupérer les catégories hiérarchiques (parents avec leurs enfants)
+     */
+    static async getCategoriesHierarchy() {
+        const parents = await prisma.category.findMany({
+            where: {
+                parentId: null,
+            },
+            include: {
+                children: {
+                    include: {
+                        _count: {
+                            select: {
+                                ads: true,
+                            },
+                        },
+                    },
+                    orderBy: {
+                        name: 'asc',
+                    },
+                },
+                _count: {
+                    select: {
+                        ads: {
+                            where: {
+                                status: 'active',
+                            },
+                        },
+                        children: true,
+                    },
+                },
+            },
+            orderBy: {
+                order: 'asc',
+            },
+        })
+
+        return parents
+    }
+
+    /**
+     * Récupérer une catégorie par ID avec ses relations
+     */
+    static async getCategoryById(id: string, includeRelations = true) {
         const category = await prisma.category.findUnique({
             where: { id },
+            include: includeRelations ? {
+                parent: true,
+                children: true,
+                _count: {
+                    select: {
+                        ads: true,
+                        children: true,
+                    },
+                },
+            } : undefined,
         })
 
         if (!category) {
@@ -28,11 +109,21 @@ export class CategoryService {
     }
 
     /**
-     * Récupérer une catégorie par slug
+     * Récupérer une catégorie par slug avec ses relations
      */
-    static async getCategoryBySlug(slug: string) {
+    static async getCategoryBySlug(slug: string, includeRelations = true) {
         const category = await prisma.category.findUnique({
             where: { slug },
+            include: includeRelations ? {
+                parent: true,
+                children: true,
+                _count: {
+                    select: {
+                        ads: true,
+                        children: true,
+                    },
+                },
+            } : undefined,
         })
 
         if (!category) {
@@ -40,6 +131,27 @@ export class CategoryService {
         }
 
         return category
+    }
+
+    /**
+     * Récupérer les enfants d'une catégorie
+     */
+    static async getCategoryChildren(parentId: string) {
+        return prisma.category.findMany({
+            where: {
+                parentId,
+            },
+            include: {
+                _count: {
+                    select: {
+                        ads: true,
+                    },
+                },
+            },
+            orderBy: {
+                name: 'asc',
+            },
+        })
     }
 
     /**
@@ -48,6 +160,8 @@ export class CategoryService {
     static async getCategoriesWithCount() {
         return prisma.category.findMany({
             include: {
+                parent: true,
+                children: true,
                 _count: {
                     select: {
                         ads: {
@@ -55,6 +169,7 @@ export class CategoryService {
                                 status: 'active',
                             },
                         },
+                        children: true,
                     },
                 },
             },
@@ -73,9 +188,23 @@ export class CategoryService {
         icon?: string
         description?: string
         order?: number
+        parentId?: string
     }) {
+        // Vérifier que le slug n'existe pas déjà
+        const existing = await prisma.category.findUnique({
+            where: { slug: data.slug },
+        })
+
+        if (existing) {
+            throw new Error('Une catégorie avec ce slug existe déjà')
+        }
+
         return prisma.category.create({
             data,
+            include: {
+                parent: true,
+                children: true,
+            },
         })
     }
 
@@ -90,11 +219,36 @@ export class CategoryService {
             icon: string
             description: string
             order: number
+            parentId: string
         }>
     ) {
+        // Vérifier que la catégorie existe
+        const category = await prisma.category.findUnique({
+            where: { id },
+        })
+
+        if (!category) {
+            throw new Error('Catégorie non trouvée')
+        }
+
+        // Si on change le slug, vérifier qu'il n'existe pas déjà
+        if (data.slug && data.slug !== category.slug) {
+            const existing = await prisma.category.findUnique({
+                where: { slug: data.slug },
+            })
+
+            if (existing) {
+                throw new Error('Une catégorie avec ce slug existe déjà')
+            }
+        }
+
         return prisma.category.update({
             where: { id },
             data,
+            include: {
+                parent: true,
+                children: true,
+            },
         })
     }
 
@@ -110,6 +264,17 @@ export class CategoryService {
         if (adsCount > 0) {
             throw new Error(
                 `Impossible de supprimer : ${adsCount} annonce(s) utilisent cette catégorie`
+            )
+        }
+
+        // Vérifier s'il y a des sous-catégories
+        const childrenCount = await prisma.category.count({
+            where: { parentId: id },
+        })
+
+        if (childrenCount > 0) {
+            throw new Error(
+                `Impossible de supprimer : cette catégorie a ${childrenCount} sous-catégorie(s)`
             )
         }
 
