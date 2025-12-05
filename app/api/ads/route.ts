@@ -8,7 +8,9 @@ export async function GET(request: NextRequest) {
 
         // Construire les filtres
         const filters = {
-            categoryId: searchParams.get('categoryId') || undefined,
+            // Si une sous-catégorie est sélectionnée, on l'utilise pour le filtrage
+            // Sinon on utilise la catégorie principale
+            categoryId: searchParams.get('subcategoryId') || searchParams.get('categoryId') || undefined,
             minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
             maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
             location: searchParams.get('location') || undefined,

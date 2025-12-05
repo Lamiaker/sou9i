@@ -16,7 +16,31 @@ export class AdService {
 
         // Filtres
         if (filters.categoryId) {
-            where.categoryId = filters.categoryId
+            // Récupérer la catégorie et ses enfants
+            const category = await prisma.category.findUnique({
+                where: { id: filters.categoryId },
+                include: {
+                    children: {
+                        select: { id: true }
+                    }
+                }
+            });
+
+            if (category) {
+                // Si la catégorie a des enfants, chercher dans la catégorie ET ses sous-catégories
+                if (category.children && category.children.length > 0) {
+                    const categoryIds = [category.id, ...category.children.map(c => c.id)];
+                    where.categoryId = {
+                        in: categoryIds
+                    };
+                } else {
+                    // Sinon, juste la catégorie
+                    where.categoryId = filters.categoryId;
+                }
+            } else {
+                // Catégorie non trouvée, utiliser l'ID fourni
+                where.categoryId = filters.categoryId;
+            }
         }
 
         if (filters.minPrice || filters.maxPrice) {

@@ -62,6 +62,9 @@ export default function CategoryPage() {
                 params.append('status', 'active');
                 params.append('sortBy', sortBy);
 
+                console.log('🔍 Fetching ads for category:', category.name, 'ID:', category.id);
+                console.log('📡 API URL:', `/api/ads?${params.toString()}`);
+
                 const response = await fetch(`/api/ads?${params.toString()}`);
 
                 if (!response.ok) {
@@ -69,15 +72,19 @@ export default function CategoryPage() {
                 }
 
                 const data = await response.json();
+                console.log('📦 API Response:', data);
 
                 if (data.success) {
-                    setAds(data.data.ads || []);
+                    // L'API retourne { success: true, data: [...annonces...], pagination: {...} }
+                    const adsArray = Array.isArray(data.data) ? data.data : [];
+                    console.log(`✅ ${adsArray.length} annonce(s) trouvée(s)`);
+                    setAds(adsArray);
                 } else {
                     throw new Error(data.error || 'Erreur inconnue');
                 }
             } catch (err) {
                 setAdsError(err instanceof Error ? err.message : 'Une erreur est survenue');
-                console.error('Error fetching ads:', err);
+                console.error('❌ Error fetching ads:', err);
             } finally {
                 setAdsLoading(false);
             }
