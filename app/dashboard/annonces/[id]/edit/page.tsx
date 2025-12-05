@@ -148,6 +148,10 @@ export default function EditAnnoncePage() {
         try {
             setSubmitting(true);
 
+            // Temps minimum pour garantir une bonne UX (utilisateur voit le feedback)
+            const startTime = Date.now();
+            const MIN_LOADING_TIME = 1500; // 1.5 secondes minimum
+
             let allImageUrls = [...existingImages];
 
             // Upload des nouvelles images
@@ -183,6 +187,15 @@ export default function EditAnnoncePage() {
             const result = await response.json();
 
             if (result.success) {
+                // Calculer le temps écoulé
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = MIN_LOADING_TIME - elapsedTime;
+
+                // Si le processus a été trop rapide, attendre le temps restant
+                if (remainingTime > 0) {
+                    await new Promise(resolve => setTimeout(resolve, remainingTime));
+                }
+
                 setSuccess(true);
 
                 // Redirection après 2 secondes
@@ -447,33 +460,49 @@ export default function EditAnnoncePage() {
                     </div>
 
                     {/* Boutons */}
-                    <div className="pt-6 border-t border-gray-200 flex gap-3">
-                        <Link href="/dashboard/annonces" className="flex-1">
+                    <div className="pt-6 border-t border-gray-200">
+                        <div className="flex gap-3">
+                            <Link href="/dashboard/annonces" className="flex-1">
+                                <button
+                                    type="button"
+                                    className="w-full px-6 py-4 border-2 border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition"
+                                    disabled={isLoading}
+                                >
+                                    Annuler
+                                </button>
+                            </Link>
                             <button
-                                type="button"
-                                className="w-full px-6 py-4 border-2 border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition"
+                                type="submit"
                                 disabled={isLoading}
+                                className="flex-1 bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 px-6 rounded-xl hover:shadow-lg transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                             >
-                                Annuler
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="animate-spin" size={24} />
+                                        <span>
+                                            {uploadingImages
+                                                ? 'Téléchargement des images...'
+                                                : submitting
+                                                    ? 'Mise à jour en cours...'
+                                                    : 'Traitement...'}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={24} />
+                                        <span>Enregistrer les modifications</span>
+                                    </>
+                                )}
                             </button>
-                        </Link>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="flex-1 bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 px-6 rounded-xl hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="animate-spin" size={20} />
-                                    {uploadingImages ? 'Upload images...' : 'Mise à jour...'}
-                                </>
-                            ) : (
-                                <>
-                                    <Save size={20} />
-                                    Enregistrer les modifications
-                                </>
-                            )}
-                        </button>
+                        </div>
+
+                        {/* Message de patience pendant le traitement */}
+                        {isLoading && (
+                            <p className="text-center text-sm text-gray-500 mt-3 flex items-center justify-center gap-2">
+                                <Loader2 className="animate-spin" size={16} />
+                                Veuillez patienter, ne fermez pas cette page...
+                            </p>
+                        )}
                     </div>
                 </form>
             </div>

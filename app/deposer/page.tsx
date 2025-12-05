@@ -73,6 +73,31 @@ export default function DeposerAnnonce() {
         );
     }
 
+    // Déterminer si la catégorie nécessite les champs État/Marque/Taille
+    const getCategoryType = (categoryId: string) => {
+        const category = categories.find(cat => cat.id === categoryId);
+        if (!category) return 'other';
+
+        const categoryName = category.name.toLowerCase();
+
+        // Catégories nécessitant État/Marque/Taille (produits physiques)
+        const productCategories = [
+            'mode', 'beauté', 'vêtement', 'chaussure', 'accessoire',
+            'électronique', 'téléphone', 'ordinateur', 'tablette',
+            'meuble', 'décoration', 'maison',
+            'bébé', 'enfant', 'jouet', 'puériculture'
+        ];
+
+        const isProduct = productCategories.some(keyword =>
+            categoryName.includes(keyword)
+        );
+
+        return isProduct ? 'product' : 'other';
+    };
+
+    const selectedCategoryType = getCategoryType(formData.categoryId || formData.subcategoryId);
+    const showProductFields = selectedCategoryType === 'product';
+
     // Handlers
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -159,23 +184,27 @@ export default function DeposerAnnonce() {
         try {
             setSubmitting(true);
 
+            // Temps minimum pour garantir une bonne UX (utilisateur voit le feedback)
+            const startTime = Date.now();
+            const MIN_LOADING_TIME = 1500; // 1.5 secondes minimum
+
             // 1. Upload des images
             const imageUrls = await uploadImages(selectedFiles);
 
             // 2. Créer l'annonce
-            const adData = {
+            const createData = {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
                 price: parseFloat(formData.price),
                 categoryId: formData.subcategoryId || formData.categoryId,
-                userId: user?.id,
                 location: formData.location.trim(),
-                condition: formData.condition,
-                brand: formData.brand.trim() || undefined,
-                size: formData.size.trim() || undefined,
+                condition: showProductFields ? formData.condition : null,
+                brand: showProductFields ? formData.brand.trim() || null : null,
+                size: showProductFields ? formData.size.trim() || null : null,
                 images: imageUrls,
                 deliveryAvailable: formData.deliveryAvailable,
                 negotiable: formData.negotiable,
+                userId: user?.id,
             };
 
             const response = await fetch('/api/ads', {
@@ -183,19 +212,29 @@ export default function DeposerAnnonce() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(adData),
+                body: JSON.stringify(createData),
             });
 
             if (!response.ok) {
-                throw new Error('Erreur lors de la création de l\'annonce');
+                const data = await response.json();
+                throw new Error(data.error || 'Erreur lors de la création de l\'annonce');
             }
 
             const result = await response.json();
 
             if (result.success) {
+                // Calculer le temps écoulé
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = MIN_LOADING_TIME - elapsedTime;
+
+                // Si le processus a été trop rapide, attendre le temps restant
+                if (remainingTime > 0) {
+                    await new Promise(resolve => setTimeout(resolve, remainingTime));
+                }
+
                 setSuccess(true);
 
-                // Redirection vers l'annonce créée après 2 secondes
+                // Afficher le message de succès pendant 2 secondes
                 setTimeout(() => {
                     router.push(`/annonces/${result.data.id}`);
                 }, 2000);
@@ -440,59 +479,61 @@ export default function DeposerAnnonce() {
                                 </div>
                             </div>
 
-                            {/* Caractéristiques */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
-                                        État
-                                    </label>
-                                    <select
-                                        id="condition"
-                                        name="condition"
-                                        value={formData.condition}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
-                                        disabled={isLoading}
-                                    >
-                                        <option value="Neuf">Neuf</option>
-                                        <option value="Très bon état">Très bon état</option>
-                                        <option value="Bon état">Bon état</option>
-                                        <option value="Satisfaisant">Satisfaisant</option>
-                                    </select>
-                                </div>
+                            {/* Caractéristiques - UNIQUEMENT pour produits physiques */}
+                            {showProductFields && (
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
+                                            État
+                                        </label>
+                                        <select
+                                            id="condition"
+                                            name="condition"
+                                            value={formData.condition}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+                                            disabled={isLoading}
+                                        >
+                                            <option value="Neuf">Neuf</option>
+                                            <option value="Très bon état">Très bon état</option>
+                                            <option value="Bon état">Bon état</option>
+                                            <option value="Satisfaisant">Satisfaisant</option>
+                                        </select>
+                                    </div>
 
-                                <div>
-                                    <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Marque
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="brand"
-                                        name="brand"
-                                        value={formData.brand}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                        placeholder="Ex: Apple"
-                                        disabled={isLoading}
-                                    />
-                                </div>
+                                    <div>
+                                        <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Marque
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="brand"
+                                            name="brand"
+                                            value={formData.brand}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                            placeholder="Ex: Apple"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
 
-                                <div>
-                                    <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Taille
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="size"
-                                        name="size"
-                                        value={formData.size}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                        placeholder="Ex: 256 GB"
-                                        disabled={isLoading}
-                                    />
+                                    <div>
+                                        <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Taille
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="size"
+                                            name="size"
+                                            value={formData.size}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                            placeholder="Ex: 256 GB"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Options */}
                             <div className="space-y-3">
@@ -527,20 +568,34 @@ export default function DeposerAnnonce() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 px-6 rounded-xl hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 px-6 rounded-xl hover:shadow-lg transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                             >
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="animate-spin" size={20} />
-                                        {uploadingImages ? 'Upload des images...' : 'Création en cours...'}
+                                        <Loader2 className="animate-spin" size={24} />
+                                        <span>
+                                            {uploadingImages
+                                                ? 'Téléchargement des images...'
+                                                : submitting
+                                                    ? 'Publication en cours...'
+                                                    : 'Traitement...'}
+                                        </span>
                                     </>
                                 ) : (
                                     <>
-                                        <Upload size={20} />
-                                        Publier l'annonce
+                                        <Upload size={24} />
+                                        <span>Publier l'annonce</span>
                                     </>
                                 )}
                             </button>
+
+                            {/* Message de patience pendant le traitement */}
+                            {isLoading && (
+                                <p className="text-center text-sm text-gray-500 mt-3 flex items-center justify-center gap-2">
+                                    <Loader2 className="animate-spin" size={16} />
+                                    Veuillez patienter, ne fermez pas cette page...
+                                </p>
+                            )}
                         </div>
                     </form>
                 </div>
