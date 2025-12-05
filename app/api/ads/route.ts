@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { AdService } from '@/services'
 
 // GET /api/ads - Récupérer toutes les annonces avec filtres
@@ -92,6 +93,14 @@ export async function POST(request: NextRequest) {
             deliveryAvailable,
             negotiable,
         })
+
+        // Revalider les chemins pour mettre à jour les caches
+        revalidatePath('/');
+        revalidatePath('/categories');
+        revalidatePath('/dashboard/annonces');
+        // On revalide aussi la page de la catégorie spécifique si possible, mais globalement /categories suffit souvent
+        // pour les compteurs globaux. Pour la page de la catégorie spécifique :
+        revalidatePath('/categories/[slug]', 'page');
 
         return NextResponse.json({
             success: true,

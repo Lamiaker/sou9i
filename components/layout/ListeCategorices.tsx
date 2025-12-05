@@ -129,11 +129,6 @@ export default function ListeCategorices({ isMobileMenu = false, onSelectItem, s
                     }`}
                 >
                   {cat.name}
-                  {cat._count && cat._count.ads > 0 && (
-                    <span className="ml-1 text-xs text-gray-400">
-                      ({cat._count.ads})
-                    </span>
-                  )}
                   {activeCategory === cat.id && (
                     <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary"></span>
                   )}
@@ -179,11 +174,6 @@ export default function ListeCategorices({ isMobileMenu = false, onSelectItem, s
                       <h3 className="font-semibold text-gray-700 mb-2 text-sm group-hover:text-primary transition-colors">
                         {child.name}
                       </h3>
-                      {child._count && child._count.ads > 0 && (
-                        <p className="text-xs text-gray-500">
-                          {child._count.ads} annonce{child._count.ads > 1 ? 's' : ''}
-                        </p>
-                      )}
                     </Link>
                   </div>
                 ))}

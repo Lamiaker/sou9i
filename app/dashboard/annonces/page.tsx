@@ -16,7 +16,7 @@ export default function MesAnnoncesPage() {
     const router = useRouter();
 
     const [searchTerm, setSearchTerm] = useState("");
-    const [statusFilter, setStatusFilter] = useState("active");
+    const [statusFilter, setStatusFilter] = useState("all");
     const [deleteModal, setDeleteModal] = useState<{ open: boolean; adId: string | null }>({
         open: false,
         adId: null,
@@ -146,8 +146,8 @@ export default function MesAnnoncesPage() {
             {/* Messages */}
             {message && (
                 <div className={`p-4 rounded-lg border flex items-start gap-3 ${message.type === 'success'
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-red-50 border-red-200'
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-red-50 border-red-200'
                     }`}>
                     {message.type === 'success' ? (
                         <CheckCircle className="text-green-500 flex-shrink-0" size={20} />

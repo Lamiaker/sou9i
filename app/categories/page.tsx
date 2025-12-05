@@ -50,8 +50,8 @@ export default function CategoriesPage() {
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`p-2 rounded transition ${viewMode === 'grid'
-                                        ? 'bg-white text-primary shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white text-primary shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
                                     }`}
                                 aria-label="Vue grille"
                             >
@@ -60,8 +60,8 @@ export default function CategoriesPage() {
                             <button
                                 onClick={() => setViewMode('list')}
                                 className={`p-2 rounded transition ${viewMode === 'list'
-                                        ? 'bg-white text-primary shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white text-primary shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
                                     }`}
                                 aria-label="Vue liste"
                             >
@@ -93,11 +93,6 @@ export default function CategoriesPage() {
 
                                     {category._count && (
                                         <div className="flex items-center gap-4 text-sm text-gray-600">
-                                            <span>
-                                                {category._count.ads > 0
-                                                    ? `${category._count.ads} annonce${category._count.ads > 1 ? 's' : ''}`
-                                                    : 'Aucune annonce'}
-                                            </span>
                                             {category._count.children > 0 && (
                                                 <span>
                                                     {category._count.children} sous-catégorie{category._count.children > 1 ? 's' : ''}
@@ -114,11 +109,6 @@ export default function CategoriesPage() {
                                                     <li key={child.id} className="flex items-center text-sm text-gray-600">
                                                         <span className="w-1.5 h-1.5 bg-gray-300 rounded-full mr-2"></span>
                                                         {child.name}
-                                                        {child._count && child._count.ads > 0 && (
-                                                            <span className="ml-auto text-xs text-gray-400">
-                                                                ({child._count.ads})
-                                                            </span>
-                                                        )}
                                                     </li>
                                                 ))}
                                                 {category.children.length > 3 && (
@@ -151,11 +141,6 @@ export default function CategoriesPage() {
                                         </h3>
                                         {category._count && (
                                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                                                <span>
-                                                    {category._count.ads > 0
-                                                        ? `${category._count.ads} annonce${category._count.ads > 1 ? 's' : ''}`
-                                                        : 'Aucune annonce'}
-                                                </span>
                                                 {category._count.children > 0 && (
                                                     <span>
                                                         {category._count.children} sous-catégorie{category._count.children > 1 ? 's' : ''}
@@ -178,11 +163,6 @@ export default function CategoriesPage() {
                                                     className="text-sm text-gray-600 hover:text-primary transition flex items-center justify-between group"
                                                 >
                                                     <span className="truncate">{child.name}</span>
-                                                    {child._count && child._count.ads > 0 && (
-                                                        <span className="ml-2 text-xs text-gray-400">
-                                                            ({child._count.ads})
-                                                        </span>
-                                                    )}
                                                 </Link>
                                             ))}
                                         </div>

@@ -56,7 +56,11 @@ export class CategoryService {
                     include: {
                         _count: {
                             select: {
-                                ads: true,
+                                ads: {
+                                    where: {
+                                        status: 'active',
+                                    }
+                                },
                             },
                         },
                     },
@@ -80,7 +84,20 @@ export class CategoryService {
             },
         })
 
-        return parents
+        // Calculer le total des annonces (parent + enfants)
+        return parents.map(parent => {
+            const childrenAdsCount = parent.children.reduce((acc, child) => {
+                return acc + (child._count?.ads || 0);
+            }, 0);
+
+            return {
+                ...parent,
+                _count: {
+                    ...parent._count,
+                    ads: (parent._count?.ads || 0) + childrenAdsCount
+                }
+            };
+        });
     }
 
     /**

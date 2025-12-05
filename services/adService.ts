@@ -10,8 +10,17 @@ export class AdService {
         page: number = 1,
         limit: number = 12
     ) {
-        const where: any = {
-            status: filters.status || 'active',
+        const where: any = {};
+
+        // Gestion du status (supporte "active,pending" etc.)
+        if (filters.status) {
+            if (filters.status.includes(',')) {
+                where.status = { in: filters.status.split(',') };
+            } else {
+                where.status = filters.status;
+            }
+        } else {
+            where.status = 'active';
         }
 
         // Filtres

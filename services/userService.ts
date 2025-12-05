@@ -81,6 +81,11 @@ export class UserService {
                 avatar: true,
                 isVerified: true,
                 createdAt: true,
+                _count: {
+                    select: {
+                        ads: true,
+                    }
+                }
             },
         })
     }
@@ -99,6 +104,7 @@ export class UserService {
         id: string,
         data: Partial<{
             name: string
+            email: string // Allow email update
             phone: string
             city: string
             avatar: string

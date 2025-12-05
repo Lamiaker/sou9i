@@ -20,12 +20,13 @@ export function useRequireAuth(redirectUrl = '/login') {
 }
 
 export function useAuth() {
-    const { data: session, status } = useSession()
+    const { data: session, status, update } = useSession()
 
     return {
         user: session?.user,
         isAuthenticated: !!session,
         isLoading: status === 'loading',
         status,
+        update,
     }
 }

@@ -228,9 +228,7 @@ export default function CategoryPage() {
                                                     {child.name}
                                                 </span>
                                             </div>
-                                            {child._count && child._count.ads > 0 && (
-                                                <span className="text-xs text-gray-400">({child._count.ads})</span>
-                                            )}
+                                            {/* Compteur supprimé */}
                                         </label>
                                     ))}
                                 </div>
