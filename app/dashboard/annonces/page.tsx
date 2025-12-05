@@ -1,84 +1,165 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Search, Edit, Trash2, Eye, X, Save, AlertTriangle } from "lucide-react";
 import Image from "next/image";
-
-// Mock data
-const initialAnnonces = [
-    {
-        id: 1,
-        title: "iPhone 14 Pro Max - 256GB",
-        price: "180,000 DZD",
-        date: "27 Nov 2025",
-        status: "En ligne",
-        views: 145,
-        image: "https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?auto=format&fit=crop&w=300&q=80",
-        description: "iPhone 14 Pro Max en excellent état, batterie 95%.",
-        category: "Téléphones"
-    },
-    {
-        id: 2,
-        title: "Appartement F3 - Alger Centre",
-        price: "25,000,000 DZD",
-        date: "25 Nov 2025",
-        status: "En attente",
-        views: 0,
-        image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=300&q=80",
-        description: "Bel appartement F3 refait à neuf, vue sur mer.",
-        category: "Immobilier"
-    },
-    {
-        id: 3,
-        title: "Robe de soirée rouge",
-        price: "12,000 DZD",
-        date: "20 Nov 2025",
-        status: "Vendu",
-        views: 89,
-        image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80",
-        description: "Portée une seule fois, taille 38.",
-        category: "Vêtements"
-    },
-];
+import { useRouter } from "next/navigation";
+import {
+    Plus, Search, Edit, Trash2, Eye, Loader2,
+    AlertCircle, CheckCircle, PackageX
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useAds } from "@/hooks/useAds";
 
 export default function MesAnnoncesPage() {
-    const [annonces, setAnnonces] = useState(initialAnnonces);
-    const [editingAd, setEditingAd] = useState<any>(null);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+    const router = useRouter();
 
-    // Suppression
-    const handleDelete = (id: number) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.")) {
-            setAnnonces(annonces.filter(a => a.id !== id));
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("active");
+    const [deleteModal, setDeleteModal] = useState<{ open: boolean; adId: string | null }>({
+        open: false,
+        adId: null,
+    });
+    const [deleting, setDeleting] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    // Récupérer les annonces de l'utilisateur (EXCLURE les deleted automatiquement)
+    const { ads, loading, error, refetch } = useAds({
+        filters: {
+            userId: user?.id,
+            // Ne jamais montrer les annonces deleted au client
+            status: statusFilter === "all"
+                ? "active,pending,sold" // Tous sauf deleted
+                : statusFilter,
+        },
+        limit: 50,
+        enabled: !!user?.id && isAuthenticated,
+    });
+
+    // Redirection si non connecté
+    useEffect(() => {
+        if (!authLoading && !isAuthenticated) {
+            router.push('/auth/login?redirect=/dashboard/annonces');
+        }
+    }, [authLoading, isAuthenticated, router]);
+
+    // Loading
+    if (authLoading || loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <Loader2 className="animate-spin h-12 w-12 text-primary mx-auto mb-4" />
+                    <p className="text-gray-500">Chargement de vos annonces...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error
+    if (error) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+                <div>
+                    <p className="text-red-700 font-medium">Erreur de chargement</p>
+                    <p className="text-red-600 text-sm">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Filtrage par recherche
+    const filteredAds = ads.filter(ad => {
+        const matchesSearch = ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            ad.description.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearch;
+    });
+
+    // Soft Delete
+    const handleDelete = async (adId: string) => {
+        try {
+            setDeleting(true);
+
+            const response = await fetch(`/api/ads/${adId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    status: 'deleted',
+                    userId: user?.id,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de la suppression');
+            }
+
+            setMessage({ type: 'success', text: 'Annonce supprimée avec succès' });
+            setDeleteModal({ open: false, adId: null });
+            refetch(); // Recharger la liste
+
+            // Cacher le message après 3s
+            setTimeout(() => setMessage(null), 3000);
+        } catch (err) {
+            setMessage({
+                type: 'error',
+                text: err instanceof Error ? err.message : 'Erreur lors de la suppression'
+            });
+        } finally {
+            setDeleting(false);
         }
     };
 
-    // Ouverture de la modale d'édition
-    const handleEditClick = (ad: any) => {
-        setEditingAd({ ...ad }); // Copie pour éviter la mutation directe
-        setIsEditModalOpen(true);
-    };
-
-    // Sauvegarde de l'édition
-    const handleSaveEdit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setAnnonces(annonces.map(a => a.id === editingAd.id ? editingAd : a));
-        setIsEditModalOpen(false);
-        setEditingAd(null);
-    };
-
-    const getStatusColor = (status: string) => {
+    const getStatusDisplay = (status: string) => {
         switch (status) {
-            case "En ligne": return "bg-green-100 text-green-800";
-            case "En attente": return "bg-yellow-100 text-yellow-800";
-            case "Vendu": return "bg-gray-100 text-gray-800";
-            default: return "bg-gray-100 text-gray-800";
+            case 'active':
+                return { label: 'En ligne', color: 'bg-green-100 text-green-800' };
+            case 'pending':
+                return { label: 'En attente', color: 'bg-yellow-100 text-yellow-800' };
+            case 'sold':
+                return { label: 'Vendu', color: 'bg-gray-100 text-gray-800' };
+            default:
+                return { label: status, color: 'bg-gray-100 text-gray-800' };
         }
+    };
+
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('fr-DZ', {
+            style: 'currency',
+            currency: 'DZD',
+            minimumFractionDigits: 0,
+        }).format(price);
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
     };
 
     return (
         <div className="space-y-6 relative">
+            {/* Messages */}
+            {message && (
+                <div className={`p-4 rounded-lg border flex items-start gap-3 ${message.type === 'success'
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-red-50 border-red-200'
+                    }`}>
+                    {message.type === 'success' ? (
+                        <CheckCircle className="text-green-500 flex-shrink-0" size={20} />
+                    ) : (
+                        <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+                    )}
+                    <p className={message.type === 'success' ? 'text-green-700' : 'text-red-700'}>
+                        {message.text}
+                    </p>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -100,12 +181,18 @@ export default function MesAnnoncesPage() {
                     <input
                         type="text"
                         placeholder="Rechercher une annonce..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
                     />
                 </div>
-                <select className="px-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white">
-                    <option value="all">Tous les statuts</option>
-                    <option value="online">En ligne</option>
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"
+                >
+                    <option value="all">Tous</option>
+                    <option value="active">En ligne</option>
                     <option value="pending">En attente</option>
                     <option value="sold">Vendu</option>
                 </select>
@@ -126,59 +213,81 @@ export default function MesAnnoncesPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {annonces.length > 0 ? (
-                                annonces.map((annonce) => (
-                                    <tr key={annonce.id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 relative">
-                                                    <Image
-                                                        src={annonce.image}
-                                                        alt={annonce.title}
-                                                        fill
-                                                        className="object-cover"
-                                                    />
+                            {filteredAds.length > 0 ? (
+                                filteredAds.map((ad) => {
+                                    const statusInfo = getStatusDisplay(ad.status);
+                                    return (
+                                        <tr key={ad.id} className="hover:bg-gray-50 transition">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 relative">
+                                                        {ad.images && ad.images.length > 0 ? (
+                                                            <Image
+                                                                src={ad.images[0]}
+                                                                alt={ad.title}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex items-center justify-center h-full text-gray-400">
+                                                                <PackageX size={20} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="font-medium text-gray-900 line-clamp-1">{ad.title}</span>
                                                 </div>
-                                                <span className="font-medium text-gray-900 line-clamp-1">{annonce.title}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{annonce.price}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{annonce.date}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(annonce.status)}`}>
-                                                {annonce.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            <div className="flex items-center gap-1">
-                                                <Eye size={16} />
-                                                {annonce.views}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleEditClick(annonce)}
-                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                                                    title="Modifier"
-                                                >
-                                                    <Edit size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(annonce.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                                                    title="Supprimer"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                                {formatPrice(ad.price)}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                                                {formatDate(ad.createdAt)}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                                                    {statusInfo.label}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-500">
+                                                <div className="flex items-center gap-1">
+                                                    <Eye size={16} />
+                                                    {ad.views}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Link href={`/annonces/${ad.id}`}>
+                                                        <button
+                                                            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
+                                                            title="Voir"
+                                                        >
+                                                            <Eye size={18} />
+                                                        </button>
+                                                    </Link>
+                                                    <Link href={`/dashboard/annonces/${ad.id}/edit`}>
+                                                        <button
+                                                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                                            title="Modifier"
+                                                        >
+                                                            <Edit size={18} />
+                                                        </button>
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => setDeleteModal({ open: true, adId: ad.id })}
+                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                        title="Supprimer"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                        Aucune annonce trouvée.
+                                        {searchTerm ? "Aucune annonce ne correspond à votre recherche." : "Vous n'avez pas encore d'annonce."}
                                     </td>
                                 </tr>
                             )}
@@ -187,94 +296,58 @@ export default function MesAnnoncesPage() {
                 </div>
 
                 {/* Pagination */}
-                {annonces.length > 0 && (
+                {filteredAds.length > 0 && (
                     <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                        <span className="text-sm text-gray-500">Affichage de {annonces.length} annonces</span>
-                        <div className="flex gap-2">
-                            <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled>Précédent</button>
-                            <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled>Suivant</button>
-                        </div>
+                        <span className="text-sm text-gray-500">Affichage de {filteredAds.length} annonce{filteredAds.length > 1 ? 's' : ''}</span>
                     </div>
                 )}
             </div>
 
-            {/* Edit Modal */}
-            {isEditModalOpen && editingAd && (
+            {/* Delete Confirmation Modal */}
+            {deleteModal.open && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
-                            <h2 className="text-xl font-bold text-gray-900">Modifier l'annonce</h2>
-                            <button
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="p-2 hover:bg-gray-100 rounded-full transition"
-                            >
-                                <X size={24} className="text-gray-500" />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSaveEdit} className="p-6 space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
-                                <input
-                                    type="text"
-                                    value={editingAd.title}
-                                    onChange={(e) => setEditingAd({ ...editingAd, title: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Prix</label>
-                                    <input
-                                        type="text"
-                                        value={editingAd.price}
-                                        onChange={(e) => setEditingAd({ ...editingAd, price: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-                                    />
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+                        <div className="p-6">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                    <Trash2 className="text-red-600" size={24} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                                    <select
-                                        value={editingAd.status}
-                                        onChange={(e) => setEditingAd({ ...editingAd, status: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-white"
-                                    >
-                                        <option value="En ligne">En ligne</option>
-                                        <option value="En attente">En attente</option>
-                                        <option value="Vendu">Vendu</option>
-                                    </select>
+                                    <h3 className="text-lg font-bold text-gray-900">Supprimer l'annonce ?</h3>
+                                    <p className="text-sm text-gray-500">Action irréversible pour vous</p>
                                 </div>
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                <textarea
-                                    rows={4}
-                                    value={editingAd.description || ""}
-                                    onChange={(e) => setEditingAd({ ...editingAd, description: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"
-                                    placeholder="Description de l'annonce..."
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                            <p className="text-gray-600 mb-6">
+                                Êtes-vous sûr de vouloir supprimer cette annonce ? Elle disparaîtra de votre liste et ne sera plus visible sur le site.
+                            </p>
+                            <div className="flex justify-end gap-3">
                                 <button
                                     type="button"
-                                    onClick={() => setIsEditModalOpen(false)}
+                                    onClick={() => setDeleteModal({ open: false, adId: null })}
                                     className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded-lg transition"
+                                    disabled={deleting}
                                 >
                                     Annuler
                                 </button>
                                 <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-primary hover:bg-secondary text-white font-medium rounded-lg transition flex items-center gap-2"
+                                    onClick={() => deleteModal.adId && handleDelete(deleteModal.adId)}
+                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition flex items-center gap-2 disabled:opacity-50"
+                                    disabled={deleting}
                                 >
-                                    <Save size={18} />
-                                    Enregistrer
+                                    {deleting ? (
+                                        <>
+                                            <Loader2 className="animate-spin" size={18} />
+                                            Suppression...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Trash2 size={18} />
+                                            Supprimer définitivement
+                                        </>
+                                    )}
                                 </button>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             )}

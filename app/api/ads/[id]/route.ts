@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AdService } from '@/services'
+import { deleteUnusedImages } from '@/lib/deleteImages'
 
 // GET /api/ads/[id] - Récupérer une annonce par ID
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const params = await context.params
         const { id } = params
 
         // Appel du service
         const ad = await AdService.getAdById(id)
 
-        // Incrémenter les vues
-        await AdService.incrementViews(id)
+        // NE PAS incrémenter les vues ici (sera fait via /api/ads/[id]/views)
 
         return NextResponse.json({
             success: true,
@@ -42,9 +43,10 @@ export async function GET(
 // PATCH /api/ads/[id] - Mettre à jour une annonce
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const params = await context.params
         const { id } = params
         const body = await request.json()
 
@@ -60,6 +62,25 @@ export async function PATCH(
                 { success: false, error: 'userId requis' },
                 { status: 400 }
             )
+        }
+
+        // Récupérer l'annonce actuelle pour comparer les images
+        const currentAd = await AdService.getAdById(id)
+
+        // Vérifier la propriété
+        if (currentAd.userId !== userId) {
+            return NextResponse.json(
+                { success: false, error: 'Non autorisé' },
+                { status: 403 }
+            )
+        }
+
+        // Supprimer les images orphelines (en arrière-plan)
+        if (body.images && currentAd.images) {
+            deleteUnusedImages(currentAd.images, body.images).catch(err => {
+                console.error('Erreur suppression images orphelines:', err)
+                // Ne pas bloquer la mise à jour si la suppression échoue
+            })
         }
 
         // Appel du service (qui vérifie la propriété)
@@ -103,9 +124,10 @@ export async function PATCH(
 // DELETE /api/ads/[id] - Supprimer une annonce
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const params = await context.params
         const { id } = params
 
         // TODO: Récupérer l'utilisateur depuis la session
