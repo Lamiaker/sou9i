@@ -6,8 +6,14 @@ import Image from "next/image";
 import { MapPin, Heart, Filter, ChevronDown, Search } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useState, useEffect } from "react";
-import { categories } from "@/lib/data/categories";
 import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/lib/data/featuredCategories";
+
+const localCategories = [
+    { name: "Gâteaux & Pâtisserie" },
+    { name: "Décoration & Événements" },
+    { name: "Mode & Beauté" },
+    { name: "Bébé & Enfants" }
+];
 
 // Combine all products into a single list for search
 const getAllAds = () => {
@@ -97,7 +103,7 @@ export default function SearchPage() {
                                         onChange={(e) => setFilters({ ...filters, category: e.target.value })}
                                     >
                                         <option value="Toutes">Toutes les catégories</option>
-                                        {categories.map((cat) => (
+                                        {localCategories.map((cat) => (
                                             <option key={cat.name} value={cat.name}>
                                                 {cat.name}
                                             </option>
