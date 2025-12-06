@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Lock, Bell, Trash2, Smartphone, Mail, Eye, EyeOff, Check, AlertCircle } from "lucide-react";
+import { SettingsSkeleton } from "@/components/layout/DashboardInnerSkeletons";
 
 export default function SettingsPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+
+    // Simuler un chargement court pour la cohérence UX
+    const [isPageLoading, setIsPageLoading] = useState(true);
+    useEffect(() => {
+        const timer = setTimeout(() => setIsPageLoading(false), 500);
+        return () => clearTimeout(timer);
+    }, []);
+
     const [notifications, setNotifications] = useState({
         emailMessages: true,
         emailPromos: false,
@@ -29,6 +38,10 @@ export default function SettingsPage() {
 
     const [passwordError, setPasswordError] = useState("");
     const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+    if (isPageLoading) {
+        return <SettingsSkeleton />;
+    }
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

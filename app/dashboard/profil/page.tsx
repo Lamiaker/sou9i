@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useRouter } from "next/navigation";
+import { ProfileSkeleton } from "@/components/layout/DashboardInnerSkeletons";
 
 export default function ProfilePage() {
     const { user: sessionUser, update: updateSession } = useAuth();
@@ -126,11 +127,7 @@ export default function ProfilePage() {
     };
 
     if (isFetching) {
-        return (
-            <div className="flex justify-center items-center min-h-[400px]">
-                <Loader2 className="animate-spin text-primary" size={40} />
-            </div>
-        );
+        return <ProfileSkeleton />;
     }
 
     if (!userData) {

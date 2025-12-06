@@ -11,6 +11,7 @@ import {
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useAd } from "@/hooks/useAds";
 import { useAds } from "@/hooks/useAds";
+import AdDetailSkeleton from "@/components/layout/AdDetailSkeleton";
 
 export default function AdDetailPage() {
     const params = useParams();
@@ -34,14 +35,7 @@ export default function AdDetailPage() {
 
     // Loading state
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-gray-500">Chargement de l'annonce...</p>
-                </div>
-            </div>
-        );
+        return <AdDetailSkeleton />;
     }
 
     // Error state
@@ -95,19 +89,21 @@ export default function AdDetailPage() {
                 <nav className="flex text-sm text-gray-500 mb-6 overflow-x-auto scrollbar-hide">
                     <Link href="/" className="hover:text-primary whitespace-nowrap">Accueil</Link>
                     <ChevronRight size={16} className="mx-2 flex-shrink-0" />
-                    {ad.category && (
-                        <>
-                            <Link
-                                href={`/categories/${ad.category.slug}`}
-                                className="hover:text-primary whitespace-nowrap"
-                            >
-                                {ad.category.name}
-                            </Link>
-                            <ChevronRight size={16} className="mx-2 flex-shrink-0" />
-                        </>
-                    )}
+                    {
+                        ad.category && (
+                            <>
+                                <Link
+                                    href={`/categories/${ad.category.slug}`}
+                                    className="hover:text-primary whitespace-nowrap"
+                                >
+                                    {ad.category.name}
+                                </Link>
+                                <ChevronRight size={16} className="mx-2 flex-shrink-0" />
+                            </>
+                        )
+                    }
                     <span className="text-gray-900 font-medium truncate">{ad.title}</span>
-                </nav>
+                </nav >
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -310,7 +306,7 @@ export default function AdDetailPage() {
                                 <div className="mt-6 pt-6 border-t border-gray-100 text-xs text-gray-500 space-y-2">
                                     <p className="flex items-center gap-2">
                                         <Clock size={14} />
-                                        Membre depuis {new Date(ad.user.createdAt || ad.createdAt).getFullYear()}
+                                        Membre depuis {new Date(ad.user.createdAt).getFullYear()}
                                     </p>
                                 </div>
                             </div>
@@ -333,47 +329,49 @@ export default function AdDetailPage() {
                 </div>
 
                 {/* Similar Ads */}
-                {filteredSimilarAds.length > 0 && (
-                    <div className="mt-12">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Annonces similaires</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {filteredSimilarAds.map((similarAd) => (
-                                <Link href={`/annonces/${similarAd.id}`} key={similarAd.id} className="group">
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition">
-                                        <div className="aspect-[4/3] relative bg-gray-100">
-                                            {similarAd.images[0] ? (
-                                                <Image
-                                                    src={similarAd.images[0]}
-                                                    alt={similarAd.title}
-                                                    fill
-                                                    className="object-cover group-hover:scale-105 transition duration-300"
-                                                />
-                                            ) : (
-                                                <div className="flex items-center justify-center h-full text-gray-400">
-                                                    Pas d'image
-                                                </div>
-                                            )}
+                {
+                    filteredSimilarAds.length > 0 && (
+                        <div className="mt-12">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Annonces similaires</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                {filteredSimilarAds.map((similarAd) => (
+                                    <Link href={`/annonces/${similarAd.id}`} key={similarAd.id} className="group">
+                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition">
+                                            <div className="aspect-[4/3] relative bg-gray-100">
+                                                {similarAd.images[0] ? (
+                                                    <Image
+                                                        src={similarAd.images[0]}
+                                                        alt={similarAd.title}
+                                                        fill
+                                                        className="object-cover group-hover:scale-105 transition duration-300"
+                                                    />
+                                                ) : (
+                                                    <div className="flex items-center justify-center h-full text-gray-400">
+                                                        Pas d'image
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-4">
+                                                <h3 className="font-medium text-gray-900 line-clamp-1 group-hover:text-primary transition">
+                                                    {similarAd.title}
+                                                </h3>
+                                                <p className="text-lg font-bold text-primary mt-1">
+                                                    {formatPrice(similarAd.price)}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                                    <MapPin size={12} />
+                                                    {similarAd.location}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="p-4">
-                                            <h3 className="font-medium text-gray-900 line-clamp-1 group-hover:text-primary transition">
-                                                {similarAd.title}
-                                            </h3>
-                                            <p className="text-lg font-bold text-primary mt-1">
-                                                {formatPrice(similarAd.price)}
-                                            </p>
-                                            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                                                <MapPin size={12} />
-                                                {similarAd.location}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAds } from "@/hooks/useAds";
+import { AnnoncesSkeleton } from "@/components/layout/DashboardInnerSkeletons";
 
 export default function MesAnnoncesPage() {
     const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -46,14 +47,7 @@ export default function MesAnnoncesPage() {
 
     // Loading
     if (authLoading || loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <Loader2 className="animate-spin h-12 w-12 text-primary mx-auto mb-4" />
-                    <p className="text-gray-500">Chargement de vos annonces...</p>
-                </div>
-            </div>
-        );
+        return <AnnoncesSkeleton />;
     }
 
     // Error

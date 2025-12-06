@@ -29,6 +29,7 @@ export interface Ad {
         avatar: string | null;
         city: string | null;
         isVerified: boolean;
+        createdAt: string;
     };
     _count?: {
         favorites: number;

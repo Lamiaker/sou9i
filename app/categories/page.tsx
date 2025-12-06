@@ -4,6 +4,7 @@ import { useCategories } from "@/hooks/useCategories";
 import Link from "next/link";
 import { ChevronRight, Grid3x3, List } from "lucide-react";
 import { useState } from "react";
+import CategorySkeleton from "@/components/layout/CategorySkeleton";
 
 export default function CategoriesPage() {
     const { categories, loading, error } = useCategories({
@@ -14,11 +15,7 @@ export default function CategoriesPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-        );
+        return <CategorySkeleton />;
     }
 
     if (error) {

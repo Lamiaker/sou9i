@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import DashboardSkeleton from "@/components/layout/DashboardSkeleton";
 
 export default function DashboardLayout({
     children,
@@ -17,7 +18,7 @@ export default function DashboardLayout({
     // ou un loader pendant que la session client se synchronise.
 
     if (isLoading) {
-        return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+        return <DashboardSkeleton />;
     }
 
     // Si on n'est pas authentifié côté client mais que le middleware a laissé passer,
