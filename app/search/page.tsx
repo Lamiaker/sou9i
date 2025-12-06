@@ -3,73 +3,101 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Heart, Filter, ChevronDown, Search } from "lucide-react";
+import { MapPin, Filter, Search } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
-import { useState, useEffect } from "react";
-import { gateauxProducts, decorationProducts, beauteProducts, enfantProducts } from "@/lib/data/featuredCategories";
+import { useState, useEffect, useCallback } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
-const localCategories = [
-    { name: "Gâteaux & Pâtisserie" },
-    { name: "Décoration & Événements" },
-    { name: "Mode & Beauté" },
-    { name: "Bébé & Enfants" }
-];
-
-// Combine all products into a single list for search
-const getAllAds = () => {
-    const normalize = (products: any[], categoryName: string) => {
-        return products.map(p => ({
-            id: p.id,
-            title: p.title,
-            price: p.price,
-            location: p.location || "Algérie",
-            image: p.photos?.[0] || p.image || "https://via.placeholder.com/300",
-            category: categoryName,
-            date: p.postedTime || "Récemment",
-        }));
-    };
-
-    return [
-        ...normalize(gateauxProducts, "Gâteaux & Pâtisserie"),
-        ...normalize(decorationProducts, "Décoration & Événements"),
-        ...normalize(beauteProducts, "Mode & Beauté"),
-        ...normalize(enfantProducts, "Bébé & Enfants"),
-    ];
+// Helper for formatting price
+const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-DZ', {
+        style: 'currency',
+        currency: 'DZD',
+        maximumFractionDigits: 0,
+    }).format(price);
 };
-
-const allAds = getAllAds();
 
 export default function SearchPage() {
     const searchParams = useSearchParams();
-    const query = searchParams.get("q") || "";
-    const [results, setResults] = useState(allAds);
+    // Initialize query from URL, but also allow local state updates if needed
+    const initialQuery = searchParams.get("q") || "";
+
+    // States
+    const [query, setQuery] = useState(initialQuery);
+    const [results, setResults] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [categories, setCategories] = useState<any[]>([]);
+
     const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState({
-        category: "Toutes",
+        categoryId: "Toutes",
         minPrice: "",
         maxPrice: "",
         location: "",
     });
 
+    // Update query if URL changes
     useEffect(() => {
-        // Simple client-side filtering
-        const filtered = allAds.filter((ad) => {
-            const matchesQuery = ad.title.toLowerCase().includes(query.toLowerCase());
-            const matchesCategory = filters.category === "Toutes" || ad.category === filters.category;
-            const matchesLocation = !filters.location || ad.location.toLowerCase().includes(filters.location.toLowerCase());
+        setQuery(searchParams.get("q") || "");
+    }, [searchParams]);
 
-            // Basic price filtering (parsing "4,500 DZD" -> 4500)
-            let matchesPrice = true;
-            if (filters.minPrice || filters.maxPrice) {
-                const priceValue = parseInt(ad.price.toString().replace(/[^0-9]/g, '')) || 0;
-                if (filters.minPrice && priceValue < parseInt(filters.minPrice)) matchesPrice = false;
-                if (filters.maxPrice && priceValue > parseInt(filters.maxPrice)) matchesPrice = false;
+    // 1. Fetch Categories for the dropdown
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch("/api/categories?type=parents");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success) {
+                        setCategories(data.data);
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur chargement catégories", error);
             }
+        };
+        fetchCategories();
+    }, []);
 
-            return matchesQuery && matchesCategory && matchesLocation && matchesPrice;
-        });
-        setResults(filtered);
+    // 2. Fetch Ads based on filters & query
+    const fetchAds = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (query) params.set("search", query);
+            if (filters.categoryId !== "Toutes") params.set("categoryId", filters.categoryId);
+            if (filters.minPrice) params.set("minPrice", filters.minPrice);
+            if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+            if (filters.location) params.set("location", filters.location);
+
+            // Default params
+            params.set("limit", "24");
+            params.set("status", "active");
+
+            const res = await fetch(`/api/ads?${params.toString()}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    setResults(data.data);
+                }
+            }
+        } catch (error) {
+            console.error("Erreur chargement annonces", error);
+        } finally {
+            setLoading(false);
+        }
     }, [query, filters]);
+
+    // Trigger fetch when dependencies change
+    // Using a timeout for simple debouncing of text inputs
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchAds();
+        }, 500); // 500ms debounce
+        return () => clearTimeout(timer);
+    }, [fetchAds]);
+
 
     return (
         <div className="bg-gray-50 min-h-screen py-8">
@@ -99,12 +127,12 @@ export default function SearchPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
                                     <select
                                         className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"
-                                        value={filters.category}
-                                        onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                                        value={filters.categoryId}
+                                        onChange={(e) => setFilters({ ...filters, categoryId: e.target.value })}
                                     >
                                         <option value="Toutes">Toutes les catégories</option>
-                                        {localCategories.map((cat) => (
-                                            <option key={cat.name} value={cat.name}>
+                                        {categories.map((cat) => (
+                                            <option key={cat.id} value={cat.id}>
                                                 {cat.name}
                                             </option>
                                         ))}
@@ -152,23 +180,36 @@ export default function SearchPage() {
                     <main className="flex-1">
                         <div className="mb-6">
                             <h1 className="text-2xl font-bold text-gray-900">
-                                {results.length} résultats pour "{query}"
+                                {loading ? "Recherche en cours..." : `${results.length} résultats pour "${query}"`}
                             </h1>
                         </div>
 
-                        {results.length > 0 ? (
+                        {loading ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
+                                    <div key={i} className="bg-white rounded-xl h-[350px] animate-pulse">
+                                        <div className="h-[200px] bg-gray-200 rounded-t-xl"></div>
+                                        <div className="p-4 space-y-3">
+                                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                            <div className="h-10 bg-gray-200 rounded mt-4"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : results.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {results.map((ad) => (
                                     <Link href={`/annonces/${ad.id}`} key={ad.id} className="group">
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition h-full flex flex-col">
+                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition h-full flex flex-col relative">
                                             <div className="aspect-[4/3] relative bg-gray-100">
                                                 <Image
-                                                    src={ad.image}
+                                                    src={ad.images?.[0] || "/images/placeholder.png"}
                                                     alt={ad.title}
                                                     fill
                                                     className="object-cover group-hover:scale-105 transition duration-300"
                                                 />
-                                                <div className="absolute top-3 right-3">
+                                                <div className="absolute top-3 right-3 z-10">
                                                     <FavoriteButton adId={ad.id} size={18} />
                                                 </div>
                                             </div>
@@ -177,14 +218,16 @@ export default function SearchPage() {
                                                     <h3 className="font-medium text-gray-900 line-clamp-2 group-hover:text-primary transition mb-1">
                                                         {ad.title}
                                                     </h3>
-                                                    <p className="text-lg font-bold text-primary">{ad.price}</p>
+                                                    <p className="text-lg font-bold text-primary">{formatPrice(ad.price)}</p>
                                                 </div>
                                                 <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
                                                     <div className="flex items-center gap-1">
                                                         <MapPin size={12} />
-                                                        {ad.location}
+                                                        {ad.location || "Algérie"}
                                                     </div>
-                                                    <span>{ad.date}</span>
+                                                    <span>
+                                                        {ad.createdAt ? formatDistanceToNow(new Date(ad.createdAt), { addSuffix: true, locale: fr }) : ""}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>

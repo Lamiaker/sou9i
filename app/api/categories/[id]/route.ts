@@ -17,54 +17,33 @@ export async function GET(
 
         let category
 
-        // Vérifier si c'est un slug ou un ID
-        if (id.includes('-')) {
-            // C'est probablement un slug
-            category = await prisma.category.findUnique({
-                where: { slug: id },
-                include: includeRelations ? {
-                    parent: true,
-                    children: {
-                        include: {
-                            _count: {
-                                select: {
-                                    ads: true,
-                                },
+        // Recherche par ID ou par Slug
+        category = await prisma.category.findFirst({
+            where: {
+                OR: [
+                    { id: id },
+                    { slug: id }
+                ]
+            },
+            include: includeRelations ? {
+                parent: true,
+                children: {
+                    include: {
+                        _count: {
+                            select: {
+                                ads: true,
                             },
                         },
                     },
-                    _count: {
-                        select: {
-                            ads: true,
-                            children: true,
-                        },
+                },
+                _count: {
+                    select: {
+                        ads: true,
+                        children: true,
                     },
-                } : undefined,
-            })
-        } else {
-            // C'est un ID
-            category = await prisma.category.findUnique({
-                where: { id },
-                include: includeRelations ? {
-                    parent: true,
-                    children: {
-                        include: {
-                            _count: {
-                                select: {
-                                    ads: true,
-                                },
-                            },
-                        },
-                    },
-                    _count: {
-                        select: {
-                            ads: true,
-                            children: true,
-                        },
-                    },
-                } : undefined,
-            })
-        }
+                },
+            } : undefined,
+        })
 
         if (!category) {
             return NextResponse.json(

@@ -17,6 +17,8 @@ export default function SearchBarre() {
     e.preventDefault();
     if (query.trim()) {
       router.push(`/search?q=${encodeURIComponent(query)}`);
+    } else {
+      router.push("/search");
     }
   };
 

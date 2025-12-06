@@ -96,7 +96,9 @@ export function useCategory(idOrSlug: string) {
             const response = await fetch(`/api/categories/${idOrSlug}`);
 
             if (!response.ok) {
-                throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+                console.log(response)
+                return
+                // throw new Error(`Erreur ${response.status}: ${response.statusText}`);
             }
 
             const data = await response.json();

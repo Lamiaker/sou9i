@@ -44,7 +44,7 @@ export default function Home() {
         <SectionFeaturedAsync
           slug="gateaux"
           title="Gâteaux & Pâtisserie"
-          viewAllLink="/categories/gateaux-sucre-sale"
+          viewAllLink="/categories/gateaux-patisserie"
         />
       </Suspense>
 
@@ -71,7 +71,7 @@ export default function Home() {
         <SectionFeaturedAsync
           slug="bebe"
           title="Bébé & Enfants"
-          viewAllLink="/categories/bebe-enfant"
+          viewAllLink="/categories/bebe-enfants"
         />
       </Suspense>
     </main>
