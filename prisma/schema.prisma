@@ -124,6 +124,7 @@ model Favorite {
 model Conversation {
   id        String    @id @default(cuid())
   adTitle   String?   // Titre de l'annonce concernée
+  adId      String?   // ID de l'annonce concernée
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -132,6 +133,7 @@ model Conversation {
   messages     Message[]
 
   @@index([updatedAt])
+  @@index([adId])
 }
 
 model Message {

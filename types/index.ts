@@ -75,7 +75,6 @@ export interface User {
     phone?: string;
     avatar?: string;
     location?: string;
-    password?: string;
     memberSince?: string;
     verified?: boolean;
 }

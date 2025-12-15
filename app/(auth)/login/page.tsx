@@ -19,16 +19,16 @@ function LoginForm() {
     const [error, setError] = useState("");
 
     const { data: session, status } = useSession();
-    const redirectPath = searchParams.get("redirect");
-    const message = searchParams.get("message");
+    const redirectPath = searchParams?.get("redirect");
+    const message = searchParams?.get("message");
 
     useEffect(() => {
         if (status === 'authenticated') {
-            router.replace(redirectPath || "/"); // Utilisez replace pour éviter de revenir en arrière sur login
+            router.replace(redirectPath || "/");
         }
     }, [status, router, redirectPath]);
 
-    if (status === 'loading' || status === 'authenticated') {
+    if (status === 'authenticated') {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -70,7 +70,7 @@ function LoginForm() {
     };
 
     return (
-        <div className="w-full bg- min-h-screen">
+        <div className="w-full ">
 
             <div className="  sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 className="mt-4 text-center text-3xl font-extrabold text-gray-900">

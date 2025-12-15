@@ -6,7 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
     Camera, MapPin, Upload, X,
-    AlertCircle, CheckCircle, Loader2, ArrowLeft, Save, DollarSign
+    AlertCircle, CheckCircle, Loader2, ArrowLeft, Save, DollarSign,
+    LayoutDashboard, FileText, Tag, Map, Image as ImageIcon
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAd } from "@/hooks/useAds";
@@ -23,7 +24,7 @@ interface FormData {
 export default function EditAnnoncePage() {
     const router = useRouter();
     const params = useParams();
-    const adId = params.id as string;
+    const adId = params?.id as string;
 
     const { user, isAuthenticated, isLoading: authLoading } = useAuth();
     const { ad, loading: adLoading, error: adError } = useAd(adId);
@@ -219,10 +220,10 @@ export default function EditAnnoncePage() {
     // Loading
     if (authLoading || adLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
+                <div className="text-center p-8 bg-white rounded-3xl shadow-xl border border-gray-100/50 backdrop-blur-sm">
                     <Loader2 className="animate-spin h-12 w-12 text-primary mx-auto mb-4" />
-                    <p className="text-gray-500">Chargement...</p>
+                    <p className="text-gray-500 font-medium">Chargement de votre annonce...</p>
                 </div>
             </div>
         );
@@ -231,12 +232,17 @@ export default function EditAnnoncePage() {
     // Error loading ad
     if (adError || !ad) {
         return (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
-                <div>
-                    <p className="text-red-700 font-medium">Annonce non trouvée</p>
-                    <Link href="/dashboard/annonces" className="text-sm text-primary hover:underline">
-                        Retour à mes annonces
+            <div className="max-w-xl mx-auto mt-20 px-4">
+                <div className="bg-white border text-center border-red-100 rounded-2xl p-8 shadow-lg shadow-red-500/5">
+                    <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="text-red-500" size={32} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Annonce introuvable</h3>
+                    <p className="text-gray-500 mb-6">L'annonce que vous tentez de modifier n'existe pas ou ne vous appartient pas.</p>
+                    <Link href="/dashboard/annonces">
+                        <button className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-black transition-all shadow-md hover:shadow-lg">
+                            Retour à mes annonces
+                        </button>
                     </Link>
                 </div>
             </div>
@@ -244,265 +250,298 @@ export default function EditAnnoncePage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-4">
-                <Link href="/dashboard/annonces">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-                        <ArrowLeft size={24} />
-                    </button>
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Modifier l'annonce</h1>
-                    <p className="text-gray-500">Titre, images, prix, description, localisation et statut</p>
+        <div className="min-h-screen bg-gray-50/30 pb-20">
+            {/* Top Bar Navigation */}
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 mb-8">
+                <button
+                    onClick={() => router.push('/dashboard/annonces')}
+                    className="group flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors mb-4"
+                >
+                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm group-hover:border-gray-400">
+                        <ArrowLeft size={16} />
+                    </div>
+                    <span className="font-medium">Retour aux annonces</span>
+                </button>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Modifier l'annonce</h1>
+                        <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 font-medium text-gray-600">
+                                <LayoutDashboard size={14} />
+                                Référence: #{adId.slice(-6).toUpperCase()}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${formData.status === 'active'
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                            }`}>
+                            {formData.status === 'active' ? '● En ligne' : '● Archivée/Vendue'}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                {/* Messages */}
-                {error && (
-                    <div className="mx-6 mt-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                        <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
-                        <p className="text-red-700 text-sm">{error}</p>
-                    </div>
-                )}
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                {success && (
-                    <div className="mx-6 mt-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                        <CheckCircle className="text-green-500 flex-shrink-0" size={20} />
-                        <div className="text-green-700 text-sm">
-                            <p className="font-semibold">Annonce mise à jour avec succès !</p>
-                            <p>Redirection en cours...</p>
-                        </div>
-                    </div>
-                )}
+                    {/* Colonne Gauche - Médias (4 colonnes sur 12) */}
+                    <div className="lg:col-span-4 space-y-6">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 overflow-hidden">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-6">
+                                <ImageIcon className="text-primary" size={20} />
+                                Photos de l'annonce
+                            </h2>
 
-                <form className="p-6 sm:p-8 space-y-8" onSubmit={handleSubmit}>
-
-                    {/* Images */}
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                            <Camera className="text-primary" size={24} />
-                            Photos ({totalImages}/5)
-                        </h2>
-
-                        {/* Images existantes + nouvelles */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            {existingImages.map((url, index) => (
-                                <div key={`existing-${index}`} className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
-                                    <Image
-                                        src={url}
-                                        alt={`Image ${index + 1}`}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeExistingImage(index)}
-                                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                    {index === 0 && (
-                                        <div className="absolute bottom-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded">
-                                            Principale
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* Images existantes */}
+                                    {existingImages.map((url, index) => (
+                                        <div key={`existing-${index}`} className="group relative aspect-square rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                                            <Image
+                                                src={url}
+                                                alt={`Image ${index + 1}`}
+                                                fill
+                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeExistingImage(index)}
+                                                    className="p-2 bg-white/90 text-red-600 rounded-full hover:bg-white transition shadow-sm"
+                                                    title="Supprimer"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
+                                            {index === 0 && (
+                                                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md">
+                                                    PRINCIPALE
+                                                </div>
+                                            )}
                                         </div>
+                                    ))}
+
+                                    {/* Nouvelles images */}
+                                    {newPreviewUrls.map((url, index) => (
+                                        <div key={`new-${index}`} className="group relative aspect-square rounded-xl overflow-hidden border-2 border-primary/20 bg-primary/5">
+                                            <Image
+                                                src={url}
+                                                alt={`Nouvelle image ${index + 1}`}
+                                                fill
+                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeNewImage(index)}
+                                                    className="p-2 bg-white/90 text-red-600 rounded-full hover:bg-white transition shadow-sm"
+                                                    title="Supprimer"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
+                                            <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500 shadow-sm ring-2 ring-white"></div>
+                                        </div>
+                                    ))}
+
+                                    {/* Bouton Upload */}
+                                    {totalImages < 5 && (
+                                        <label className="relative flex flex-col items-center justify-center aspect-square rounded-xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all group">
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                                                <Upload size={20} className="text-gray-400 group-hover:text-primary" />
+                                            </div>
+                                            <span className="text-xs font-semibold text-gray-500 group-hover:text-primary">Ajouter photo</span>
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handleNewImageSelect}
+                                                disabled={isLoading}
+                                            />
+                                        </label>
                                     )}
                                 </div>
-                            ))}
-
-                            {newPreviewUrls.map((url, index) => (
-                                <div key={`new-${index}`} className="relative aspect-square rounded-lg overflow-hidden border-2 border-primary">
-                                    <Image
-                                        src={url}
-                                        alt={`Nouvelle image ${index + 1}`}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeNewImage(index)}
-                                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                    <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                                        Nouvelle
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Upload */}
-                        {totalImages < 5 && (
-                            <label className="block">
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary cursor-pointer transition">
-                                    <Upload className="mx-auto text-gray-400 mb-2" size={48} />
-                                    <p className="text-sm text-gray-600">
-                                        Ajouter des images
-                                    </p>
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        Maximum {5 - totalImages} image{5 - totalImages > 1 ? 's' : ''} restante{5 - totalImages > 1 ? 's' : ''}
-                                    </p>
-                                </div>
-                                <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleNewImageSelect}
-                                    disabled={isLoading}
-                                />
-                            </label>
-                        )}
-                    </div>
-
-                    {/* Détails */}
-                    <div className="space-y-6">
-                        {/* Titre */}
-                        <div>
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                                Titre <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                id="title"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                placeholder="Ex: iPhone 14 Pro Max - Comme neuf"
-                                disabled={isLoading}
-                                required
-                            />
-                        </div>
-
-                        {/* Description */}
-                        <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                                Description <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleInputChange}
-                                rows={5}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
-                                placeholder="Décrivez votre article en détail..."
-                                disabled={isLoading}
-                                required
-                            />
-                        </div>
-
-                        {/* Prix et Localisation */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Prix (DZD) <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                    <input
-                                        type="number"
-                                        id="price"
-                                        name="price"
-                                        value={formData.price}
-                                        onChange={handleInputChange}
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                        placeholder="0"
-                                        min="0"
-                                        step="1"
-                                        disabled={isLoading}
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Localisation <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                    <input
-                                        type="text"
-                                        id="location"
-                                        name="location"
-                                        value={formData.location}
-                                        onChange={handleInputChange}
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                        placeholder="Ville ou Wilaya"
-                                        disabled={isLoading}
-                                        required
-                                    />
+                                <div className="flex items-center justify-between text-xs text-gray-400 px-1">
+                                    <span>Format JPG, PNG</span>
+                                    <span>{totalImages}/5 photos</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Statut */}
-                        <div>
-                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                                Statut de l'annonce
-                            </label>
-                            <select
-                                id="status"
-                                name="status"
-                                value={formData.status}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
-                                disabled={isLoading}
-                            >
-                                <option value="active">En ligne</option>
-                                <option value="sold">Vendu</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Boutons */}
-                    <div className="pt-6 border-t border-gray-200">
-                        <div className="flex gap-3">
-                            <Link href="/dashboard/annonces" className="flex-1">
-                                <button
-                                    type="button"
-                                    className="w-full px-6 py-4 border-2 border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition"
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+                                <Tag className="text-primary" size={20} />
+                                Statut
+                            </h2>
+                            <div className="relative">
+                                <select
+                                    id="status"
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-3 appearance-none rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition cursor-pointer"
                                     disabled={isLoading}
                                 >
-                                    Annuler
-                                </button>
-                            </Link>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="flex-1 bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 px-6 rounded-xl hover:shadow-lg transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="animate-spin" size={24} />
-                                        <span>
-                                            {uploadingImages
-                                                ? 'Téléchargement des images...'
-                                                : submitting
-                                                    ? 'Mise à jour en cours...'
-                                                    : 'Traitement...'}
-                                        </span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save size={24} />
-                                        <span>Enregistrer les modifications</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-
-                        {/* Message de patience pendant le traitement */}
-                        {isLoading && (
-                            <p className="text-center text-sm text-gray-500 mt-3 flex items-center justify-center gap-2">
-                                <Loader2 className="animate-spin" size={16} />
-                                Veuillez patienter, ne fermez pas cette page...
+                                    <option value="active">En ligne (Visible)</option>
+                                    <option value="sold">Marquer comme Vendu</option>
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+                                Marquez l'annonce comme "Vendu" si l'article n'est plus disponible. Cela le masquera des résultats de recherche.
                             </p>
-                        )}
+                        </div>
+                    </div>
+
+                    {/* Colonne Droite - Formulaire (8 colonnes sur 12) */}
+                    <div className="lg:col-span-8">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 space-y-8 relative overflow-hidden">
+                            {/* Décoration d'arrière-plan */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-0 pointer-events-none"></div>
+
+                            {/* Messages d'alerte */}
+                            {error && (
+                                <div className="animate-pulse bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700">
+                                    <AlertCircle size={20} />
+                                    <p className="font-medium">{error}</p>
+                                </div>
+                            )}
+
+                            {success && (
+                                <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 text-green-700">
+                                    <CheckCircle size={20} />
+                                    <div>
+                                        <p className="font-bold">Annonce mise à jour !</p>
+                                        <p className="text-sm">Redirection en cours...</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 gap-8 relative z-10">
+                                {/* Titre */}
+                                <div className="space-y-2">
+                                    <label htmlFor="title" className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                        <FileText size={16} className="text-gray-400" />
+                                        Titre de l'annonce
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="title"
+                                        name="title"
+                                        value={formData.title}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-gray-400 font-medium"
+                                        placeholder="Ce que vous vendez..."
+                                        disabled={isLoading}
+                                        required
+                                    />
+                                </div>
+
+                                {/* Prix & Localisation */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label htmlFor="price" className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                            <DollarSign size={16} className="text-gray-400" />
+                                            Prix (DZD)
+                                        </label>
+                                        <div className="relative group">
+                                            <input
+                                                type="number"
+                                                id="price"
+                                                name="price"
+                                                value={formData.price}
+                                                onChange={handleInputChange}
+                                                className="w-full pl-4 pr-12 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-mono font-medium"
+                                                placeholder="0"
+                                                disabled={isLoading}
+                                                required
+                                            />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm bg-gray-100 px-2 py-0.5 rounded">DZD</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label htmlFor="location" className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                            <Map size={16} className="text-gray-400" />
+                                            Localisation
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                id="location"
+                                                name="location"
+                                                value={formData.location}
+                                                onChange={handleInputChange}
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+                                                placeholder="Ville ou région"
+                                                disabled={isLoading}
+                                                required
+                                            />
+                                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                <div className="space-y-2">
+                                    <label htmlFor="description" className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 font-serif">T</div>
+                                        Description détaillée
+                                    </label>
+                                    <textarea
+                                        id="description"
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        rows={6}
+                                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none placeholder:text-gray-400 leading-relaxed"
+                                        placeholder="Dites-en plus sur votre article : état, raison de la vente, caractéristiques..."
+                                        disabled={isLoading}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="pt-8 mt-4 border-t border-gray-100 flex items-center gap-4">
+                                <Link href="/dashboard/annonces" className="hidden sm:block">
+                                    <button
+                                        type="button"
+                                        className="px-6 py-3.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 hover:text-gray-900 transition focus:ring-4 focus:ring-gray-100"
+                                        disabled={isLoading}
+                                    >
+                                        Annuler
+                                    </button>
+                                </Link>
+
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="flex-1 bg-gray-900 text-white font-bold py-4 px-6 rounded-xl hover:bg-black transition-all shadow-xl shadow-gray-200 active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <Loader2 className="animate-spin" size={20} />
+                                            <span>
+                                                {uploadingImages ? 'Upload des photos...' : submitting ? 'Sauvegarde...' : 'Traitement...'}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save size={20} className="group-hover:-translate-y-0.5 transition-transform" />
+                                            <span>Enregistrer les modifications</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>

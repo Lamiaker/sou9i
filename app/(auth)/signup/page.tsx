@@ -121,7 +121,7 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="w-full bg- min-h-screen">
+        <div className="w-full">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Créer un compte

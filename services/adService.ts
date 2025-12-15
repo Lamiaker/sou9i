@@ -137,6 +137,7 @@ export class AdService {
                         name: true,
                         avatar: true,
                         city: true,
+                        phone: true,
                         isVerified: true,
                         createdAt: true,
                     },

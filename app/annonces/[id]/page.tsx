@@ -5,17 +5,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-    MapPin, Phone, MessageCircle, Heart, Share2, Flag, Clock,
+    MapPin, Phone, Share2, Flag, Clock,
     ShieldCheck, ChevronRight, ChevronLeft, Eye
 } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import { useAd } from "@/hooks/useAds";
 import { useAds } from "@/hooks/useAds";
 import AdDetailSkeleton from "@/components/layout/AdDetailSkeleton";
+import ContactSellerButton from "@/components/messages/ContactSellerButton";
 
 export default function AdDetailPage() {
     const params = useParams();
-    const id = params.id as string;
+    const id = params?.id as string;
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [showPhone, setShowPhone] = useState(false);
@@ -294,13 +295,19 @@ export default function AdDetailPage() {
                                         className="w-full bg-secondary hover:bg-primary text-white font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2"
                                     >
                                         <Phone size={20} />
-                                        {showPhone ? "06 XX XX XX XX" : "Voir le numéro"}
+                                        {showPhone
+                                            ? (ad.user.phone || "Numéro non renseigné")
+                                            : "Voir le numéro"}
                                     </button>
 
-                                    <button className="w-full bg-white border-2 border-primary text-primary hover:bg-orange-50 font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
-                                        <MessageCircle size={20} />
-                                        Envoyer un message
-                                    </button>
+                                    <ContactSellerButton
+                                        sellerId={ad.user.id}
+                                        sellerName={ad.user.name || undefined}
+                                        adId={ad.id}
+                                        adTitle={ad.title}
+                                        variant="outline"
+                                        fullWidth
+                                    />
                                 </div>
 
                                 <div className="mt-6 pt-6 border-t border-gray-100 text-xs text-gray-500 space-y-2">

@@ -28,6 +28,7 @@ export interface Ad {
         name: string | null;
         avatar: string | null;
         city: string | null;
+        phone: string | null;
         isVerified: boolean;
         createdAt: string;
     };

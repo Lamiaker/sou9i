@@ -16,6 +16,5 @@ export const config = {
     matcher: [
         '/dashboard/:path*',
         '/deposer',
-        '/messages/:path*',
     ],
 }
