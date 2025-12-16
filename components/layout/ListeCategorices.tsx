@@ -96,6 +96,7 @@ export default function ListeCategorices({ isMobileMenu = false, onSelectItem, s
             key={cat.id}
             href={`/categories/${cat.slug}`}
             className="flex items-center text-left py-2 hover:bg-gray-50 transition text-gray-700 font-medium text-sm"
+            onClick={() => onSelectItem && onSelectItem(cat.slug)}
           >
             {cat.name}
           </Link>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { useRef } from "react";
 import ArrowButton from "../ui/ArrowButton";
@@ -67,12 +68,13 @@ export function SectionTendances({ title, items }: SectionTendancesProps) {
           "
         >
           {items.map((item, index) => (
-            <div
+            <Link
+              href={`/search?q=${encodeURIComponent(item.title)}`}
               key={index}
               className="
                 relative min-w-[200px] h-64
                 rounded-xl overflow-hidden cursor-pointer group
-                snap-start shrink-0 
+                snap-start shrink-0 block
               "
             >
               <Image
@@ -87,7 +89,7 @@ export function SectionTendances({ title, items }: SectionTendancesProps) {
               <h3 className="absolute bottom-4 left-4 text-white font-medium text-base">
                 {item.title}
               </h3>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

@@ -5,6 +5,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNav from "@/components/layout/MobileNav";
+import NextTopLoader from 'nextjs-toploader';
 
 import { FavoritesProvider } from "@/context/FavoritesContext";
 import SessionProvider from "@/components/providers/SessionProvider";
@@ -27,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
+        <NextTopLoader color="#ec4899" showSpinner={false} />
         <SessionProvider>
           <FavoritesProvider>
             <Header />

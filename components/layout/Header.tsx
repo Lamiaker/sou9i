@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
@@ -22,15 +21,12 @@ export default function Header() {
   const { favorites } = useFavorites();
   const { data: session } = useSession();
 
-  const router = useRouter();
-
-  const handleMenuAction = (path: string) => {
+  const closeMobileMenu = () => {
     setMenuClosing(true);
 
     setTimeout(() => {
       setIsMobileMenuOpen(false);
       setMenuClosing(false);
-      router.push(path);
     }, 250);
   };
 
@@ -92,8 +88,8 @@ export default function Header() {
               />
             </Link>
 
-            <button
-              onClick={() => router.push(session ? "/deposer" : "/connexion-requise")}
+            <Link
+              href={session ? "/deposer" : "/connexion-requise"}
               className="bg-secondary cursor-pointer hover:bg-primary text-white font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -102,7 +98,7 @@ export default function Header() {
                 <line x1="8" y1="12" x2="16" y2="12" />
               </svg>
               Déposer une annonce
-            </button>
+            </Link>
           </div>
 
           {/* Section milieu : barre de recherche */}
@@ -133,6 +129,7 @@ export default function Header() {
             <IconButtonWithLabel
               icon={Mail}
               label="Messages"
+              href="/dashboard/messages"
             />
 
             {/* UserMenu component */}
@@ -162,7 +159,7 @@ export default function Header() {
               <Link href="/">
                 <Image
                   src={logo}
-                  alt="leboncoin"
+                  alt="FemMarket"
                   width={130}
                   height={36}
                   className="object-contain"
@@ -183,14 +180,16 @@ export default function Header() {
               <MenuButton
                 icon={Plus}
                 text="Déposer une annonce"
-                onClick={() => handleMenuAction(session ? "/deposer" : "/connexion-requise")}
+                href={session ? "/deposer" : "/connexion-requise"}
+                onClick={closeMobileMenu}
               />
 
               {/* Rechercher */}
               <MenuButton
                 icon={Search}
                 text="Rechercher"
-                onClick={() => handleMenuAction("/search")}
+                href="/search"
+                onClick={closeMobileMenu}
                 hasBorder={true}
               />
 
@@ -198,7 +197,8 @@ export default function Header() {
               <MenuButton
                 icon={MessageCircle}
                 text="Messages"
-                onClick={() => handleMenuAction("/messages")}
+                href="/dashboard/messages"
+                onClick={closeMobileMenu}
               />
 
               {/* Favoris avec badge */}
@@ -206,7 +206,8 @@ export default function Header() {
                 <MenuButton
                   icon={Heart}
                   text="Favoris"
-                  onClick={() => handleMenuAction("/dashboard/favoris")}
+                  href="/dashboard/favoris"
+                  onClick={closeMobileMenu}
                 />
                 {favorites.length > 0 && (
                   <span className="absolute top-1/2 -translate-y-1/2 right-4 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
@@ -219,7 +220,8 @@ export default function Header() {
               <MenuButton
                 icon={Bell}
                 text="Recherches sauvegardées"
-                onClick={() => handleMenuAction("/recherches")}
+                href="/recherches"
+                onClick={closeMobileMenu}
                 hasBorder={true}
               />
 
@@ -227,7 +229,8 @@ export default function Header() {
               <MenuButton
                 icon={Gift}
                 text="Bons plans !"
-                onClick={() => handleMenuAction("/bonsplans")}
+                href="/bonsplans"
+                onClick={closeMobileMenu}
                 hasBorder={true}
               />
 
@@ -237,7 +240,7 @@ export default function Header() {
                   Catégories
                 </h3>
                 <div className="px-4 py-2">
-                  <ListeCategorices isMobileMenu={true} onSelectItem={(path: string) => handleMenuAction(path)} />
+                  <ListeCategorices isMobileMenu={true} onSelectItem={closeMobileMenu} />
                 </div>
               </div>
             </div>

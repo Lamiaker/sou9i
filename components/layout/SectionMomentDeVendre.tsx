@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 interface SectionMomentDeVendreProps {
   title: string;
@@ -11,15 +11,6 @@ interface SectionMomentDeVendreProps {
 
 export function SectionMomentDeVendre({ title, description, buttonText }: SectionMomentDeVendreProps) {
   const { data: session } = useSession();
-  const router = useRouter();
-
-  const handleClick = () => {
-    if (session) {
-      router.push("/deposer");
-    } else {
-      router.push("/connexion-requise");
-    }
-  };
 
   return (
     <section className="w-full mb-8 ">
@@ -30,8 +21,8 @@ export function SectionMomentDeVendre({ title, description, buttonText }: Sectio
             <p className="text-gray-600 text-sm">{description}</p>
           )}
         </div>
-        <button
-          onClick={handleClick}
+        <Link
+          href={session ? "/deposer" : "/connexion-requise"}
           className="px-8 py-3 bg-secondary text-white rounded-lg font-semibold hover:bg-primary transition-colors shadow-sm flex items-center gap-2 whitespace-nowrap"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -40,7 +31,7 @@ export function SectionMomentDeVendre({ title, description, buttonText }: Sectio
             <line x1="8" y1="12" x2="16" y2="12" />
           </svg>
           {buttonText}
-        </button>
+        </Link>
       </div>
     </section>
   );

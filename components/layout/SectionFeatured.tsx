@@ -45,7 +45,7 @@ export default function SectionFeatured({
           {title}
         </h2>
         {viewAllLink && (
-          <a
+          <Link
             href={viewAllLink}
             className="flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-dark transition-colors"
           >
@@ -58,7 +58,7 @@ export default function SectionFeatured({
                 d="M9 5l7 7-7 7"
               />
             </svg>
-          </a>
+          </Link>
         )}
       </div>
 
