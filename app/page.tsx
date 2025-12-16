@@ -12,6 +12,13 @@ import SectionPubliciteSkeleton, { SectionMomentDeVendreSkeleton, SectionTendanc
 
 export const dynamic = 'force-dynamic';
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'FemMarket - Achat et Vente entre femmes en Algérie',
+  description: 'La première plateforme de vente et d\'achat dédiée aux femmes en Algérie. Mode, beauté, maison, enfants, et plus encore.',
+};
+
 export default function Home() {
   return (
     <main className="max-w-6xl mx-auto p-4 space-y-8">

@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Connexion / Inscription | FemMarket',
+    description: 'Connectez-vous ou créez un compte sur FemMarket pour commencer à vendre et acheter.',
+};
+
 export default function AuthLayout({
     children,
 }: {
