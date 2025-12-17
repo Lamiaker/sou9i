@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { categoryId, name, slug, icon, description, order } = body;
+        const { categoryId, name, slug, icon, description, parentId, order } = body;
 
         if (!categoryId) {
             return NextResponse.json({ error: 'ID catégorie requis' }, { status: 400 });
@@ -55,6 +55,7 @@ export async function PATCH(request: NextRequest) {
             slug,
             icon,
             description,
+            parentId,
             order,
         });
 

@@ -520,6 +520,46 @@ export class AdminService {
     }
 
     /**
+     * Récupérer une catégorie par ID avec détails
+     */
+    static async getCategory(id: string) {
+        const category = await prisma.category.findUnique({
+            where: { id },
+            include: {
+                parent: true,
+                children: {
+                    orderBy: { order: 'asc' },
+                    include: {
+                        _count: { select: { ads: true } },
+                        children: {
+                            include: {
+                                _count: { select: { ads: true } } // Include counts for grandchildren
+                            }
+                        },
+                    },
+                },
+                _count: { select: { ads: true } },
+            },
+        });
+
+        if (!category) return null;
+
+        // Calculate recursive total ads
+        const calculateTotalAds = (cat: any): number => {
+            let total = cat._count.ads;
+            if (cat.children) {
+                total += cat.children.reduce((acc: number, child: any) => acc + calculateTotalAds(child), 0);
+            }
+            return total;
+        };
+
+        return {
+            ...category,
+            totalAds: calculateTotalAds(category)
+        };
+    }
+
+    /**
      * Créer une nouvelle catégorie
      */
     static async createCategory(data: {
@@ -543,8 +583,9 @@ export class AdminService {
         data: Partial<{
             name: string
             slug: string
-            icon: string
-            description: string
+            icon: string | null
+            description: string | null
+            parentId: string | null
             order: number
         }>
     ) {

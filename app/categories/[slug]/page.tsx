@@ -27,7 +27,7 @@ interface Ad {
 
 export default function CategoryPage() {
     const params = useParams();
-    const slug = params.slug as string;
+    const slug = params?.slug as string;
 
     // Récupérer la catégorie depuis l'API
     const { category, loading: categoryLoading, error: categoryError } = useCategory(slug);
@@ -170,11 +170,11 @@ export default function CategoryPage() {
                     {category.description && (
                         <p className="text-gray-500 mt-2">{category.description}</p>
                     )}
-                    {category._count && (
+                    {/* {category._count && (
                         <p className="text-sm text-gray-600 mt-2">
                             {category._count.ads} annonce{category._count.ads > 1 ? 's' : ''} disponible{category._count.ads > 1 ? 's' : ''}
                         </p>
-                    )}
+                    )} */}
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8">
