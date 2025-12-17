@@ -1,16 +1,29 @@
 import { prisma } from '@/lib/prisma'
 import type { AdFilters } from '@/lib/prisma-types'
+import { AdStatus } from '@prisma/client'
 
 export class AdService {
     /**
      * Récupérer toutes les annonces avec filtres et pagination
      */
     static async getAds(
-        filters: AdFilters = {},
+        filters: AdFilters & { moderationStatus?: string } = {},
         page: number = 1,
         limit: number = 12
     ) {
         const where: any = {};
+
+        // Gestion de la modération
+        // Si moderationStatus est fourni et vaut 'ALL', on filtre pas (affiche tout)
+        // Si fourni et != 'ALL', on filtre sur la valeur
+        // Si pas fourni, on filtre sur 'APPROVED' par défaut (comportement public standard)
+        if (filters.moderationStatus) {
+            if (filters.moderationStatus !== 'ALL') {
+                where.moderationStatus = filters.moderationStatus;
+            }
+        } else {
+            where.moderationStatus = 'APPROVED';
+        }
 
         // Gestion du status (supporte "active,pending" etc.)
         if (filters.status) {
@@ -95,6 +108,8 @@ export class AdService {
                             avatar: true,
                             city: true,
                             isVerified: true,
+                            verificationStatus: true,
+                            isTrusted: true
                         },
                     },
                     category: true,
@@ -139,6 +154,8 @@ export class AdService {
                         city: true,
                         phone: true,
                         isVerified: true,
+                        verificationStatus: true,
+                        isTrusted: true,
                         createdAt: true,
                     },
                 },
@@ -194,6 +211,14 @@ export class AdService {
         deliveryAvailable?: boolean
         negotiable?: boolean
     }) {
+        // Vérifier si l'utilisateur est de confiance (Trusted)
+        const user = await prisma.user.findUnique({
+            where: { id: data.userId },
+            select: { isTrusted: true }
+        });
+
+        const moderationStatus = user?.isTrusted ? AdStatus.APPROVED : AdStatus.PENDING;
+
         return prisma.ad.create({
             data: {
                 title: data.title,
@@ -206,6 +231,7 @@ export class AdService {
                 images: data.images || [],
                 deliveryAvailable: data.deliveryAvailable || false,
                 negotiable: data.negotiable !== undefined ? data.negotiable : true,
+                moderationStatus: moderationStatus, // Auto-approve if trusted
                 user: {
                     connect: { id: data.userId },
                 },
@@ -261,6 +287,9 @@ export class AdService {
             throw new Error('Non autorisé')
         }
 
+        // Si on change des champs sensibles, on devrait peut-être remettre en PENDING ?
+        // Pour l'instant on garde simple.
+
         return prisma.ad.update({
             where: { id },
             data,
@@ -309,6 +338,9 @@ export class AdService {
         if (status) {
             where.status = status
         }
+
+        // Pour ses propres annonces, l'utilisateur veut tout voir, quel que soit le moderationStatus
+        // Donc on ne filtre pas sur moderationStatus ici par défaut
 
         return prisma.ad.findMany({
             where,

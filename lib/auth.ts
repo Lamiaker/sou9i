@@ -5,6 +5,29 @@ import { prisma } from '@/lib/prisma'
 import { UserService } from '@/services'
 import { loginSchema } from '@/lib/validations/auth'
 
+// Extend NextAuth types for role support
+declare module 'next-auth' {
+    interface User {
+        role?: 'USER' | 'ADMIN'
+    }
+    interface Session {
+        user: {
+            id: string
+            email: string
+            name?: string | null
+            image?: string | null
+            role: 'USER' | 'ADMIN'
+        }
+    }
+}
+
+declare module 'next-auth/jwt' {
+    interface JWT {
+        id: string
+        role: 'USER' | 'ADMIN'
+    }
+}
+
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     session: {
@@ -29,8 +52,18 @@ export const authOptions: NextAuthOptions = {
 
                 const { email, password } = parsedCredentials.data
 
-                // 2. Récupération de l'utilisateur
-                const user = await UserService.getUserByEmail(email)
+                // 2. Récupération de l'utilisateur avec le rôle
+                const user = await prisma.user.findUnique({
+                    where: { email },
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        avatar: true,
+                        password: true,
+                        role: true,
+                    },
+                })
 
                 if (!user) {
                     // Message générique pour éviter l'énumération des utilisateurs
@@ -47,12 +80,13 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Identifiants invalides')
                 }
 
-                // 4. Retourner l'utilisateur (sans données sensibles)
+                // 4. Retourner l'utilisateur avec le rôle
                 return {
                     id: user.id,
                     email: user.email,
                     name: user.name,
                     image: user.avatar,
+                    role: user.role as 'USER' | 'ADMIN',
                 }
             },
         }),
@@ -66,12 +100,14 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id
+                token.role = user.role || 'USER'
             }
             return token
         },
         async session({ session, token }) {
             if (session.user) {
                 session.user.id = token.id as string
+                session.user.role = token.role as 'USER' | 'ADMIN'
             }
             return session
         },

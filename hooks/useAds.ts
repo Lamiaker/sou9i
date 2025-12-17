@@ -11,6 +11,8 @@ export interface Ad {
     brand?: string | null;
     size?: string | null;
     status: string;
+    moderationStatus?: string;
+    rejectionReason?: string;
     views: number;
     deliveryAvailable: boolean;
     negotiable: boolean;
@@ -46,6 +48,7 @@ export interface AdFilters {
     search?: string;
     status?: string;
     userId?: string;
+    moderationStatus?: string;
 }
 
 interface UseAdsOptions {
@@ -100,6 +103,7 @@ export function useAds(options: UseAdsOptions = {}): UseAdsReturn {
             if (filters.search) params.append('search', filters.search);
             if (filters.status) params.append('status', filters.status);
             if (filters.userId) params.append('userId', filters.userId);
+            if (filters.moderationStatus) params.append('moderationStatus', filters.moderationStatus);
 
             // Pagination
             params.append('page', page.toString());
@@ -139,6 +143,7 @@ export function useAds(options: UseAdsOptions = {}): UseAdsReturn {
         filters.search,
         filters.status,
         filters.userId,
+        filters.moderationStatus,
         page,
         limit,
         enabled,

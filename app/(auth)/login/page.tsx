@@ -23,10 +23,15 @@ function LoginForm() {
     const message = searchParams?.get("message");
 
     useEffect(() => {
-        if (status === 'authenticated') {
-            router.replace(redirectPath || "/");
+        if (status === 'authenticated' && session?.user) {
+            // Si l'utilisateur est ADMIN, rediriger vers l'espace admin
+            if (session.user.role === 'ADMIN') {
+                router.replace('/admin');
+            } else {
+                router.replace(redirectPath || "/");
+            }
         }
-    }, [status, router, redirectPath]);
+    }, [status, session, router, redirectPath]);
 
     if (status === 'authenticated') {
         return (
@@ -59,8 +64,7 @@ function LoginForm() {
                 return;
             }
 
-            // Succès ! Redirection
-            router.push(redirectPath || "/");
+            // Succès ! La redirection sera gérée par le useEffect après refresh de la session
             router.refresh(); // Refresh pour mettre à jour la session
         } catch (err) {
             setError("Une erreur est survenue. Veuillez réessayer.");

@@ -11,6 +11,36 @@ datasource db {
 }
 
 // ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  REJECTED
+}
+
+// Statut de modération des annonces
+enum AdStatus {
+  PENDING   // En attente de validation
+  APPROVED  // Validée, visible sur le site
+  REJECTED  // Rejetée par l'admin
+}
+
+// Statut de vérification du compte utilisateur
+enum VerificationStatus {
+  PENDING   // En attente de vérification
+  VERIFIED  // Vérifié (annonces doivent être validées)
+  TRUSTED   // Vérifié définitivement (annonces auto-validées)
+  REJECTED  // Rejeté avec raison
+}
+
+// ============================================
 // MODÈLES UTILISATEUR
 // ============================================
 
@@ -22,8 +52,15 @@ model User {
   password      String    // Hashé avec bcrypt
   avatar        String?   // URL de l'image de profil
   city          String?
+  role          Role      @default(USER) // Rôle de l'utilisateur
   emailVerified DateTime?
-  isVerified    Boolean   @default(false)
+  
+  // Système de vérification
+  isVerified          Boolean            @default(false) // Compatibilité rétroactive
+  verificationStatus  VerificationStatus @default(PENDING)
+  isTrusted           Boolean            @default(false) // Auto-approve les annonces
+  rejectionReason     String?            // Raison du rejet (si applicable)
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -34,8 +71,14 @@ model User {
   messages      Message[]
   sentReviews   Review[]       @relation("ReviewAuthor")
   receivedReviews Review[]     @relation("ReviewReceiver")
+  
+  // Relations Signalements
+  reportsSent     Report[]     @relation("Reporter")
+  reportsReceived Report[]     @relation("ReportedUser")
 
   @@index([email])
+  @@index([role])
+  @@index([verificationStatus])
 }
 
 // ============================================
@@ -74,6 +117,10 @@ model Ad {
   status      String   @default("active") // "active", "sold", "archived"
   views       Int      @default(0)
   
+  // Modération des annonces
+  moderationStatus  AdStatus  @default(PENDING) // Statut de validation
+  rejectionReason   String?   // Raison du rejet (si applicable)
+  
   // Images (array de URLs)
   images      String[] @default([])
   
@@ -91,11 +138,43 @@ model Ad {
   category    Category  @relation(fields: [categoryId], references: [id])
   favorites   Favorite[]
   reviews     Review[]
+  reports     Report[]
 
   @@index([userId])
   @@index([categoryId])
   @@index([status])
+  @@index([moderationStatus])
   @@index([createdAt])
+}
+
+// ============================================
+// MODÈLES SIGNALEMENTS (ADMIN)
+// ============================================
+
+model Report {
+  id          String       @id @default(cuid())
+  reason      String       // Raison du signalement (ex: "Fraude", "Produit interdit")
+  details     String?      @db.Text
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Qui signale ?
+  reporterId  String
+  reporter    User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  // Qui est signalé ? (Optionnel si c'est juste une annonce)
+  reportedUserId String?
+  reportedUser   User?     @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+
+  // Quelle annonce est signalée ? (Optionnel si c'est un profil)
+  adId        String?
+  ad          Ad?          @relation(fields: [adId], references: [id], onDelete: SetNull)
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([adId])
+  @@index([status])
 }
 
 // ============================================

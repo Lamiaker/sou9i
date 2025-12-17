@@ -2,13 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import MobileNav from "@/components/layout/MobileNav";
 import NextTopLoader from 'nextjs-toploader';
-
-import { FavoritesProvider } from "@/context/FavoritesContext";
 import SessionProvider from "@/components/providers/SessionProvider";
+import ConditionalLayout from "@/components/layout/ConditionalLayout";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -16,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Next Shop",
-  description: "Next Shop",
+  title: "FemMarket - Achat et Vente entre femmes en Algérie",
+  description: "La première plateforme de vente et d'achat dédiée aux femmes en Algérie.",
 };
 
 export default function RootLayout({
@@ -30,16 +26,12 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <NextTopLoader color="#ec4899" showSpinner={false} />
         <SessionProvider>
-          <FavoritesProvider>
-            <Header />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
-            <MobileNav />
-          </FavoritesProvider>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
         </SessionProvider>
       </body>
     </html>
   );
 }
+

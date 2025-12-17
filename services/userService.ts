@@ -40,7 +40,9 @@ export class UserService {
                 phone: true,
                 city: true,
                 avatar: true,
+                role: true,
                 isVerified: true,
+                verificationStatus: true,
                 createdAt: true,
             },
         })
@@ -59,7 +61,11 @@ export class UserService {
                 phone: true,
                 city: true,
                 avatar: true,
+                role: true,
                 isVerified: true,
+                verificationStatus: true,
+                isTrusted: true,
+                rejectionReason: true,
                 password: true, // Pour vérification
                 createdAt: true,
             },
@@ -79,7 +85,11 @@ export class UserService {
                 phone: true,
                 city: true,
                 avatar: true,
+                role: true,
                 isVerified: true,
+                verificationStatus: true,
+                isTrusted: true,
+                rejectionReason: true,
                 createdAt: true,
                 _count: {
                     select: {
@@ -120,7 +130,9 @@ export class UserService {
                 phone: true,
                 city: true,
                 avatar: true,
+                role: true,
                 isVerified: true,
+                verificationStatus: true,
                 createdAt: true,
             },
         })

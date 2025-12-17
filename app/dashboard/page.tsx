@@ -1,10 +1,37 @@
 "use client";
 
-import { ShoppingBag, Eye, MessageCircle, TrendingUp } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { ShoppingBag, Eye, MessageCircle, TrendingUp, AlertTriangle, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import Link from 'next/link';
+
+interface UserProfile {
+    id: string;
+    name: string;
+    verificationStatus: string;
+    rejectionReason?: string;
+}
 
 export default function DashboardPage() {
     const { user } = useAuth();
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch('/api/user/profile');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success) {
+                        setProfile(data.data);
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur chargement profil", error);
+            }
+        };
+        fetchProfile();
+    }, []);
 
     return (
         <div className="space-y-6">
@@ -12,6 +39,25 @@ export default function DashboardPage() {
                 <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
                 <p className="text-gray-500">Bienvenue dans votre espace vendeur, <span className="font-semibold text-primary">{user?.name}</span>.</p>
             </div>
+
+            {/* Notification de rejet */}
+            {profile?.verificationStatus === 'REJECTED' && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                    <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                        <h3 className="font-semibold text-red-900">Vérification refusée</h3>
+                        <p className="text-red-700 mt-1">
+                            Votre demande de vérification a été rejetée.
+                            {profile.rejectionReason && (
+                                <span className="block mt-1 font-medium">Raison : "{profile.rejectionReason}"</span>
+                            )}
+                        </p>
+                        <Link href="/dashboard/settings" className="text-sm font-medium text-red-600 hover:text-red-500 mt-2 inline-block">
+                            ➔ Mettre à jour mon profil
+                        </Link>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -4,6 +4,7 @@ export { FavoriteService } from './favoriteService'
 export { CategoryService } from './categoryService'
 export { UserService } from './userService'
 export { MessageService } from './messageService'
+export { AdminService } from './adminService'
 
 // Usage example:
 // import { AdService, FavoriteService, UserService, MessageService } from '@/services'

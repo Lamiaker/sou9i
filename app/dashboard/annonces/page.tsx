@@ -33,6 +33,7 @@ export default function MesAnnoncesPage() {
             status: statusFilter === "all"
                 ? "active,pending,sold" // Tous sauf deleted
                 : statusFilter,
+            moderationStatus: 'ALL' // Voir toutes les annonces, même en attente/rejetées
         },
         limit: 50,
         enabled: !!user?.id && isAuthenticated,
@@ -106,16 +107,25 @@ export default function MesAnnoncesPage() {
         }
     };
 
-    const getStatusDisplay = (status: string) => {
-        switch (status) {
+    const getStatusDisplay = (ad: any) => {
+        // Priorité au statut de modération si rejeté ou en attente
+        if (ad.moderationStatus === 'REJECTED') {
+            return { label: 'Refusé', color: 'bg-red-100 text-red-800', icon: AlertCircle };
+        }
+        if (ad.moderationStatus === 'PENDING') {
+            return { label: 'En examen', color: 'bg-orange-100 text-orange-800', icon: Loader2 };
+        }
+
+        // Sinon statut commercial
+        switch (ad.status) {
             case 'active':
-                return { label: 'En ligne', color: 'bg-green-100 text-green-800' };
-            case 'pending':
-                return { label: 'En attente', color: 'bg-yellow-100 text-yellow-800' };
+                return { label: 'En ligne', color: 'bg-green-100 text-green-800', icon: CheckCircle };
+            case 'pending': // Ancien statut pending, peut être utilisé comme draft ?
+                return { label: 'Brouillon', color: 'bg-gray-100 text-gray-800', icon: Edit };
             case 'sold':
-                return { label: 'Vendu', color: 'bg-gray-100 text-gray-800' };
+                return { label: 'Vendu', color: 'bg-blue-100 text-blue-800', icon: PackageX };
             default:
-                return { label: status, color: 'bg-gray-100 text-gray-800' };
+                return { label: ad.status, color: 'bg-gray-100 text-gray-800', icon: AlertCircle };
         }
     };
 
@@ -187,7 +197,7 @@ export default function MesAnnoncesPage() {
                 >
                     <option value="all">Tous</option>
                     <option value="active">En ligne</option>
-                    <option value="pending">En attente</option>
+                    <option value="pending">En attente / Brouillon</option>
                     <option value="sold">Vendu</option>
                 </select>
             </div>
@@ -209,7 +219,8 @@ export default function MesAnnoncesPage() {
                         <tbody className="divide-y divide-gray-200">
                             {filteredAds.length > 0 ? (
                                 filteredAds.map((ad) => {
-                                    const statusInfo = getStatusDisplay(ad.status);
+                                    const statusInfo = getStatusDisplay(ad);
+                                    const StatusIcon = statusInfo.icon || AlertCircle;
                                     return (
                                         <tr key={ad.id} className="hover:bg-gray-50 transition">
                                             <td className="px-6 py-4">
@@ -238,9 +249,17 @@ export default function MesAnnoncesPage() {
                                                 {formatDate(ad.createdAt)}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                                                    {statusInfo.label}
-                                                </span>
+                                                <div className="flex flex-col items-start gap-1">
+                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                                                        <StatusIcon size={12} />
+                                                        {statusInfo.label}
+                                                    </span>
+                                                    {ad.moderationStatus === 'REJECTED' && ad.rejectionReason && (
+                                                        <span className="text-xs text-red-600 max-w-[150px] truncate" title={ad.rejectionReason}>
+                                                            {ad.rejectionReason}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-500">
                                                 <div className="flex items-center gap-1">
