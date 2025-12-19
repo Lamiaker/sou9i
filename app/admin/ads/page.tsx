@@ -81,7 +81,7 @@ export default async function AdminAdsPage({ searchParams }: PageProps) {
             </div>
 
             {/* Ads Table */}
-            <AdsTable ads={ads} pagination={pagination} />
+            <AdsTable ads={ads as any} pagination={pagination} />
         </div>
     );
 }

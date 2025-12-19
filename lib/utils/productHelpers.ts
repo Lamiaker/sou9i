@@ -2,8 +2,7 @@
 // Helpers pour la gestion des produits
 // ============================================
 
-import { Product, Ad, Categorie } from "@/types";
-import { categories } from "@/lib/data/categories";
+import { Ad } from "@/types";
 import {
     gateauxProducts,
     decorationProducts,
@@ -13,10 +12,11 @@ import {
 
 /**
  * Assigne des sous-catégories aux produits pour la démo
+ * Note: Cette fonction utilise des données mockées et n'est plus compatible avec la nouvelle structure de catégories
  */
 export const assignSubcategories = (products: any[], categoryName: string): Ad[] => {
-    const category = categories.find(c => c.name === categoryName);
-    const subcats = category?.sousCategories.map(s => s.titre) || [];
+    // Simplified version without category dependency since the structure has changed
+    const subcats: string[] = [];
 
     return products.map((p, index) => ({
         id: p.id,

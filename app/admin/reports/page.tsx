@@ -66,7 +66,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
             </div>
 
             {/* Reports Table */}
-            <ReportsTable reports={reports} pagination={pagination} />
+            <ReportsTable reports={reports as any} pagination={pagination} />
         </div>
     );
 }

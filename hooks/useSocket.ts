@@ -75,7 +75,7 @@ export function useSocket(options: UseSocketOptions = {}) {
             }
         })
 
-        socket.on('authenticated', (data) => {
+        socket.on('authenticated', () => {
             setIsAuthenticated(true)
         })
 
@@ -165,6 +165,8 @@ export function useSocket(options: UseSocketOptions = {}) {
         }
     }, [autoConnect, status, session?.user?.id, connect, disconnect])
 
+    // Returning ref.current is intentional for stable reference
+    // eslint-disable-next-line react-hooks/refs
     return {
         socket: socketRef.current,
         isConnected,

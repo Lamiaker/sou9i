@@ -24,7 +24,7 @@ function LoginForm() {
 
     useEffect(() => {
         if (status === 'authenticated' && session?.user) {
-            // Si l'utilisateur est ADMIN, rediriger vers l'espace admin
+            // Si l&apos;utilisateur est ADMIN, rediriger vers l&apos;espace admin
             if (session.user.role === 'ADMIN') {
                 router.replace('/admin');
             } else {
@@ -66,7 +66,7 @@ function LoginForm() {
 
             // Succès ! La redirection sera gérée par le useEffect après refresh de la session
             router.refresh(); // Refresh pour mettre à jour la session
-        } catch (err) {
+        } catch {
             setError("Une erreur est survenue. Veuillez réessayer.");
         } finally {
             setLoading(false);
@@ -105,7 +105,7 @@ function LoginForm() {
                     </div>
                 )}
 
-                {/* Message d'alerte si redirection */}
+                {/* Message d&apos;alerte si redirection */}
                 {redirectPath && (
                     <div className="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md shadow-sm mx-3 sm:mx-0">
                         <div className="flex">
@@ -126,7 +126,7 @@ function LoginForm() {
 
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 mx-3 sm:mx-0">
                     <form className="space-y-6" onSubmit={handleSubmit}>
-                        {/* Message d'erreur */}
+                        {/* Message d&apos;erreur */}
                         {error && (
                             <div className="rounded-md bg-red-50 p-3">
                                 <p className="text-sm text-red-800">{error}</p>

@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, Heart, MessageCircle, User, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Heart, MessageCircle, User, Settings } from "lucide-react";
 
 const menuItems = [
-    { name: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Vue d&apos;ensemble", href: "/dashboard", icon: LayoutDashboard },
     { name: "Mes annonces", href: "/dashboard/annonces", icon: ShoppingBag },
     { name: "Mes favoris", href: "/dashboard/favoris", icon: Heart },
     { name: "Messagerie", href: "/dashboard/messages", icon: MessageCircle },

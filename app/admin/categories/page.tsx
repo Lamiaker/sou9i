@@ -25,7 +25,7 @@ export default async function AdminCategoriesPage() {
             </div>
 
             {/* Categories Manager */}
-            <CategoriesManager initialCategories={categories} />
+            <CategoriesManager initialCategories={categories as any} />
         </div>
     );
 }

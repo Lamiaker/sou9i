@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 // Composants Async Wrappers (simulés pour la démo UX ou futurs fetchs)
-import { SectionMomentDeVendreAsync } from "../components/layout/SectionMomentDeVendreAsync";
-import { SectionPubliciteAsync } from "../components/layout/SectionPubliciteAsync";
-import { SectionTendancesAsync } from "../components/layout/SectionTendancesAsync";
+import { SectionMomentDeVendreAsync } from "@/components/layout/SectionMomentDeVendreAsync";
+import { SectionPubliciteAsync } from "@/components/layout/SectionPubliciteAsync";
+import { SectionTendancesAsync } from "@/components/layout/SectionTendancesAsync";
 import { tendances } from "@/lib/data/tendances";
 
 // Skeletons
@@ -33,7 +33,7 @@ export default function Home() {
       {/* Moment de vendre : Deposer une annonce */}
       <Suspense fallback={<SectionMomentDeVendreSkeleton />}>
         <SectionMomentDeVendreAsync
-          title="C'est le moment de vendre"
+          title="c&apos;est le moment de vendre"
           buttonText="Déposer une annonce"
         />
       </Suspense>

@@ -44,8 +44,8 @@ export default function AdDetailPage() {
         return (
             <div className="min-h-screen flex items-center justify-center flex-col gap-4">
                 <h1 className="text-2xl font-bold">Annonce non trouvée</h1>
-                <p className="text-gray-500">{error || "Cette annonce n'existe pas ou a été supprimée."}</p>
-                <Link href="/" className="text-primary hover:underline">Retour à l'accueil</Link>
+                <p className="text-gray-500">{error || "Cette annonce n&apos;existe pas ou a été supprimée."}</p>
+                <Link href="/" className="text-primary hover:underline">Retour à l&apos;accueil</Link>
             </div>
         );
     }
@@ -326,9 +326,9 @@ export default function AdDetailPage() {
                                 Conseils de sécurité
                             </h3>
                             <ul className="text-sm text-blue-800 space-y-2 list-disc list-inside">
-                                <li>Ne payez jamais à l'avance.</li>
+                                <li>Ne payez jamais à l&apos;avance.</li>
                                 <li>Rencontrez le vendeur dans un lieu public.</li>
-                                <li>Vérifiez l'objet avant de l'acheter.</li>
+                                <li>Vérifiez l&apos;objet avant de l&apos;acheter.</li>
                                 <li>Méfiez-vous des prix trop bas.</li>
                             </ul>
                         </div>
@@ -354,7 +354,7 @@ export default function AdDetailPage() {
                                                     />
                                                 ) : (
                                                     <div className="flex items-center justify-center h-full text-gray-400">
-                                                        Pas d'image
+                                                        Pas d&apos;image
                                                     </div>
                                                 )}
                                             </div>

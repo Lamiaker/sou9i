@@ -3,15 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    ChevronRight,
-    ChevronDown,
     Plus,
     Edit2,
     Trash2,
     FolderTree,
     ShoppingBag,
-    X,
-    Save,
     Eye
 } from 'lucide-react';
 import CategoryFormModal from './CategoryFormModal';
@@ -47,16 +43,6 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
     useEffect(() => {
         setCategories(initialCategories);
     }, [initialCategories]);
-
-    const toggleExpand = (id: string) => {
-        const newExpanded = new Set(expandedIds);
-        if (newExpanded.has(id)) {
-            newExpanded.delete(id);
-        } else {
-            newExpanded.add(id);
-        }
-        setExpandedIds(newExpanded);
-    };
 
     const openCreateModal = (parentId: string = '') => {
         // We pass parentId in initialData so the Modal knows to hide the selection
@@ -127,15 +113,6 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
         } finally {
             setLoading(false);
         }
-    };
-
-    const generateSlug = (name: string) => {
-        return name
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '');
     };
 
     const renderCategory = (category: Category, depth = 0) => {

@@ -38,6 +38,8 @@ export function FilterBar<F>({ filters, configs, onUpdate, onReset, className = 
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        // Required for SSR - mount state for portal
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 

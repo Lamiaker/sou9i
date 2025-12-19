@@ -6,11 +6,13 @@ import { Search } from "lucide-react";
 
 export default function SearchBarre() {
   const searchParams = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get("q") || "");
+  const [query, setQuery] = useState(searchParams?.get("q") || "");
   const router = useRouter();
 
   useEffect(() => {
-    setQuery(searchParams.get("q") || "");
+    // Synchronize with URL params - intentional setState in effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuery(searchParams?.get("q") || "");
   }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {

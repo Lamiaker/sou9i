@@ -4,7 +4,8 @@ import ArrowButton from "@/components/ui/ArrowButton";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import { ProductItem } from "@/types";
 import Link from "next/link";
-import { MapPin, Clock } from "lucide-react";
+import Image from "next/image";
+import { MapPin } from "lucide-react";
 
 export interface SectionFeaturedProps {
   title?: string;
@@ -107,10 +108,11 @@ export default function SectionFeatured({
             >
               {/* Image */}
               <div className="relative h-60 bg-gray-100 overflow-hidden">
-                <img
+                <Image
                   src={product.photos[0]}
                   alt={product.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-black/0 to-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -134,7 +136,7 @@ export default function SectionFeatured({
               <div className="p-4 space-y-3">
                 {/* Seller */}
                 <div className="flex items-center gap-2">
-                  <img src={product.sellerAvatar} alt={product.sellerName} className="w-6 h-6 rounded-full object-cover border border-gray-100" />
+                  <Image src={product.sellerAvatar} alt={product.sellerName} width={24} height={24} className="w-6 h-6 rounded-full object-cover border border-gray-100" />
                   <span className="text-xs font-medium text-gray-500 truncate">{product.sellerName}</span>
                 </div>
 

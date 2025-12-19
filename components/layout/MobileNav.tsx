@@ -6,7 +6,7 @@ import { LayoutDashboard, ShoppingBag, Heart, MessageCircle, Settings } from "lu
 import { useAuth } from "@/hooks/useAuth";
 
 const menuItems = [
-    { name: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Vue d&apos;ensemble", href: "/dashboard", icon: LayoutDashboard },
     { name: "Mes annonces", href: "/dashboard/annonces", icon: ShoppingBag },
     { name: "Mes favoris", href: "/dashboard/favoris", icon: Heart },
     { name: "Messagerie", href: "/dashboard/messages", icon: MessageCircle },
@@ -16,7 +16,7 @@ export default function MobileNav() {
     const pathname = usePathname();
     const { isAuthenticated } = useAuth();
 
-    // Ne pas afficher si l'utilisateur n'est pas connecté
+    // Ne pas afficher si l&apos;utilisateur n&apos;est pas connecté
     if (!isAuthenticated) {
         return null;
     }

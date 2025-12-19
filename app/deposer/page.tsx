@@ -191,7 +191,7 @@ export default function DeposerAnnonce() {
             // 1. Upload des images
             const imageUrls = await uploadImages(selectedFiles);
 
-            // 2. Créer l'annonce
+            // 2. Créer l&apos;annonce
             const createData = {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
@@ -347,7 +347,7 @@ export default function DeposerAnnonce() {
                         <div className="space-y-6">
                             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                                 <Tag className="text-primary" size={24} />
-                                Détails de l'annonce
+                                Détails de l&apos;annonce
                             </h2>
 
                             {/* Titre */}
@@ -584,7 +584,7 @@ export default function DeposerAnnonce() {
                                 ) : (
                                     <>
                                         <Upload size={24} />
-                                        <span>Publier l'annonce</span>
+                                        <span>Publier l&apos;annonce</span>
                                     </>
                                 )}
                             </button>

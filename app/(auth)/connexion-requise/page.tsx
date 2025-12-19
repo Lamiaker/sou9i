@@ -66,7 +66,7 @@ export default function ConnexionRequise() {
             </div>
 
             <p className="mt-6 text-center text-sm text-gray-400">
-                Rejoignez notre communauté et commencez à vendre dès aujourd'hui !
+                Rejoignez notre communauté et commencez à vendre dès aujourd&apos;hui !
             </p>
         </div>
     );

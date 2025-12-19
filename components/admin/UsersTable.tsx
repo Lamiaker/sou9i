@@ -12,16 +12,15 @@ import {
     ChevronLeft,
     ChevronRight,
     User,
-    Mail,
     Phone,
     MapPin,
     ShoppingBag,
     Star,
-    AlertCircle,
-    CheckCircle
+    AlertCircle
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import Image from 'next/image';
 
 interface User {
     id: string;
@@ -167,7 +166,7 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                             {user.avatar ? (
-                                                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                                                <Image src={user.avatar} alt="" width={40} height={40} className="w-full h-full object-cover" />
                                             ) : (
                                                 <span className="text-white font-bold text-sm">
                                                     {user.name?.charAt(0) || 'U'}
@@ -335,7 +334,7 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
                         <div className="flex items-start gap-3">
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                 {user.avatar ? (
-                                    <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                                    <Image src={user.avatar} alt="" width={48} height={48} className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="text-white font-bold">
                                         {user.name?.charAt(0) || 'U'}

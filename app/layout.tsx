@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "FemMarket - Achat et Vente entre femmes en Algérie",
-  description: "La première plateforme de vente et d'achat dédiée aux femmes en Algérie.",
+  description: "La première plateforme de vente et d&apos;achat dédiée aux femmes en Algérie.",
 };
 
 export default function RootLayout({

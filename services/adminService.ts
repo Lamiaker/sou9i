@@ -1,5 +1,18 @@
 import { prisma } from '@/lib/prisma'
 
+// Helper function to serialize dates to strings for API responses
+function serializeDates<T>(obj: T): T {
+    if (obj === null || obj === undefined) return obj;
+    if (obj instanceof Date) return obj.toISOString() as any;
+    if (Array.isArray(obj)) return obj.map(serializeDates) as any;
+    if (typeof obj === 'object') {
+        return Object.fromEntries(
+            Object.entries(obj).map(([key, value]) => [key, serializeDates(value)])
+        ) as T;
+    }
+    return obj;
+}
+
 export class AdminService {
     // ============================================
     // DASHBOARD STATS
@@ -44,7 +57,7 @@ export class AdminService {
     /**
      * Récupérer les dernières activités
      */
-    static async getRecentActivity(limit = 10) {
+    static async getRecentActivity() {
         const [recentUsers, recentAds, recentReports] = await Promise.all([
             prisma.user.findMany({
                 take: 5,
@@ -328,7 +341,7 @@ export class AdminService {
         ])
 
         return {
-            ads,
+            ads: serializeDates(ads),
             pagination: {
                 page,
                 limit,
@@ -458,7 +471,7 @@ export class AdminService {
         ])
 
         return {
-            reports,
+            reports: serializeDates(reports),
             pagination: {
                 page,
                 limit,
@@ -496,7 +509,7 @@ export class AdminService {
      * Récupérer toutes les catégories avec leur structure arborescente
      */
     static async getCategories() {
-        return prisma.category.findMany({
+        const categories = await prisma.category.findMany({
             where: { parentId: null },
             orderBy: { order: 'asc' },
             include: {
@@ -516,7 +529,8 @@ export class AdminService {
                     select: { ads: true },
                 },
             },
-        })
+        });
+        return serializeDates(categories);
     }
 
     /**

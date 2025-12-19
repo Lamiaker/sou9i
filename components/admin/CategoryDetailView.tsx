@@ -7,10 +7,7 @@ import {
     Edit2,
     Trash2,
     FolderTree,
-    ShoppingBag,
-    Eye,
-    Plus
-} from 'lucide-react';
+    ShoppingBag} from 'lucide-react';
 import Link from 'next/link';
 import CategoryFormModal from './CategoryFormModal';
 
@@ -22,7 +19,7 @@ interface CategoryDetailViewProps {
 export default function CategoryDetailView({ category, allCategories }: CategoryDetailViewProps) {
     const router = useRouter();
     const [editingCategory, setEditingCategory] = useState<any | null>(null);
-    const [loading, setLoading] = useState(false);
+    // Removed unused loading state
 
     const flatCategories = allCategories.flatMap((cat: any) => [
         { id: cat.id, label: cat.name },
@@ -32,7 +29,7 @@ export default function CategoryDetailView({ category, allCategories }: Category
     const handleSave = async (data: any) => {
         if (!editingCategory) return;
 
-        setLoading(true);
+        // setLoading(true);
         try {
             const res = await fetch('/api/admin/categories', {
                 method: 'PATCH',
@@ -51,14 +48,14 @@ export default function CategoryDetailView({ category, allCategories }: Category
             console.error('Error:', error);
             alert('Une erreur est survenue');
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     };
 
     const handleDelete = async (targetId: string) => {
         if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
 
-        setLoading(true);
+        // setLoading(true);
         try {
             const res = await fetch('/api/admin/categories', {
                 method: 'DELETE',
@@ -81,7 +78,7 @@ export default function CategoryDetailView({ category, allCategories }: Category
             console.error('Error:', error);
             alert('Une erreur est survenue');
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     };
 

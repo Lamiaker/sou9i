@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,7 +11,6 @@ export default function DashboardLayoutClient({
     children: React.ReactNode;
 }) {
     const { isAuthenticated, isLoading } = useAuth();
-    const router = useRouter();
 
     if (isLoading) {
         return <DashboardSkeleton />;

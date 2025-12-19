@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { X, Save, Plus } from 'lucide-react';
+import { Save, Plus } from 'lucide-react';
 
 interface CategoryFormModalProps {
     isOpen: boolean;
@@ -24,7 +24,6 @@ export default function CategoryFormModal({
     onClose,
     onSubmit,
     initialData,
-    categoryTree,
     title,
     editingId
 }: CategoryFormModalProps) {

@@ -7,7 +7,6 @@ import { Lock, Bell, Trash2, Smartphone, Mail, Eye, EyeOff, Check, AlertCircle }
 import { SettingsSkeleton } from "@/components/layout/DashboardInnerSkeletons";
 
 export default function SettingsPage() {
-    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
     // Simuler un chargement court pour la cohérence UX
@@ -72,7 +71,7 @@ export default function SettingsPage() {
         }
 
         if (passwordForm.currentPassword === passwordForm.newPassword) {
-            setPasswordError("Le nouveau mot de passe doit être différent de l'ancien");
+            setPasswordError("Le nouveau mot de passe doit être différent de l&apos;ancien");
             return;
         }
 
@@ -103,7 +102,7 @@ export default function SettingsPage() {
                 confirmPassword: "",
             });
 
-            // Déconnecter l'utilisateur après 3 secondes pour qu'il se reconnecte avec le nouveau mot de passe
+            // Déconnecter l&apos;utilisateur après 3 secondes pour qu&apos;il se reconnecte avec le nouveau mot de passe
             setTimeout(() => {
                 signOut({ callbackUrl: '/login?message=password-changed' });
             }, 3000);
@@ -113,11 +112,6 @@ export default function SettingsPage() {
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const handleSave = () => {
-        setIsLoading(true);
-        setTimeout(() => setIsLoading(false), 1000);
     };
 
     const toggleNotification = (key: keyof typeof notifications) => {
@@ -142,7 +136,7 @@ export default function SettingsPage() {
                 </div>
 
                 <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
-                    {/* Messages d'erreur et succès */}
+                    {/* Messages d&apos;erreur et succès */}
                     {passwordError && (
                         <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
                             <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={18} />

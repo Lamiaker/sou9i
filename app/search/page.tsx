@@ -21,7 +21,7 @@ const formatPrice = (price: number) => {
 export default function SearchPage() {
     const searchParams = useSearchParams();
     // Initialize query from URL, but also allow local state updates if needed
-    const initialQuery = searchParams.get("q") || "";
+    const initialQuery = searchParams?.get("q") ?? "";
 
     // States
     const [query, setQuery] = useState(initialQuery);
@@ -39,7 +39,7 @@ export default function SearchPage() {
 
     // Update query if URL changes
     useEffect(() => {
-        setQuery(searchParams.get("q") || "");
+        setQuery(searchParams?.get("q") ?? "");
     }, [searchParams]);
 
     // 1. Fetch Categories for the dropdown

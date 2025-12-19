@@ -16,7 +16,7 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
     // Routes où le header/footer ne doit PAS apparaître
     const isAdminRoute = pathname?.startsWith('/admin');
 
-    // Si c'est une route admin, afficher uniquement le contenu sans header/footer
+    // Si c&apos;est une route admin, afficher uniquement le contenu sans header/footer
     if (isAdminRoute) {
         return (
             <FavoritesProvider>

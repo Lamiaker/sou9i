@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { User, Mail, Phone, MapPin, Camera, Save, ShieldCheck, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +10,6 @@ import { ProfileSkeleton } from "@/components/layout/DashboardInnerSkeletons";
 
 export default function ProfilePage() {
     const { user: sessionUser, update: updateSession } = useAuth();
-    const router = useRouter();
     const { uploadImages, uploading } = useImageUpload();
 
     const [isLoading, setIsLoading] = useState(false);
@@ -32,8 +30,8 @@ export default function ProfilePage() {
                 } else {
                     console.error("Erreur chargement profil:", data.error);
                 }
-            } catch (error) {
-                console.error("Erreur connexion:", error);
+            } catch {
+                console.error("Erreur connexion");
             } finally {
                 setIsFetching(false);
             }
@@ -57,11 +55,11 @@ export default function ProfilePage() {
 
             // 2. Mise à jour du profil utilisateur via API
             // Note: Notre route API attend un patch avec les champs à modifier.
-            // On peut envoyer juste l'avatar.
+            // On peut envoyer juste l&apos;avatar.
 
             // Mais attendez, notre route API actuelle ne gère pas 'avatar' dans PATCH ! 
-            // Je dois vérifier ou modifier l'API pour accepter 'avatar'.
-            // Je vais supposer que je peux modifier l'API rapidement après.
+            // Je dois vérifier ou modifier l&apos;API pour accepter 'avatar'.
+            // Je vais supposer que je peux modifier l&apos;API rapidement après.
 
             const response = await fetch('/api/user/profile', {
                 method: 'PATCH',
@@ -79,8 +77,8 @@ export default function ProfilePage() {
                 setMessage({ type: 'success', text: 'Photo de profil mise à jour' });
             }
 
-        } catch (error) {
-            console.error("Upload error:", error);
+        } catch {
+            console.error("Upload error");
             setMessage({ type: 'error', text: 'Erreur lors du téléchargement de l\'image' });
         }
     };
@@ -97,7 +95,7 @@ export default function ProfilePage() {
             email: formData.get('email'),
             phone: formData.get('phone'),
             city: formData.get('city'),
-            // Bio n'est pas encore dans le modèle, on l'ignore pour l'instant
+            // Bio n&apos;est pas encore dans le modèle, on l&apos;ignore pour l&apos;instant
         };
 
         try {
@@ -119,7 +117,7 @@ export default function ProfilePage() {
             } else {
                 setMessage({ type: 'error', text: result.error || 'Erreur lors de la mise à jour' });
             }
-        } catch (error) {
+        } catch {
             setMessage({ type: 'error', text: 'Une erreur est survenue' });
         } finally {
             setIsLoading(false);
@@ -161,7 +159,7 @@ export default function ProfilePage() {
                                 />
                             </div>
 
-                            {/* Input file caché pour l'upload */}
+                            {/* Input file caché pour l&apos;upload */}
                             <label className="absolute inset-0 flex items-center justify-center rounded-full cursor-pointer group hover:bg-black/40 transition-colors z-10">
                                 <input
                                     type="file"
@@ -269,10 +267,10 @@ export default function ProfilePage() {
                                         className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     />
                                 </div>
-                                <p className="mt-1 text-xs text-gray-500">Cette ville sera pré-remplie lors de vos dépôts d'annonces.</p>
+                                <p className="mt-1 text-xs text-gray-500">Cette ville sera pré-remplie lors de vos dépôts d&apos;annonces.</p>
                             </div>
 
-                            {/* Bio commentée car pas dans le modèle User pour l'instant */}
+                            {/* Bio commentée car pas dans le modèle User pour l&apos;instant */}
                             {/* <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Bio (Optionnel)</label>
                                 <textarea

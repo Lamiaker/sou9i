@@ -13,7 +13,6 @@ import {
     XCircle,
     Archive,
     ExternalLink,
-    MapPin,
     User,
     ShieldCheck,
     AlertCircle
@@ -21,6 +20,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Ad {
     id: string;
@@ -80,13 +80,13 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
     const [loading, setLoading] = useState<string | null>(null);
 
     const handleAction = async (action: string, adId: string, extraData: any = {}) => {
-        // Validation : Empêcher l'approbation si l'utilisateur n'est pas vérifié
+        // Validation : Empêcher l&apos;approbation si l&apos;utilisateur n&apos;est pas vérifié
         if (action === 'approve') {
             const ad = ads.find(a => a.id === adId);
             if (ad) {
                 const userStatus = ad.user.verificationStatus;
                 if (userStatus !== 'VERIFIED' && userStatus !== 'TRUSTED') {
-                    alert("⚠️ Impossible de valider l'annonce.\n\nLe compte de l'utilisateur est en attente ou rejeté.\nVeuillez d'abord valider le compte de l'utilisateur dans la section 'Utilisateurs' avant de pouvoir approuver ses annonces.");
+                    alert("⚠️ Impossible de valider l&apos;annonce.\n\nLe compte de l&apos;utilisateur est en attente ou rejeté.\nVeuillez d&apos;abord valider le compte de l&apos;utilisateur dans la section 'Utilisateurs' avant de pouvoir approuver ses annonces.");
                     return;
                 }
             }
@@ -125,7 +125,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
     };
 
     const handleReject = (adId: string) => {
-        const reason = prompt("Raison du rejet de l'annonce :");
+        const reason = prompt("Raison du rejet de l&apos;annonce :");
         if (reason) {
             handleAction('reject', adId, { reason });
         }
@@ -169,7 +169,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                                         <div className="flex items-center gap-3">
                                             <div className="w-16 h-16 rounded-xl bg-white/10 flex-shrink-0 overflow-hidden">
                                                 {ad.images[0] ? (
-                                                    <img src={ad.images[0]} alt="" className="w-full h-full object-cover" />
+                                                    <Image src={ad.images[0]} alt="" width={64} height={64} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-white/20">
                                                         <Eye className="w-6 h-6" />
@@ -198,7 +198,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                                         <div className="flex items-center gap-2">
                                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                                 {ad.user.avatar ?
-                                                    <img src={ad.user.avatar} className="w-full h-full object-cover" /> :
+                                                    <Image src={ad.user.avatar} alt="" width={32} height={32} className="w-full h-full object-cover" /> :
                                                     <User className="w-4 h-4 text-white" />
                                                 }
                                             </div>
@@ -348,7 +348,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                             <div className="flex gap-3">
                                 <div className="w-20 h-20 rounded-xl bg-white/10 flex-shrink-0 overflow-hidden">
                                     {ad.images[0] ? (
-                                        <img src={ad.images[0]} alt="" className="w-full h-full object-cover" />
+                                        <Image src={ad.images[0]} alt="" width={80} height={80} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-white/20">
                                             <Eye className="w-6 h-6" />
@@ -402,7 +402,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                                                         className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2 transition-colors"
                                                     >
                                                         <ExternalLink className="w-4 h-4" />
-                                                        Voir l'annonce
+                                                        Voir l&apos;annonce
                                                     </Link>
                                                     {ad.status !== 'active' && (
                                                         <button

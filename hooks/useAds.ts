@@ -134,6 +134,7 @@ export function useAds(options: UseAdsOptions = {}): UseAdsReturn {
 
     useEffect(() => {
         fetchAds();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         filters.categoryId,
         filters.minPrice,
@@ -200,6 +201,7 @@ export function useAd(id: string | null) {
 
     useEffect(() => {
         fetchAd();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     return {

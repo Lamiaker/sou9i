@@ -9,6 +9,7 @@ import {
     Clock
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -68,7 +69,7 @@ export default async function AdminDashboardPage() {
                     Tableau de bord
                 </h1>
                 <p className="text-white/60">
-                    Bienvenue dans l'espace d'administration FemMarket
+                    Bienvenue dans l&apos;espace d&apos;administration FemMarket
                 </p>
             </div>
 
@@ -133,9 +134,11 @@ export default async function AdminDashboardPage() {
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
                                             {user.avatar ? (
-                                                <img
+                                                <Image
                                                     src={user.avatar}
                                                     alt={user.name || ''}
+                                                    width={40}
+                                                    height={40}
                                                     className="w-full h-full rounded-full object-cover"
                                                 />
                                             ) : (

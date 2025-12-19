@@ -16,6 +16,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Report {
     id: string;
@@ -153,7 +154,7 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                                 {report.reporter.avatar ? (
-                                                    <img src={report.reporter.avatar} alt="" className="w-full h-full object-cover" />
+                                                    <Image src={report.reporter.avatar} alt="" width={40} height={40} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <User className="w-5 h-5 text-white" />
                                                 )}
@@ -176,7 +177,7 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-lg bg-white/10 flex-shrink-0 overflow-hidden">
                                                     {report.ad.images[0] ? (
-                                                        <img src={report.ad.images[0]} alt="" className="w-full h-full object-cover" />
+                                                        <Image src={report.ad.images[0]} alt="" width={40} height={40} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <ShoppingBag className="w-5 h-5 text-white/20 m-auto" />
                                                     )}
@@ -190,7 +191,7 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                                                         target="_blank"
                                                         className="text-cyan-400 text-xs hover:underline inline-flex items-center gap-1"
                                                     >
-                                                        Voir l'annonce
+                                                        Voir l&apos;annonce
                                                         <ExternalLink className="w-3 h-3" />
                                                     </Link>
                                                 </div>
@@ -202,7 +203,7 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                                     {report.reportedUser.avatar ? (
-                                                        <img src={report.reportedUser.avatar} alt="" className="w-full h-full object-cover" />
+                                                        <Image src={report.reportedUser.avatar} alt="" width={40} height={40} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <User className="w-5 h-5 text-white" />
                                                     )}

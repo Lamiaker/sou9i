@@ -6,7 +6,7 @@ import { UserService } from '@/services';
 import { unlink } from 'fs/promises';
 import path from 'path';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const session = await getServerSession(authOptions);
 

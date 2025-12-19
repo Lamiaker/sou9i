@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 export interface Category {
     id: string;
@@ -72,6 +72,7 @@ export function useCategories(options: UseCategoriesOptions = {}): UseCategories
 
     useEffect(() => {
         fetchCategories();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [type, withCount, parentId]);
 
     return {
@@ -96,9 +97,9 @@ export function useCategory(idOrSlug: string) {
             const response = await fetch(`/api/categories/${idOrSlug}`);
 
             if (!response.ok) {
-               
+
                 setCategory(null);
-                 return;
+                return;
             }
 
 
@@ -121,6 +122,7 @@ export function useCategory(idOrSlug: string) {
         if (idOrSlug) {
             fetchCategory();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idOrSlug]);
 
     return {

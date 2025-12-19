@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 
 import Image from "next/image";
-import { Plus, Bell, Heart, Mail, User, Search, Menu, X, MessageCircle, Gift } from "lucide-react";
+import { Plus, Bell, Heart, Mail, Search, Menu, X, MessageCircle, Gift } from "lucide-react";
 import logo from "@/public/logo.png";
 import SearchBar from "./SearchBar";
 import ListeCategorices from "./ListeCategorices";

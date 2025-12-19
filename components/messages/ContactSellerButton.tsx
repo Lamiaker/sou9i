@@ -95,7 +95,7 @@ export default function ContactSellerButton({
         lg: 22,
     }
 
-    // Si c'est l'utilisateur lui-même, ne pas afficher le bouton
+    // Si c&apos;est l&apos;utilisateur lui-même, ne pas afficher le bouton
     if (session?.user?.id === sellerId) {
         return null
     }
