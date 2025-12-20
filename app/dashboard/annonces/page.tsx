@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
     Plus, Search, Edit, Trash2, Eye, Loader2,
-    AlertCircle, CheckCircle, PackageX
+    AlertCircle, CheckCircle, PackageX, Clock, Info
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAds } from "@/hooks/useAds";
@@ -37,6 +37,7 @@ export default function MesAnnoncesPage() {
         },
         limit: 50,
         enabled: !!user?.id && isAuthenticated,
+        refreshInterval: 10000, // Rafraîchir toutes les 10s pour voir les changements de statut (admin)
     });
 
     // Redirection si non connecté
@@ -110,22 +111,22 @@ export default function MesAnnoncesPage() {
     const getStatusDisplay = (ad: any) => {
         // Priorité au statut de modération si rejeté ou en attente
         if (ad.moderationStatus === 'REJECTED') {
-            return { label: 'Refusé', color: 'bg-red-100 text-red-800', icon: AlertCircle };
+            return { label: 'Rejetée', color: 'bg-red-50 text-red-700 border border-red-100', icon: AlertCircle };
         }
         if (ad.moderationStatus === 'PENDING') {
-            return { label: 'En examen', color: 'bg-orange-100 text-orange-800', icon: Loader2 };
+            return { label: 'EN ATTENTE', color: 'bg-yellow-50 text-yellow-700 border border-yellow-100', icon: Clock };
         }
 
         // Sinon statut commercial
         switch (ad.status) {
             case 'active':
-                return { label: 'En ligne', color: 'bg-green-100 text-green-800', icon: CheckCircle };
-            case 'pending': // Ancien statut pending, peut être utilisé comme draft ?
-                return { label: 'Brouillon', color: 'bg-gray-100 text-gray-800', icon: Edit };
+                return { label: 'En ligne', color: 'bg-green-50 text-green-700 border border-green-100', icon: CheckCircle };
+            case 'pending':
+                return { label: 'Brouillon', color: 'bg-gray-50 text-gray-700 border border-gray-100', icon: Edit };
             case 'sold':
-                return { label: 'Vendu', color: 'bg-blue-100 text-blue-800', icon: PackageX };
+                return { label: 'Vendu', color: 'bg-blue-50 text-blue-700 border border-blue-100', icon: PackageX };
             default:
-                return { label: ad.status, color: 'bg-gray-100 text-gray-800', icon: AlertCircle };
+                return { label: ad.status, color: 'bg-gray-50 text-gray-700 border border-gray-100', icon: AlertCircle };
         }
     };
 
@@ -248,16 +249,19 @@ export default function MesAnnoncesPage() {
                                             <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                                                 {formatDate(ad.createdAt)}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-col items-start gap-1">
-                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                                                        <StatusIcon size={12} />
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm ${statusInfo.color}`}>
+                                                        <StatusIcon size={14} />
                                                         {statusInfo.label}
                                                     </span>
                                                     {ad.moderationStatus === 'REJECTED' && ad.rejectionReason && (
-                                                        <span className="text-xs text-red-600 max-w-[150px] truncate" title={ad.rejectionReason}>
-                                                            {ad.rejectionReason}
-                                                        </span>
+                                                        <div className="flex items-start gap-1 p-1.5 bg-red-50/50 rounded-md border border-red-200/50 max-w-[200px]">
+                                                            <Info size={12} className="text-red-500 mt-0.5 flex-shrink-0" />
+                                                            <p className="text-[10px] text-red-600 leading-tight font-medium" title={ad.rejectionReason}>
+                                                                {ad.rejectionReason}
+                                                            </p>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </td>

@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
             search: searchParams.get('search') || undefined,
             status: searchParams.get('status') || 'active',
             userId: searchParams.get('userId') || undefined,
+            moderationStatus: searchParams.get('moderationStatus') || undefined,
         }
 
         // Pagination
@@ -101,6 +102,8 @@ export async function POST(request: NextRequest) {
         // On revalide aussi la page de la catégorie spécifique si possible, mais globalement /categories suffit souvent
         // pour les compteurs globaux. Pour la page de la catégorie spécifique :
         revalidatePath('/categories/[slug]', 'page');
+        revalidatePath('/admin/ads');
+        revalidatePath('/admin');
 
         return NextResponse.json({
             success: true,

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { mutate } from 'swr';
 import {
     MoreVertical,
     Trash2,
@@ -66,6 +67,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
     active: { label: 'Active', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: CheckCircle },
     sold: { label: 'Vendue', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: CheckCircle },
     archived: { label: 'Archivée', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: Archive },
+    deleted: { label: 'Supprimée', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: Trash2 },
 };
 
 const moderationConfig: Record<string, { label: string; color: string; icon: any }> = {
@@ -115,6 +117,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
 
             // Notification simple
             // alert(data.message);
+            mutate((key) => typeof key === 'string' && (key.startsWith('/api/ads') || key.startsWith('/api/admin/ads')));
             router.refresh();
         } catch (error: any) {
             console.error('Error:', error);

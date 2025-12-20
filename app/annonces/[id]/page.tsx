@@ -21,8 +21,8 @@ export default function AdDetailPage() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [showPhone, setShowPhone] = useState(false);
 
-    // Récupérer l'annonce depuis l'API
-    const { ad, loading, error } = useAd(id);
+    // Récupérer l'annonce depuis l'API (avec polling de 10s pour le status)
+    const { ad, loading, error } = useAd(id, { refreshInterval: 10000 });
 
     // Récupérer les annonces similaires (même catégorie)
     const { ads: similarAds } = useAds({

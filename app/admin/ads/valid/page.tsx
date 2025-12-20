@@ -1,12 +1,10 @@
 "use client";
 
-import { use, useState, useEffect } from 'react';
+import { use } from 'react';
 import AdsTable from '@/components/admin/AdsTable';
-import { ShoppingBag, Search, Filter, Clock } from 'lucide-react';
+import { CheckCircle, Search, Filter } from 'lucide-react';
 import { useAds } from '@/hooks/useAds';
 import AdsNav from '@/components/admin/AdsNav';
-
-export const dynamic = 'force-dynamic';
 
 interface PageProps {
     searchParams: Promise<{
@@ -16,7 +14,7 @@ interface PageProps {
     }>;
 }
 
-export default function AdminAdsPage({ searchParams }: PageProps) {
+export default function ValidAdsPage({ searchParams }: PageProps) {
     const params = use(searchParams);
     const page = parseInt(params.page || '1');
     const search = params.search || '';
@@ -27,10 +25,10 @@ export default function AdminAdsPage({ searchParams }: PageProps) {
         limit: 20,
         filters: {
             search,
-            moderationStatus: 'PENDING' // Uniquement les annonces en attente
+            status: status || 'active',
+            moderationStatus: 'APPROVED' // Uniquement les annonces validées
         },
-        isAdmin: true,
-        refreshInterval: 15000 // Polling 15s via SWR
+        isAdmin: true
     });
 
     if (!pagination && loading) {
@@ -50,13 +48,13 @@ export default function AdminAdsPage({ searchParams }: PageProps) {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                            <CheckCircle className="w-5 h-5 text-white" />
                         </div>
-                        Annonces en attente
+                        Annonces Validées
                     </h1>
                     <p className="text-white/60 mt-1">
-                        {safePagination.total} annonce{safePagination.total > 1 ? 's' : ''} au total
+                        {safePagination.total} annonce{safePagination.total > 1 ? 's' : ''} validée{safePagination.total > 1 ? 's' : ''}
                     </p>
                 </div>
             </div>
@@ -64,7 +62,6 @@ export default function AdminAdsPage({ searchParams }: PageProps) {
             {/* Filters */}
             <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-4 lg:p-6">
                 <form className="flex flex-col lg:flex-row gap-4">
-                    {/* Search */}
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                         <input
@@ -72,26 +69,13 @@ export default function AdminAdsPage({ searchParams }: PageProps) {
                             name="search"
                             defaultValue={search}
                             placeholder="Rechercher par titre..."
-                            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
                         />
                     </div>
 
-                    {/* Status Filter */}
-                    <select
-                        name="status"
-                        defaultValue={status}
-                        className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all appearance-none cursor-pointer"
-                    >
-                        <option value="" className="bg-slate-800">Tous les statuts</option>
-                        <option value="active" className="bg-slate-800">Active</option>
-                        <option value="sold" className="bg-slate-800">Vendue</option>
-                        <option value="archived" className="bg-slate-800">Archivée</option>
-                    </select>
-
-                    {/* Submit */}
                     <button
                         type="submit"
-                        className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2"
+                        className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2"
                     >
                         <Filter className="w-4 h-4" />
                         Filtrer

@@ -1,4 +1,6 @@
-import { AdminService } from '@/services';
+"use client";
+
+import useSWR from 'swr';
 import {
     Users,
     ShoppingBag,
@@ -13,18 +15,23 @@ import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-export const dynamic = 'force-dynamic';
+export default function AdminDashboardPage() {
+    const { data, error } = useSWR('/api/admin/dashboard', {
+        refreshInterval: 30000 // Polling 30s
+    });
 
-async function getDashboardData() {
-    const [stats, activity] = await Promise.all([
-        AdminService.getDashboardStats(),
-        AdminService.getRecentActivity(),
-    ]);
-    return { stats, activity };
-}
+    if (!data && !error) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
-export default async function AdminDashboardPage() {
-    const { stats, activity } = await getDashboardData();
+    const { stats, activity } = data?.data || {
+        stats: { totalUsers: 0, newUsersThisMonth: 0, activeAds: 0, totalAds: 0, pendingReports: 0, totalCategories: 0 },
+        activity: { recentUsers: [], recentAds: [], recentReports: [] }
+    };
 
     const statCards = [
         {
@@ -129,7 +136,7 @@ export default async function AdminDashboardPage() {
                                 Aucun utilisateur récent
                             </div>
                         ) : (
-                            activity.recentUsers.map((user) => (
+                            activity.recentUsers.map((user: any) => (
                                 <div key={user.id} className="p-4 hover:bg-white/5 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
@@ -191,7 +198,7 @@ export default async function AdminDashboardPage() {
                                 Aucune annonce récente
                             </div>
                         ) : (
-                            activity.recentAds.map((ad) => (
+                            activity.recentAds.map((ad: any) => (
                                 <div key={ad.id} className="p-4 hover:bg-white/5 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
@@ -235,7 +242,7 @@ export default async function AdminDashboardPage() {
                     </div>
                     <div className="divide-y divide-white/5">
                         {activity.recentReports.length === 0 ? (
-                            <div className="p-6 text-center">
+                            <div className="p-10 text-center">
                                 <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-500/20 flex items-center justify-center">
                                     <AlertTriangle className="w-6 h-6 text-emerald-400" />
                                 </div>
@@ -247,7 +254,7 @@ export default async function AdminDashboardPage() {
                                 </p>
                             </div>
                         ) : (
-                            activity.recentReports.map((report) => (
+                            activity.recentReports.map((report: any) => (
                                 <div key={report.id} className="p-4 hover:bg-white/5 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0">

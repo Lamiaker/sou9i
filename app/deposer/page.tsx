@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { mutate } from "swr";
 import Image from "next/image";
 import {
     Camera, MapPin, Tag, DollarSign, Upload, X,
@@ -231,6 +232,9 @@ export default function DeposerAnnonce() {
                 if (remainingTime > 0) {
                     await new Promise(resolve => setTimeout(resolve, remainingTime));
                 }
+
+                // Forcer la mise à jour du cache SWR pour que l'admin et le vendeur voient l'annonce de suite
+                mutate((key) => typeof key === 'string' && key.startsWith('/api/ads'));
 
                 setSuccess(true);
 

@@ -4,6 +4,7 @@ import "./globals.css";
 
 import NextTopLoader from 'nextjs-toploader';
 import SessionProvider from "@/components/providers/SessionProvider";
+import SWRProvider from "@/components/providers/SWRProvider";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 
 const inter = Inter({
@@ -26,9 +27,11 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <NextTopLoader color="#ec4899" showSpinner={false} />
         <SessionProvider>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
+          <SWRProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+          </SWRProvider>
         </SessionProvider>
       </body>
     </html>

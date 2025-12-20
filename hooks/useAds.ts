@@ -1,3 +1,4 @@
+import useSWR from 'swr';
 import { useEffect, useState } from 'react';
 
 export interface Ad {
@@ -55,159 +56,80 @@ interface UseAdsOptions {
     filters?: AdFilters;
     page?: number;
     limit?: number;
-    enabled?: boolean; // Pour désactiver le fetch automatique
+    enabled?: boolean;
+    refreshInterval?: number;
+    isAdmin?: boolean;
 }
 
-interface UseAdsReturn {
-    ads: Ad[];
-    loading: boolean;
-    error: string | null;
-    pagination: {
-        page: number;
-        limit: number;
-        total: number;
-        totalPages: number;
-    } | null;
-    refetch: () => void;
-}
-
-export function useAds(options: UseAdsOptions = {}): UseAdsReturn {
+export function useAds(options: UseAdsOptions = {}) {
     const {
         filters = {},
         page = 1,
         limit = 12,
-        enabled = true
+        enabled = true,
+        refreshInterval = 0,
+        isAdmin = false
     } = options;
 
-    const [ads, setAds] = useState<Ad[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [pagination, setPagination] = useState<UseAdsReturn['pagination']>(null);
+    const params = new URLSearchParams();
+    if (filters.categoryId) params.append('categoryId', filters.categoryId);
+    if (filters.minPrice !== undefined) params.append('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
+    if (filters.location) params.append('location', filters.location);
+    if (filters.condition) params.append('condition', filters.condition);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.userId) params.append('userId', filters.userId);
+    if (filters.moderationStatus) params.append('moderationStatus', filters.moderationStatus);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
-    const fetchAds = async () => {
-        if (!enabled) return;
+    const queryString = params.toString();
+    const baseUrl = isAdmin ? '/api/admin/ads' : '/api/ads';
+    const url = enabled ? `${baseUrl}?${queryString}` : null;
 
-        try {
-            setLoading(true);
-            setError(null);
-
-            // Construire l'URL avec les paramètres
-            const params = new URLSearchParams();
-
-            // Filtres
-            if (filters.categoryId) params.append('categoryId', filters.categoryId);
-            if (filters.minPrice !== undefined) params.append('minPrice', filters.minPrice.toString());
-            if (filters.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
-            if (filters.location) params.append('location', filters.location);
-            if (filters.condition) params.append('condition', filters.condition);
-            if (filters.search) params.append('search', filters.search);
-            if (filters.status) params.append('status', filters.status);
-            if (filters.userId) params.append('userId', filters.userId);
-            if (filters.moderationStatus) params.append('moderationStatus', filters.moderationStatus);
-
-            // Pagination
-            params.append('page', page.toString());
-            params.append('limit', limit.toString());
-
-            const url = `/api/ads?${params.toString()}`;
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`Erreur ${response.status}: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                setAds(data.data);
-                setPagination(data.pagination);
-            } else {
-                throw new Error(data.error || 'Erreur lors de la récupération des annonces');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-            console.error('Error fetching ads:', err);
-        } finally {
-            setLoading(false);
+    const { data, error, mutate, isValidating } = useSWR(
+        url,
+        {
+            refreshInterval,
+            revalidateOnFocus: true,
+            dedupingInterval: 2000,
         }
-    };
-
-    useEffect(() => {
-        fetchAds();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        filters.categoryId,
-        filters.minPrice,
-        filters.maxPrice,
-        filters.location,
-        filters.condition,
-        filters.search,
-        filters.status,
-        filters.userId,
-        filters.moderationStatus,
-        page,
-        limit,
-        enabled,
-    ]);
+    );
 
     return {
-        ads,
-        loading,
-        error,
-        pagination,
-        refetch: fetchAds,
+        ads: (data?.data as Ad[]) || [],
+        loading: !data && !error,
+        error: error ? (error instanceof Error ? error.message : 'Une erreur est survenue') : (data?.success === false ? data.error : null),
+        pagination: data?.pagination || null,
+        refetch: mutate,
+        isValidating
     };
 }
 
-// Hook pour récupérer une seule annonce
-export function useAd(id: string | null) {
-    const [ad, setAd] = useState<Ad | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+export function useAd(id: string | null, options: { refreshInterval?: number } = {}) {
+    const { refreshInterval = 0 } = options;
+    const url = id ? `/api/ads/${id}` : null;
 
-    const fetchAd = async () => {
-        if (!id) {
-            setLoading(false);
-            return;
-        }
-
-        try {
-            setLoading(true);
-            setError(null);
-
-            const response = await fetch(`/api/ads/${id}`);
-
-            if (!response.ok) {
-                throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+    const { data, error, mutate, isValidating } = useSWR(
+        url,
+        {
+            refreshInterval,
+            revalidateOnFocus: true,
+            onSuccess: (data) => {
+                if (data.success && id) {
+                    // Incrémenter les vues (fire and forget)
+                    fetch(`/api/ads/${id}/views`, { method: 'POST' }).catch(console.error);
+                }
             }
-
-            const data = await response.json();
-
-            if (data.success) {
-                setAd(data.data);
-
-                // Incrémenter les vues (dans un appel séparé pour ne pas bloquer)
-                fetch(`/api/ads/${id}/views`, { method: 'POST' }).catch(console.error);
-            } else {
-                throw new Error(data.error || 'Erreur lors de la récupération de l\'annonce');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-            console.error('Error fetching ad:', err);
-        } finally {
-            setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        fetchAd();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+    );
 
     return {
-        ad,
-        loading,
-        error,
-        refetch: fetchAd,
+        ad: (data?.data as Ad) || null,
+        loading: !data && !error,
+        error: error ? (error instanceof Error ? error.message : 'Une erreur est survenue') : (data?.success === false ? data.error : null),
+        refetch: mutate,
+        isValidating
     };
 }
