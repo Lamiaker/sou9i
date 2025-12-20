@@ -13,12 +13,12 @@ interface PageProps {
     }>;
 }
 
-export default async function AdminUsersPage({ searchParams }: PageProps) {
+export default async function TrustedUsersPage({ searchParams }: PageProps) {
     const params = await searchParams;
     const page = parseInt(params.page || '1');
     const search = params.search || '';
     const role = params.role || '';
-    const status = 'PENDING'; // Défaut pour la page principale
+    const status = 'TRUSTED';
 
     const { users, pagination } = await AdminService.getUsers({
         page,
@@ -28,7 +28,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         status,
     });
 
-    // Format dates for client component serialization
     const formattedUsers = users.map((user: any) => ({
         ...user,
         createdAt: new Date(user.createdAt).toISOString(),
@@ -36,7 +35,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -46,7 +44,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                         Gestion des Utilisateurs
                     </h1>
                     <p className="text-white/60 mt-1">
-                        {pagination.total} utilisateur{pagination.total > 1 ? 's' : ''} en attente
+                        {pagination.total} utilisateur{pagination.total > 1 ? 's' : ''} de confiance
                     </p>
                 </div>
             </div>
@@ -56,7 +54,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
             {/* Filters */}
             <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-4 lg:p-6">
                 <form className="flex flex-col lg:flex-row gap-4">
-                    {/* Search */}
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                         <input
@@ -68,7 +65,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                         />
                     </div>
 
-                    {/* Role Filter */}
                     <select
                         name="role"
                         defaultValue={role}
@@ -79,7 +75,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                         <option value="ADMIN" className="bg-slate-800">Administrateurs</option>
                     </select>
 
-                    {/* Submit */}
                     <button
                         type="submit"
                         className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2"
@@ -90,7 +85,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                 </form>
             </div>
 
-            {/* Users Table */}
             <UsersTable users={formattedUsers} pagination={pagination} />
         </div>
     );

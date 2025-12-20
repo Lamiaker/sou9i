@@ -6,6 +6,7 @@ import NextTopLoader from 'nextjs-toploader';
 import SessionProvider from "@/components/providers/SessionProvider";
 import SWRProvider from "@/components/providers/SWRProvider";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
+import BanGuard from "@/components/auth/BanGuard";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,9 +29,11 @@ export default function RootLayout({
         <NextTopLoader color="#ec4899" showSpinner={false} />
         <SessionProvider>
           <SWRProvider>
-            <ConditionalLayout>
-              {children}
-            </ConditionalLayout>
+            <BanGuard>
+              <ConditionalLayout>
+                {children}
+              </ConditionalLayout>
+            </BanGuard>
           </SWRProvider>
         </SessionProvider>
       </body>

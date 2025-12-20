@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     MoreVertical,
@@ -33,6 +33,8 @@ interface User {
     verificationStatus: 'PENDING' | 'VERIFIED' | 'TRUSTED' | 'REJECTED';
     isTrusted: boolean;
     rejectionReason: string | null;
+    isBanned: boolean;
+    banReason: string | null;
     createdAt: Date | string;
     _count: {
         ads: number;
@@ -56,6 +58,22 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);
 
+    // Fermer le menu si on clique en dehors
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            // Si on clique en dehors du conteneur du menu actif
+            if (activeDropdown && !target.closest('.user-menu-container')) {
+                setActiveDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeDropdown]);
+
     const handleAction = async (action: string, userId: string, extraData: any = {}) => {
         // Confirmation pour Trusted User
         if (action === 'verify' && extraData?.trusted === true) {
@@ -72,7 +90,12 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
         setActiveDropdown(null);
 
         try {
-            const res = await fetch('/api/admin/users', {
+            // Utiliser l&apos;endpoint dédié pour le ban/unban, sinon l&apos;endpoint classique
+            const endpoint = (action === 'ban' || action === 'unban')
+                ? '/api/admin/users/status'
+                : '/api/admin/users';
+
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action, userId, ...extraData }),
@@ -102,6 +125,13 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
         }
     };
 
+    const handleBan = (userId: string) => {
+        const reason = prompt("Raison du blocage de l&apos;utilisateur :");
+        if (reason) {
+            handleAction('ban', userId, { reason });
+        }
+    };
+
     const goToPage = (page: number) => {
         const params = new URLSearchParams(window.location.search);
         params.set('page', page.toString());
@@ -109,6 +139,19 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
     };
 
     const getStatusBadge = (user: User) => {
+        // Le bannissement est prioritaire sur l'état de vérification
+        if (user.isBanned) {
+            return (
+                <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-600/20 text-red-500 border border-red-600/30"
+                    title={user.banReason || 'Aucune raison spécifiée'}
+                >
+                    <BadgeX className="w-3 h-3" />
+                    Banni
+                </span>
+            );
+        }
+
         switch (user.verificationStatus) {
             case 'TRUSTED':
                 return (
@@ -141,10 +184,20 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
         }
     };
 
+    const getBanBadge = (user: User) => {
+        if (!user.isBanned) return null;
+        return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white border border-red-500 shadow-lg shadow-red-900/20 animate-pulse" title={user.banReason || ''}>
+                <BadgeX className="w-2.5 h-2.5" />
+                BANNI
+            </span>
+        );
+    };
+
     return (
-        <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
+        <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
+            {/* Desktop Table (Visible overflow to prevent clipping dropdowns) */}
+            <div className="hidden lg:block overflow-visible">
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-white/10">
@@ -160,7 +213,7 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
                         {users.map((user) => (
                             <tr
                                 key={user.id}
-                                className={`hover:bg-white/5 transition-colors ${loading === user.id ? 'opacity-50' : ''}`}
+                                className={`hover:bg-white/5 transition-colors ${loading === user.id ? 'opacity-50' : ''} ${activeDropdown === user.id ? 'relative z-50' : ''}`}
                             >
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
@@ -178,6 +231,7 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
                                                 <span className="text-white font-medium">
                                                     {user.name || 'Utilisateur'}
                                                 </span>
+                                                {getBanBadge(user)}
                                             </div>
                                             <span className="text-white/40 text-sm">{user.email}</span>
                                         </div>
@@ -229,7 +283,159 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
                                     })}
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <div className="relative">
+                                    {user.role !== 'ADMIN' && (
+                                        <div className="relative user-menu-container">
+                                            <button
+                                                onClick={() => setActiveDropdown(activeDropdown === user.id ? null : user.id)}
+                                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                            >
+                                                <MoreVertical className="w-5 h-5 text-white/60" />
+                                            </button>
+
+                                            {activeDropdown === user.id && (
+                                                <div className="absolute right-full mr-2 top-0 w-56 bg-slate-800 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-right-2 duration-200">
+
+                                                    {/* Actions de vérification */}
+                                                    {user.verificationStatus !== 'TRUSTED' && (
+                                                        <button
+                                                            onClick={() => handleAction('verify', user.id, { trusted: true })}
+                                                            className="w-full px-4 py-3 text-left text-sm text-emerald-400 hover:bg-white/10 flex items-center gap-2 transition-colors"
+                                                            title="Les annonces de cet utilisateur seront auto-validées"
+                                                        >
+                                                            <Star className="w-4 h-4" />
+                                                            Marquer comme Confiance
+                                                        </button>
+                                                    )}
+
+                                                    {user.verificationStatus !== 'VERIFIED' && user.verificationStatus !== 'TRUSTED' && (
+                                                        <button
+                                                            onClick={() => handleAction('verify', user.id, { trusted: false })}
+                                                            className="w-full px-4 py-3 text-left text-sm text-blue-400 hover:bg-white/10 flex items-center gap-2 transition-colors"
+                                                        >
+                                                            <BadgeCheck className="w-4 h-4" />
+                                                            Vérifier (Standard)
+                                                        </button>
+                                                    )}
+
+                                                    {(user.verificationStatus === 'VERIFIED' || user.verificationStatus === 'TRUSTED') && (
+                                                        <button
+                                                            onClick={() => handleAction('unverify', user.id)}
+                                                            className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2 transition-colors"
+                                                        >
+                                                            <BadgeX className="w-4 h-4" />
+                                                            Retirer la vérification
+                                                        </button>
+                                                    )}
+
+                                                    {user.verificationStatus !== 'REJECTED' && (
+                                                        <button
+                                                            onClick={() => handleReject(user.id)}
+                                                            className="w-full px-4 py-3 text-left text-sm text-orange-400 hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
+                                                        >
+                                                            <AlertCircle className="w-4 h-4" />
+                                                            Rejeter / Invalider
+                                                        </button>
+                                                    )}
+
+                                                    {/* Actions de Blocage (Masquées pour les admins) */}
+                                                    {user.role !== 'ADMIN' && (
+                                                        <div className="border-t border-white/10 mt-1 pt-1">
+                                                            {user.isBanned ? (
+                                                                <button
+                                                                    onClick={() => handleAction('unban', user.id)}
+                                                                    className="w-full px-4 py-3 text-left text-sm text-emerald-400 hover:bg-white/10 flex items-center gap-2 transition-colors"
+                                                                >
+                                                                    <BadgeCheck className="w-4 h-4" />
+                                                                    Débloquer (Unban)
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => handleBan(user.id)}
+                                                                    className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+                                                                >
+                                                                    <BadgeX className="w-4 h-4" />
+                                                                    Bannir / Bloquer
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Action de suppression (Masquée pour les admins) */}
+                                                    {user.role !== 'ADMIN' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+                                                                    handleAction('delete', user.id);
+                                                                }
+                                                            }}
+                                                            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors border-t border-white/10"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Supprimer
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div >
+
+            {/* Mobile Cards */}
+            < div className="lg:hidden divide-y divide-white/5" >
+                {
+                    users.map((user) => (
+                        <div
+                            key={user.id}
+                            className={`p-4 ${loading === user.id ? 'opacity-50' : ''}`}
+                        >
+                            <div className="flex items-start gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                    {user.avatar ? (
+                                        <Image src={user.avatar} alt="" width={48} height={48} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-white font-bold">
+                                            {user.name?.charAt(0) || 'U'}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-white font-medium truncate">
+                                            {user.name || 'Utilisateur'}
+                                        </span>
+                                        <span className={`ml-auto px-2 py-0.5 rounded-full text-xs ${user.role === 'ADMIN'
+                                            ? 'bg-purple-500/20 text-cyan-400'
+                                            : 'bg-white/10 text-white/60'
+                                            }`}>
+                                            {user.role}
+                                        </span>
+                                    </div>
+                                    <p className="text-white/40 text-sm truncate mb-2">{user.email}</p>
+
+                                    <div className="mb-2">
+                                        {getStatusBadge(user)}
+                                    </div>
+
+                                    <div className="flex items-center gap-4 mt-2 text-white/40 text-xs">
+                                        <span className="flex items-center gap-1">
+                                            <ShoppingBag className="w-3 h-3" />
+                                            {user._count.ads} annonces
+                                        </span>
+                                        <span>
+                                            {formatDistanceToNow(new Date(user.createdAt), {
+                                                addSuffix: true,
+                                                locale: fr
+                                            })}
+                                        </span>
+                                    </div>
+                                </div>
+                                {user.role !== 'ADMIN' && (
+                                    <div className="relative user-menu-container">
                                         <button
                                             onClick={() => setActiveDropdown(activeDropdown === user.id ? null : user.id)}
                                             className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -238,244 +444,122 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
                                         </button>
 
                                         {activeDropdown === user.id && (
-                                            <div className="absolute right-0 top-full mt-1 w-56 bg-slate-800 border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
-
-                                                {/* Actions de vérification */}
+                                            <div className="absolute right-full mr-2 top-0 w-56 bg-slate-800 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-right-2 duration-200">
+                                                {/* Actions Mobile identiques / simplifiées si besoin */}
                                                 {user.verificationStatus !== 'TRUSTED' && (
                                                     <button
                                                         onClick={() => handleAction('verify', user.id, { trusted: true })}
-                                                        className="w-full px-4 py-3 text-left text-sm text-emerald-400 hover:bg-white/10 flex items-center gap-2 transition-colors"
-                                                        title="Les annonces de cet utilisateur seront auto-validées"
+                                                        className="w-full px-4 py-3 text-left text-sm text-emerald-400 hover:bg-white/10 flex items-center gap-2"
                                                     >
                                                         <Star className="w-4 h-4" />
-                                                        Marquer comme Confiance
+                                                        De Confiance
                                                     </button>
                                                 )}
 
                                                 {user.verificationStatus !== 'VERIFIED' && user.verificationStatus !== 'TRUSTED' && (
                                                     <button
                                                         onClick={() => handleAction('verify', user.id, { trusted: false })}
-                                                        className="w-full px-4 py-3 text-left text-sm text-blue-400 hover:bg-white/10 flex items-center gap-2 transition-colors"
+                                                        className="w-full px-4 py-3 text-left text-sm text-blue-400 hover:bg-white/10 flex items-center gap-2"
                                                     >
                                                         <BadgeCheck className="w-4 h-4" />
-                                                        Vérifier (Standard)
+                                                        Vérifier
                                                     </button>
                                                 )}
 
                                                 {(user.verificationStatus === 'VERIFIED' || user.verificationStatus === 'TRUSTED') && (
                                                     <button
                                                         onClick={() => handleAction('unverify', user.id)}
-                                                        className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2 transition-colors"
+                                                        className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2"
                                                     >
                                                         <BadgeX className="w-4 h-4" />
-                                                        Retirer la vérification
+                                                        Retirer vérif.
                                                     </button>
                                                 )}
 
-                                                {user.verificationStatus !== 'REJECTED' && (
+                                                {/* Actions de Blocage (Masquées pour les admins) */}
+                                                {user.role !== 'ADMIN' && (
+                                                    <div className="border-t border-white/10 mt-1 pt-1">
+                                                        {user.isBanned ? (
+                                                            <button
+                                                                onClick={() => handleAction('unban', user.id)}
+                                                                className="w-full px-4 py-3 text-left text-sm text-emerald-400 hover:bg-white/10 flex items-center gap-2"
+                                                            >
+                                                                <BadgeCheck className="w-4 h-4" />
+                                                                Débloquer (Unban)
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleBan(user.id)}
+                                                                className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                                                            >
+                                                                <BadgeX className="w-4 h-4" />
+                                                                Bannir / Bloquer
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {user.role !== 'ADMIN' && (
                                                     <button
-                                                        onClick={() => handleReject(user.id)}
-                                                        className="w-full px-4 py-3 text-left text-sm text-orange-400 hover:bg-white/10 flex items-center gap-2 transition-colors border-t border-white/10"
+                                                        onClick={() => {
+                                                            if (confirm('Supprimer cet utilisateur ?')) {
+                                                                handleAction('delete', user.id);
+                                                            }
+                                                        }}
+                                                        className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 border-t border-white/10"
                                                     >
-                                                        <AlertCircle className="w-4 h-4" />
-                                                        Rejeter / Invalider
+                                                        <Trash2 className="w-4 h-4" />
+                                                        Supprimer
                                                     </button>
                                                 )}
-
-                                                {/* Actions Rôle Admmin */}
-                                                <div className="border-t border-white/10 mt-1 pt-1">
-                                                    {user.role === 'ADMIN' ? (
-                                                        <button
-                                                            onClick={() => handleAction('demote', user.id)}
-                                                            className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2 transition-colors"
-                                                        >
-                                                            <ShieldOff className="w-4 h-4" />
-                                                            Rétrograder en USER
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => handleAction('promote', user.id)}
-                                                            className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2 transition-colors"
-                                                        >
-                                                            <Shield className="w-4 h-4 text-cyan-400" />
-                                                            Promouvoir en ADMIN
-                                                        </button>
-                                                    )}
-                                                </div>
-
-                                                <button
-                                                    onClick={() => {
-                                                        if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-                                                            handleAction('delete', user.id);
-                                                        }
-                                                    }}
-                                                    className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors border-t border-white/10"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                    Supprimer
-                                                </button>
                                             </div>
                                         )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="lg:hidden divide-y divide-white/5">
-                {users.map((user) => (
-                    <div
-                        key={user.id}
-                        className={`p-4 ${loading === user.id ? 'opacity-50' : ''}`}
-                    >
-                        <div className="flex items-start gap-3">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                {user.avatar ? (
-                                    <Image src={user.avatar} alt="" width={48} height={48} className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="text-white font-bold">
-                                        {user.name?.charAt(0) || 'U'}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-white font-medium truncate">
-                                        {user.name || 'Utilisateur'}
-                                    </span>
-                                    <span className={`ml-auto px-2 py-0.5 rounded-full text-xs ${user.role === 'ADMIN'
-                                        ? 'bg-purple-500/20 text-cyan-400'
-                                        : 'bg-white/10 text-white/60'
-                                        }`}>
-                                        {user.role}
-                                    </span>
-                                </div>
-                                <p className="text-white/40 text-sm truncate mb-2">{user.email}</p>
-
-                                <div className="mb-2">
-                                    {getStatusBadge(user)}
-                                </div>
-
-                                <div className="flex items-center gap-4 mt-2 text-white/40 text-xs">
-                                    <span className="flex items-center gap-1">
-                                        <ShoppingBag className="w-3 h-3" />
-                                        {user._count.ads} annonces
-                                    </span>
-                                    <span>
-                                        {formatDistanceToNow(new Date(user.createdAt), {
-                                            addSuffix: true,
-                                            locale: fr
-                                        })}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="relative">
-                                <button
-                                    onClick={() => setActiveDropdown(activeDropdown === user.id ? null : user.id)}
-                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                                >
-                                    <MoreVertical className="w-5 h-5 text-white/60" />
-                                </button>
-
-                                {activeDropdown === user.id && (
-                                    <div className="absolute right-0 top-full mt-1 w-56 bg-slate-800 border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
-                                        {/* Actions Mobile identiques / simplifiées si besoin */}
-                                        {user.verificationStatus !== 'TRUSTED' && (
-                                            <button
-                                                onClick={() => handleAction('verify', user.id, { trusted: true })}
-                                                className="w-full px-4 py-3 text-left text-sm text-emerald-400 hover:bg-white/10 flex items-center gap-2"
-                                            >
-                                                <Star className="w-4 h-4" />
-                                                De Confiance
-                                            </button>
-                                        )}
-
-                                        {user.verificationStatus !== 'VERIFIED' && user.verificationStatus !== 'TRUSTED' && (
-                                            <button
-                                                onClick={() => handleAction('verify', user.id, { trusted: false })}
-                                                className="w-full px-4 py-3 text-left text-sm text-blue-400 hover:bg-white/10 flex items-center gap-2"
-                                            >
-                                                <BadgeCheck className="w-4 h-4" />
-                                                Vérifier
-                                            </button>
-                                        )}
-
-                                        {(user.verificationStatus === 'VERIFIED' || user.verificationStatus === 'TRUSTED') && (
-                                            <button
-                                                onClick={() => handleAction('unverify', user.id)}
-                                                className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2"
-                                            >
-                                                <BadgeX className="w-4 h-4" />
-                                                Retirer vérif.
-                                            </button>
-                                        )}
-
-                                        {user.verificationStatus !== 'REJECTED' && (
-                                            <button
-                                                onClick={() => handleReject(user.id)}
-                                                className="w-full px-4 py-3 text-left text-sm text-orange-400 hover:bg-white/10 flex items-center gap-2 border-t border-white/10"
-                                            >
-                                                <AlertCircle className="w-4 h-4" />
-                                                Rejeter
-                                            </button>
-                                        )}
-
-                                        <button
-                                            onClick={() => {
-                                                if (confirm('Supprimer cet utilisateur ?')) {
-                                                    handleAction('delete', user.id);
-                                                }
-                                            }}
-                                            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 border-t border-white/10"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                            Supprimer
-                                        </button>
                                     </div>
                                 )}
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))
+                }
+            </div >
 
             {/* Empty State */}
-            {users.length === 0 && (
-                <div className="p-12 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                        <User className="w-8 h-8 text-white/20" />
+            {
+                users.length === 0 && (
+                    <div className="p-12 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                            <User className="w-8 h-8 text-white/20" />
+                        </div>
+                        <p className="text-white/60">Aucun utilisateur trouvé</p>
                     </div>
-                    <p className="text-white/60">Aucun utilisateur trouvé</p>
-                </div>
-            )}
+                )
+            }
 
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
-                    <p className="text-white/40 text-sm">
-                        Page {pagination.page} sur {pagination.totalPages}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => goToPage(pagination.page - 1)}
-                            disabled={pagination.page === 1}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <ChevronLeft className="w-5 h-5 text-white" />
-                        </button>
-                        <button
-                            onClick={() => goToPage(pagination.page + 1)}
-                            disabled={pagination.page === pagination.totalPages}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <ChevronRight className="w-5 h-5 text-white" />
-                        </button>
+            {
+                pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
+                        <p className="text-white/40 text-sm">
+                            Page {pagination.page} sur {pagination.totalPages}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => goToPage(pagination.page - 1)}
+                                disabled={pagination.page === 1}
+                                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft className="w-5 h-5 text-white" />
+                            </button>
+                            <button
+                                onClick={() => goToPage(pagination.page + 1)}
+                                disabled={pagination.page === pagination.totalPages}
+                                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronRight className="w-5 h-5 text-white" />
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

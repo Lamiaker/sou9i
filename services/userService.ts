@@ -66,6 +66,9 @@ export class UserService {
                 verificationStatus: true,
                 isTrusted: true,
                 rejectionReason: true,
+                isBanned: true,
+                banReason: true,
+                bannedAt: true,
                 password: true, // Pour vérification
                 createdAt: true,
             },
@@ -90,6 +93,9 @@ export class UserService {
                 verificationStatus: true,
                 isTrusted: true,
                 rejectionReason: true,
+                isBanned: true,
+                banReason: true,
+                bannedAt: true,
                 createdAt: true,
                 _count: {
                     select: {

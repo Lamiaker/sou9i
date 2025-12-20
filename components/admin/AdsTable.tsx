@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { mutate } from 'swr';
 import {
@@ -80,6 +80,21 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
     const router = useRouter();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);
+
+    // Fermer le menu si on clique en dehors
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (activeDropdown && !target.closest('.ad-menu-container')) {
+                setActiveDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeDropdown]);
 
     const handleAction = async (action: string, adId: string, extraData: any = {}) => {
         // Validation : Empêcher l&apos;approbation si l&apos;utilisateur n&apos;est pas vérifié
@@ -242,7 +257,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                                         })}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <div className="relative flex items-center justify-end gap-2">
+                                        <div className="relative flex items-center justify-end gap-2 ad-menu-container">
                                             <Link
                                                 href={`/annonces/${ad.id}`}
                                                 target="_blank"
@@ -366,7 +381,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                                                 {ad.price.toLocaleString('fr-FR')} DA
                                             </p>
                                         </div>
-                                        <div className="relative">
+                                        <div className="relative ad-menu-container">
                                             <button
                                                 onClick={() => setActiveDropdown(activeDropdown === ad.id ? null : ad.id)}
                                                 className="p-2 hover:bg-white/10 rounded-lg transition-colors"

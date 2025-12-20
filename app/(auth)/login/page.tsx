@@ -60,7 +60,12 @@ function LoginForm() {
             });
 
             if (result?.error) {
-                setError("Email ou mot de passe incorrect");
+                // Si l&apos;erreur contient un message spécifique (ex: ban raison), on l&apos;affiche
+                if (result.error.includes("suspendu") || result.error.includes("banni")) {
+                    setError(result.error);
+                } else {
+                    setError("Email ou mot de passe incorrect");
+                }
                 return;
             }
 

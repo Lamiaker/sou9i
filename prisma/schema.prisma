@@ -61,6 +61,11 @@ model User {
   isTrusted           Boolean            @default(false) // Auto-approve les annonces
   rejectionReason     String?            // Raison du rejet (si applicable)
   
+  // Système de blocage
+  isBanned            Boolean            @default(false)
+  banReason           String?            // Raison du blocage
+  bannedAt            DateTime?          // Date du blocage
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -79,6 +84,7 @@ model User {
   @@index([email])
   @@index([role])
   @@index([verificationStatus])
+  @@index([isBanned])
 }
 
 // ============================================

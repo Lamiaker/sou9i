@@ -140,7 +140,15 @@ export class AdminService {
         }
 
         if (status) {
-            where.verificationStatus = status
+            // Pour les onglets spécifiques, on exclut les admins pour ne pas polluer les listes de validation
+            where.role = { not: 'ADMIN' };
+
+            if (status === 'BANNED') {
+                where.isBanned = true;
+            } else {
+                where.verificationStatus = status;
+                where.isBanned = false;
+            }
         }
 
         const [users, total] = await Promise.all([
@@ -159,6 +167,8 @@ export class AdminService {
                     role: true,
                     verificationStatus: true,
                     isTrusted: true,
+                    isBanned: true,
+                    banReason: true,
                     rejectionReason: true,
                     createdAt: true,
                     _count: {
