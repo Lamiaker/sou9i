@@ -82,6 +82,7 @@ export function SectionTendances({ title, items }: SectionTendancesProps) {
                 alt={item.title}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
+                unoptimized
               />
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />

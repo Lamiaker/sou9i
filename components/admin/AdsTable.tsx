@@ -187,7 +187,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                                         <div className="flex items-center gap-3">
                                             <div className="w-16 h-16 rounded-xl bg-white/10 flex-shrink-0 overflow-hidden">
                                                 {ad.images[0] ? (
-                                                    <Image src={ad.images[0]} alt="" width={64} height={64} className="w-full h-full object-cover" />
+                                                    <Image src={ad.images[0]} alt="" width={64} height={64} className="w-full h-full object-cover" unoptimized />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-white/20">
                                                         <Eye className="w-6 h-6" />
@@ -214,11 +214,15 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                {ad.user.avatar ?
-                                                    <Image src={ad.user.avatar} alt="" width={32} height={32} className="w-full h-full object-cover" /> :
-                                                    <User className="w-4 h-4 text-white" />
-                                                }
+                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-white/10">
+                                                <Image
+                                                    src={ad.user.avatar || "/user.png"}
+                                                    alt=""
+                                                    width={32}
+                                                    height={32}
+                                                    className="w-full h-full object-cover"
+                                                    unoptimized
+                                                />
                                             </div>
                                             <div>
                                                 <p className="text-white text-sm">{ad.user.name || 'Utilisateur'}</p>
@@ -366,7 +370,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
                             <div className="flex gap-3">
                                 <div className="w-20 h-20 rounded-xl bg-white/10 flex-shrink-0 overflow-hidden">
                                     {ad.images[0] ? (
-                                        <Image src={ad.images[0]} alt="" width={80} height={80} className="w-full h-full object-cover" />
+                                        <Image src={ad.images[0]} alt="" width={80} height={80} className="w-full h-full object-cover" unoptimized />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-white/20">
                                             <Eye className="w-6 h-6" />

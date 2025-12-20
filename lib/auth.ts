@@ -127,13 +127,15 @@ export const authOptions: NextAuthOptions = {
                 try {
                     const dbUser: any = await prisma.user.findUnique({
                         where: { id: token.id },
-                        select: { isBanned: true, role: true, banReason: true }
+                        select: { isBanned: true, role: true, banReason: true, name: true, avatar: true }
                     } as any);
 
                     if (dbUser) {
                         token.isBanned = dbUser.isBanned;
                         token.role = dbUser.role || 'USER';
                         token.banReason = dbUser.banReason || null;
+                        token.name = dbUser.name;
+                        token.picture = dbUser.avatar;
                     } else {
                         // Utilisateur supprimé
                         token.isBanned = true;
@@ -148,6 +150,8 @@ export const authOptions: NextAuthOptions = {
                 if (session.isBanned !== undefined) token.isBanned = session.isBanned;
                 if (session.role !== undefined) token.role = session.role;
                 if (session.banReason !== undefined) token.banReason = session.banReason;
+                if (session.name !== undefined) token.name = session.name;
+                if (session.image !== undefined) token.picture = session.image;
             }
 
             return token
@@ -158,6 +162,8 @@ export const authOptions: NextAuthOptions = {
                 session.user.role = token.role as 'USER' | 'ADMIN'
                 session.user.isBanned = token.isBanned as boolean
                 session.user.banReason = token.banReason as string | null
+                session.user.name = token.name as string
+                session.user.image = token.picture as string
             }
             return session
         },

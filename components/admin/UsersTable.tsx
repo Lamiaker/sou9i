@@ -217,14 +217,15 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
                             >
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                            {user.avatar ? (
-                                                <Image src={user.avatar} alt="" width={40} height={40} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <span className="text-white font-bold text-sm">
-                                                    {user.name?.charAt(0) || 'U'}
-                                                </span>
-                                            )}
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-white/10">
+                                            <Image
+                                                src={user.avatar || "/user.png"}
+                                                alt=""
+                                                width={40}
+                                                height={40}
+                                                className="w-full h-full object-cover"
+                                                unoptimized
+                                            />
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
@@ -394,14 +395,15 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
                             className={`p-4 ${loading === user.id ? 'opacity-50' : ''}`}
                         >
                             <div className="flex items-start gap-3">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                    {user.avatar ? (
-                                        <Image src={user.avatar} alt="" width={48} height={48} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span className="text-white font-bold">
-                                            {user.name?.charAt(0) || 'U'}
-                                        </span>
-                                    )}
+                                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-white/10">
+                                    <Image
+                                        src={user.avatar || "/user.png"}
+                                        alt=""
+                                        width={48}
+                                        height={48}
+                                        className="w-full h-full object-cover"
+                                        unoptimized
+                                    />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">

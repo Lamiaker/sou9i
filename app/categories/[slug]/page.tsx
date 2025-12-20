@@ -336,10 +336,11 @@ export default function CategoryPage() {
                                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition h-full flex flex-col">
                                             <div className="aspect-[4/3] relative bg-gray-100">
                                                 <Image
-                                                    src={ad.images[0] || '/placeholder-ad.jpg'}
+                                                    src={ad.images[0] || '/user.png'}
                                                     alt={ad.title}
                                                     fill
                                                     className="object-cover group-hover:scale-105 transition duration-300"
+                                                    unoptimized
                                                 />
                                                 <div className="absolute top-3 right-3">
                                                     <FavoriteButton adId={ad.id} size={18} />

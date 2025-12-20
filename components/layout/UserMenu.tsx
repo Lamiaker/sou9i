@@ -5,6 +5,7 @@ import { signOut } from 'next-auth/react'
 import { User, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 
 export default function UserMenu() {
     const { user, isAuthenticated, isLoading } = useAuth()
@@ -32,6 +33,7 @@ export default function UserMenu() {
     }
 
     if (!isAuthenticated || !user) {
+        console.log("User not authenticated or user not found", user)
         return (
             <>
                 {/* Desktop - Style avec texte */}
@@ -64,8 +66,14 @@ export default function UserMenu() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="hidden lg:flex items-center gap-2 hover:text-primary transition"
             >
-                <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-semibold">
-                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center font-semibold overflow-hidden relative border border-gray-200">
+                    <Image
+                        src={user.image || "/user.png"}
+                        alt={user.name || "User"}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                    />
                 </div>
                 <div className="hidden md:block text-left">
                     <p className="text-sm font-medium">{user.name}</p>

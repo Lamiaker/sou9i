@@ -121,6 +121,7 @@ export default function AdDetailPage() {
                                         fill
                                         className="object-contain"
                                         priority
+                                        unoptimized
                                     />
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-gray-400">
@@ -161,7 +162,7 @@ export default function AdDetailPage() {
                                             className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 ${currentImageIndex === idx ? "border-primary" : "border-transparent"
                                                 }`}
                                         >
-                                            <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover" />
+                                            <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover" unoptimized />
                                         </button>
                                     ))}
                                 </div>
@@ -266,14 +267,14 @@ export default function AdDetailPage() {
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <div className="flex items-center gap-4 mb-6">
                                     <div className="relative">
-                                        <div className="w-16 h-16 rounded-full overflow-hidden relative bg-gray-200">
-                                            {ad.user.avatar ? (
-                                                <Image src={ad.user.avatar} alt={ad.user.name || "Vendeur"} fill className="object-cover" />
-                                            ) : (
-                                                <div className="flex items-center justify-center h-full text-2xl font-bold text-gray-500">
-                                                    {ad.user.name?.charAt(0).toUpperCase() || "?"}
-                                                </div>
-                                            )}
+                                        <div className="w-16 h-16 rounded-full overflow-hidden relative bg-gray-100 border border-gray-100">
+                                            <Image
+                                                src={ad.user.avatar || "/user.png"}
+                                                alt={ad.user.name || "Vendeur"}
+                                                fill
+                                                className="object-cover"
+                                                unoptimized
+                                            />
                                         </div>
                                         {ad.user.isVerified && (
                                             <div className="absolute -bottom-1 -right-1 bg-green-500 text-white p-1 rounded-full border-2 border-white" title="Vendeur vérifié">
@@ -351,6 +352,7 @@ export default function AdDetailPage() {
                                                         alt={similarAd.title}
                                                         fill
                                                         className="object-cover group-hover:scale-105 transition duration-300"
+                                                        unoptimized
                                                     />
                                                 ) : (
                                                     <div className="flex items-center justify-center h-full text-gray-400">

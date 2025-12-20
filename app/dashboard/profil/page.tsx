@@ -152,13 +152,13 @@ export default function ProfilePage() {
                         <div className="relative group cursor-pointer">
                             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md relative bg-gray-100">
                                 <Image
-                                    src={userData.avatar || "/images/avatars/default-avatar.png"} // Fallback image doit exister dans public
+                                    src={userData.avatar || "/user.png"} // Fallback image doit exister dans public
                                     alt="Profile"
                                     fill
                                     className="object-cover"
+                                    unoptimized
                                 />
                             </div>
-
                             {/* Input file caché pour l&apos;upload */}
                             <label className="absolute inset-0 flex items-center justify-center rounded-full cursor-pointer group hover:bg-black/40 transition-colors z-10">
                                 <input

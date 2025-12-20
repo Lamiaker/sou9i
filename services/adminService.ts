@@ -77,11 +77,12 @@ export class AdminService {
                     id: true,
                     title: true,
                     price: true,
+                    images: true,
                     createdAt: true,
                     user: {
                         select: { name: true },
                     },
-                },
+                } as any,
             }),
             prisma.report.findMany({
                 take: 5,

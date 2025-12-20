@@ -113,6 +113,7 @@ export default function SectionFeatured({
                   alt={product.title}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  unoptimized
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-black/0 to-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -136,7 +137,15 @@ export default function SectionFeatured({
               <div className="p-4 space-y-3">
                 {/* Seller */}
                 <div className="flex items-center gap-2">
-                  <Image src={product.sellerAvatar} alt={product.sellerName} width={24} height={24} className="w-6 h-6 rounded-full object-cover border border-gray-100" />
+                  <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-100 relative">
+                    <Image
+                      src={product.sellerAvatar || "/user.png"}
+                      alt={product.sellerName}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
                   <span className="text-xs font-medium text-gray-500 truncate">{product.sellerName}</span>
                 </div>
 

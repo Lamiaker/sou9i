@@ -139,20 +139,15 @@ export default function AdminDashboardPage() {
                             activity.recentUsers.map((user: any) => (
                                 <div key={user.id} className="p-4 hover:bg-white/5 transition-colors">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
-                                            {user.avatar ? (
-                                                <Image
-                                                    src={user.avatar}
-                                                    alt={user.name || ''}
-                                                    width={40}
-                                                    height={40}
-                                                    className="w-full h-full rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <span className="text-white font-bold text-sm">
-                                                    {user.name?.charAt(0) || 'U'}
-                                                </span>
-                                            )}
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-white/10">
+                                            <Image
+                                                src={user.avatar || "/user.png"}
+                                                alt={user.name || ''}
+                                                width={40}
+                                                height={40}
+                                                className="w-full h-full object-cover"
+                                                unoptimized
+                                            />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-white text-sm font-medium truncate">
@@ -201,8 +196,19 @@ export default function AdminDashboardPage() {
                             activity.recentAds.map((ad: any) => (
                                 <div key={ad.id} className="p-4 hover:bg-white/5 transition-colors">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
-                                            <ShoppingBag className="w-5 h-5 text-white" />
+                                        <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-white/10">
+                                            {ad.images && ad.images[0] ? (
+                                                <Image
+                                                    src={ad.images[0]}
+                                                    alt={ad.title}
+                                                    width={40}
+                                                    height={40}
+                                                    className="w-full h-full object-cover"
+                                                    unoptimized
+                                                />
+                                            ) : (
+                                                <ShoppingBag className="w-5 h-5 text-white/40" />
+                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-white text-sm font-medium truncate">

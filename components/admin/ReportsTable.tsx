@@ -152,12 +152,15 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                                     <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                                         <p className="text-white/40 text-xs uppercase tracking-wider mb-2">Signalé par</p>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                {report.reporter.avatar ? (
-                                                    <Image src={report.reporter.avatar} alt="" width={40} height={40} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <User className="w-5 h-5 text-white" />
-                                                )}
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-white/10">
+                                                <Image
+                                                    src={report.reporter.avatar || "/user.png"}
+                                                    alt=""
+                                                    width={40}
+                                                    height={40}
+                                                    className="w-full h-full object-cover"
+                                                    unoptimized
+                                                />
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-white text-sm font-medium truncate">
@@ -175,9 +178,16 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                                             <p className="text-white/40 text-xs uppercase tracking-wider mb-2">Annonce signalée</p>
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg bg-white/10 flex-shrink-0 overflow-hidden">
+                                                <div className="w-10 h-10 rounded-lg bg-white/10 flex-shrink-0 overflow-hidden relative border border-white/10">
                                                     {report.ad.images[0] ? (
-                                                        <Image src={report.ad.images[0]} alt="" width={40} height={40} className="w-full h-full object-cover" />
+                                                        <Image
+                                                            src={report.ad.images[0]}
+                                                            alt=""
+                                                            width={40}
+                                                            height={40}
+                                                            className="w-full h-full object-cover"
+                                                            unoptimized
+                                                        />
                                                     ) : (
                                                         <ShoppingBag className="w-5 h-5 text-white/20 m-auto" />
                                                     )}
@@ -201,12 +211,15 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                                             <p className="text-white/40 text-xs uppercase tracking-wider mb-2">Utilisateur signalé</p>
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                    {report.reportedUser.avatar ? (
-                                                        <Image src={report.reportedUser.avatar} alt="" width={40} height={40} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <User className="w-5 h-5 text-white" />
-                                                    )}
+                                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-white/10">
+                                                    <Image
+                                                        src={report.reportedUser.avatar || "/user.png"}
+                                                        alt=""
+                                                        width={40}
+                                                        height={40}
+                                                        className="w-full h-full object-cover"
+                                                        unoptimized
+                                                    />
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-white text-sm font-medium truncate">

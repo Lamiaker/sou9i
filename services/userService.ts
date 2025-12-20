@@ -32,6 +32,7 @@ export class UserService {
                 password: hashedPassword,
                 phone: data.phone,
                 city: data.city,
+                avatar: '/user.png',
             },
             select: {
                 id: true,
@@ -71,7 +72,7 @@ export class UserService {
                 bannedAt: true,
                 password: true, // Pour vérification
                 createdAt: true,
-            },
+            } as any,
         })
     }
 
@@ -102,7 +103,7 @@ export class UserService {
                         ads: true,
                     }
                 }
-            },
+            } as any,
         })
     }
 
