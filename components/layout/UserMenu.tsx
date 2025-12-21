@@ -33,7 +33,6 @@ export default function UserMenu() {
     }
 
     if (!isAuthenticated || !user) {
-        console.log("User not authenticated or user not found", user)
         return (
             <>
                 {/* Desktop - Style avec texte */}

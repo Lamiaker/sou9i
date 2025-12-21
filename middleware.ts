@@ -39,9 +39,13 @@ export default withAuth(
 export const config = {
     matcher: [
         /*
-         * Appliquer à toutes les routes sauf API, statiques et auth pages
+         * Protéger uniquement les routes privées :
+         * - /dashboard/*
+         * - /deposer
+         * - /admin/*
          */
-        "/((?!api|_next/static|_next/image|favicon.ico|login|signup|banned).*)",
+        "/dashboard/:path*",
+        "/deposer",
+        "/admin/:path*",
     ],
 }
-

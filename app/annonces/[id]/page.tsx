@@ -5,10 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-    MapPin, Phone, Share2, Flag, Clock,
+    MapPin, Phone, Share2, Clock,
     ShieldCheck, ChevronRight, ChevronLeft, Eye
 } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
+import ReportButton from "@/components/ui/ReportButton";
 import { useAd } from "@/hooks/useAds";
 import { useAds } from "@/hooks/useAds";
 import AdDetailSkeleton from "@/components/layout/AdDetailSkeleton";
@@ -200,10 +201,11 @@ export default function AdDetailPage() {
                                     <Eye size={16} />
                                     {ad.views} vues
                                 </div>
-                                <button className="flex items-center gap-1 hover:text-red-500 transition">
-                                    <Flag size={16} />
-                                    Signaler
-                                </button>
+                                <ReportButton
+                                    adId={id}
+                                    adTitle={ad.title}
+                                    variant="text"
+                                />
                             </div>
 
                             {/* Specifications */}
@@ -311,11 +313,16 @@ export default function AdDetailPage() {
                                     />
                                 </div>
 
-                                <div className="mt-6 pt-6 border-t border-gray-100 text-xs text-gray-500 space-y-2">
+                                <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
                                     <p className="flex items-center gap-2">
                                         <Clock size={14} />
                                         Membre depuis {new Date(ad.user.createdAt).getFullYear()}
                                     </p>
+                                    <ReportButton
+                                        userId={ad.user.id}
+                                        userName={ad.user.name || 'Vendeur'}
+                                        variant="text"
+                                    />
                                 </div>
                             </div>
                         )}

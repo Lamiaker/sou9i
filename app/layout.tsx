@@ -7,6 +7,7 @@ import SessionProvider from "@/components/providers/SessionProvider";
 import SWRProvider from "@/components/providers/SWRProvider";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import BanGuard from "@/components/auth/BanGuard";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -15,7 +16,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "FemMarket - Achat et Vente entre femmes en Algérie",
-  description: "La première plateforme de vente et d&apos;achat dédiée aux femmes en Algérie.",
+  description: "La première plateforme de vente et d'achat dédiée aux femmes en Algérie.",
 };
 
 export default function RootLayout({
@@ -29,11 +30,13 @@ export default function RootLayout({
         <NextTopLoader color="#ec4899" showSpinner={false} />
         <SessionProvider>
           <SWRProvider>
-            <BanGuard>
-              <ConditionalLayout>
-                {children}
-              </ConditionalLayout>
-            </BanGuard>
+            <ToastProvider>
+              <BanGuard>
+                <ConditionalLayout>
+                  {children}
+                </ConditionalLayout>
+              </BanGuard>
+            </ToastProvider>
           </SWRProvider>
         </SessionProvider>
       </body>

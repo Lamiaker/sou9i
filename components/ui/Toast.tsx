@@ -33,31 +33,23 @@ export function useToast() {
 const toastConfig = {
     success: {
         icon: CheckCircle,
-        bgColor: 'bg-emerald-500/20',
-        borderColor: 'border-emerald-500/30',
-        textColor: 'text-emerald-400',
-        iconColor: 'text-emerald-400',
+        bgColor: 'bg-emerald-600',
+        borderColor: 'border-emerald-700',
     },
     error: {
         icon: XCircle,
-        bgColor: 'bg-red-500/20',
-        borderColor: 'border-red-500/30',
-        textColor: 'text-red-400',
-        iconColor: 'text-red-400',
+        bgColor: 'bg-red-600',
+        borderColor: 'border-red-700',
     },
     warning: {
         icon: AlertCircle,
-        bgColor: 'bg-amber-500/20',
-        borderColor: 'border-amber-500/30',
-        textColor: 'text-amber-400',
-        iconColor: 'text-amber-400',
+        bgColor: 'bg-amber-500',
+        borderColor: 'border-amber-600',
     },
     info: {
         icon: Info,
-        bgColor: 'bg-cyan-500/20',
-        borderColor: 'border-cyan-500/30',
-        textColor: 'text-cyan-400',
-        iconColor: 'text-cyan-400',
+        bgColor: 'bg-cyan-600',
+        borderColor: 'border-cyan-700',
     },
 };
 
@@ -67,15 +59,15 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
 
     return (
         <div
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-xl shadow-lg animate-in slide-in-from-right-5 duration-300 ${config.bgColor} ${config.borderColor}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl animate-in slide-in-from-top-5 duration-300 ${config.bgColor} ${config.borderColor}`}
         >
-            <Icon className={`w-5 h-5 flex-shrink-0 ${config.iconColor}`} />
-            <p className={`flex-1 text-sm font-medium ${config.textColor}`}>{toast.message}</p>
+            <Icon className="w-5 h-5 flex-shrink-0 text-white" />
+            <p className="flex-1 text-sm font-medium text-white">{toast.message}</p>
             <button
                 onClick={() => onRemove(toast.id)}
-                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
             >
-                <X className="w-4 h-4 text-white/60" />
+                <X className="w-4 h-4 text-white/80" />
             </button>
         </div>
     );
