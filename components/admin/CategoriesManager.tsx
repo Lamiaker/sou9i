@@ -8,7 +8,8 @@ import {
     Trash2,
     FolderTree,
     ShoppingBag,
-    Eye
+    Eye,
+    AlertTriangle
 } from 'lucide-react';
 import CategoryFormModal from './CategoryFormModal';
 import Link from 'next/link';
@@ -41,6 +42,13 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
     const [formData, setFormData] = useState({ name: '', slug: '', icon: '', description: '', parentId: '' });
     const [loading, setLoading] = useState(false);
     const toast = useToast();
+    const [confirmDelete, setConfirmDelete] = useState<{
+        show: boolean;
+        categoryId: string;
+        categoryName: string;
+        adsCount: number;
+        hasAds: boolean;
+    } | null>(null);
 
     useEffect(() => {
         setCategories(initialCategories);
@@ -98,29 +106,65 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
         }
     };
 
-    const handleDelete = async (categoryId: string) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
+    // Ouvrir le modal de confirmation
+    const initiateDelete = (categoryId: string, categoryName: string, adsCount: number = 0) => {
+        setConfirmDelete({
+            show: true,
+            categoryId,
+            categoryName,
+            adsCount,
+            hasAds: adsCount > 0
+        });
+    };
+
+    // Exécuter la suppression
+    const executeDelete = async (forceDelete: boolean = false) => {
+        if (!confirmDelete) return;
 
         setLoading(true);
         try {
             const res = await fetch('/api/admin/categories', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categoryId }),
+                body: JSON.stringify({
+                    categoryId: confirmDelete.categoryId,
+                    forceDelete
+                }),
             });
 
             const data = await res.json();
 
-            if (!res.ok) {
-                toast.error(data.error || 'Impossible de supprimer');
+            // Si la catégorie a des annonces et on n'a pas forcé la suppression
+            if (data.requiresConfirmation && data.hasAds && !forceDelete) {
+                setConfirmDelete(prev => prev ? {
+                    ...prev,
+                    adsCount: data.adsCount,
+                    hasAds: true
+                } : null);
+                setLoading(false);
                 return;
             }
 
-            toast.success('Catégorie supprimée avec succès');
+            if (!res.ok && !data.success) {
+                toast.error(data.error || 'Impossible de supprimer');
+                setConfirmDelete(null);
+                setLoading(false);
+                return;
+            }
+
+            // Succès
+            if (forceDelete && data.deletedAdsCount) {
+                toast.success(`Catégorie et ${data.deletedAdsCount} annonce(s) supprimées`);
+            } else {
+                toast.success('Catégorie supprimée avec succès');
+            }
+
+            setConfirmDelete(null);
             router.refresh();
         } catch (error) {
             console.error('Error:', error);
             toast.error('Une erreur est survenue');
+            setConfirmDelete(null);
         } finally {
             setLoading(false);
         }
@@ -188,7 +232,7 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
                             <Edit2 size={18} />
                         </button>
                         <button
-                            onClick={() => handleDelete(category.id)}
+                            onClick={() => initiateDelete(category.id, category.name, category._count?.ads || 0)}
                             className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                             title="Supprimer"
                         >
@@ -241,6 +285,75 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
                     categories.map((category) => renderCategory(category))
                 )}
             </div>
+
+            {/* Modal de confirmation pour suppression */}
+            {confirmDelete?.show && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                        onClick={() => !loading && setConfirmDelete(null)}
+                    />
+                    <div className={`relative bg-slate-900 border ${confirmDelete.hasAds ? 'border-red-500/30' : 'border-white/10'} rounded-2xl p-6 w-full max-w-md`}>
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className={`w-12 h-12 rounded-full ${confirmDelete.hasAds ? 'bg-red-500/20' : 'bg-amber-500/20'} flex items-center justify-center`}>
+                                <AlertTriangle className={`w-6 h-6 ${confirmDelete.hasAds ? 'text-red-400' : 'text-amber-400'}`} />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white">
+                                    {confirmDelete.hasAds ? 'Attention !' : 'Confirmer la suppression'}
+                                </h2>
+                                <p className={`${confirmDelete.hasAds ? 'text-red-400' : 'text-amber-400'} text-sm`}>
+                                    {confirmDelete.hasAds ? 'Suppression définitive' : 'Cette action est irréversible'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {confirmDelete.hasAds ? (
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
+                                <p className="text-white/90 mb-2">
+                                    La catégorie <strong>&quot;{confirmDelete.categoryName}&quot;</strong> contient :
+                                </p>
+                                <p className="text-red-400 font-bold text-lg">
+                                    {confirmDelete.adsCount} annonce{confirmDelete.adsCount > 1 ? 's' : ''}
+                                </p>
+                                <p className="text-white/60 text-sm mt-2">
+                                    Si vous confirmez, toutes ces annonces seront supprimées définitivement.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+                                <p className="text-white/90">
+                                    Êtes-vous sûr de vouloir supprimer la catégorie <strong>&quot;{confirmDelete.categoryName}&quot;</strong> ?
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmDelete(null)}
+                                disabled={loading}
+                                className="flex-1 px-4 py-3 bg-white/5 border border-white/10 text-white/80 font-medium rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={() => executeDelete(confirmDelete.hasAds)}
+                                disabled={loading}
+                                className={`flex-1 px-4 py-3 ${confirmDelete.hasAds ? 'bg-red-500 hover:bg-red-600' : 'bg-amber-500 hover:bg-amber-600'} text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2`}
+                            >
+                                {loading ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-5 h-5" />
+                                        {confirmDelete.hasAds ? 'Supprimer tout' : 'Supprimer'}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal */}
             <CategoryFormModal

@@ -628,6 +628,16 @@ export class AdminService {
             throw new Error('Une catégorie ne peut pas être son propre parent');
         }
 
+        // Vérifier que le parentId existe (si fourni et non vide)
+        if (data.parentId && data.parentId.trim() !== '') {
+            const parentExists = await prisma.category.findUnique({
+                where: { id: data.parentId }
+            });
+            if (!parentExists) {
+                throw new Error('La catégorie parente sélectionnée n\'existe pas');
+            }
+        }
+
         // Vérifier si une autre catégorie avec ce slug existe déjà
         if (data.slug) {
             const existing = await prisma.category.findFirst({
@@ -642,9 +652,15 @@ export class AdminService {
             }
         }
 
+        // Nettoyer parentId si vide (pour enlever le parent)
+        const cleanData = { ...data };
+        if (cleanData.parentId === '' || cleanData.parentId === undefined) {
+            cleanData.parentId = null;
+        }
+
         return prisma.category.update({
             where: { id: categoryId },
-            data,
+            data: cleanData,
         })
     }
 
