@@ -1,38 +1,69 @@
-import { AdminService } from '@/services';
+"use client";
+
+import { useState, useEffect } from 'react';
+import useSWR from 'swr';
+import { useSearchParams, useRouter } from 'next/navigation';
 import UsersTable from '@/components/admin/UsersTable';
 import UsersNav from '@/components/admin/UsersNav';
-import { Users, Search, Filter } from 'lucide-react';
+import { Users, Search, Filter, RefreshCw } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+// SWR fetcher
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-interface PageProps {
-    searchParams: Promise<{
-        page?: string;
-        search?: string;
-        role?: string;
-    }>;
-}
+export default function AdminUsersPage() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
-export default async function AdminUsersPage({ searchParams }: PageProps) {
-    const params = await searchParams;
-    const page = parseInt(params.page || '1');
-    const search = params.search || '';
-    const role = params.role || '';
+    // Get params from URL
+    const page = parseInt(searchParams?.get('page') || '1');
+    const search = searchParams?.get('search') || '';
+    const role = searchParams?.get('role') || '';
     const status = 'PENDING'; // Défaut pour la page principale
 
-    const { users, pagination } = await AdminService.getUsers({
-        page,
-        limit: 20,
-        search,
-        role,
-        status,
+    // Build API URL with query params
+    const apiUrl = `/api/admin/users?page=${page}&limit=20&search=${encodeURIComponent(search)}&role=${role}&status=${status}`;
+
+    // SWR with auto-refresh every 10 seconds
+    const { data, error, isLoading, isValidating, mutate } = useSWR(apiUrl, fetcher, {
+        refreshInterval: 10000, // Polling toutes les 10 secondes
+        revalidateOnFocus: true,
+        dedupingInterval: 2000,
     });
 
-    // Format dates for client component serialization
-    const formattedUsers = users.map((user: any) => ({
-        ...user,
-        createdAt: new Date(user.createdAt).toISOString(),
-    }));
+    const users = data?.users || [];
+    const pagination = data?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 };
+
+    // Handle form submit for filters
+    const handleFilterSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const params = new URLSearchParams();
+
+        const searchValue = formData.get('search') as string;
+        const roleValue = formData.get('role') as string;
+
+        if (searchValue) params.set('search', searchValue);
+        if (roleValue) params.set('role', roleValue);
+        params.set('page', '1');
+
+        router.push(`/admin/users?${params.toString()}`);
+    };
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <p className="text-red-400 mb-2">Erreur de chargement</p>
+                    <button
+                        onClick={() => mutate()}
+                        className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
+                    >
+                        Réessayer
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -45,9 +76,14 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                         </div>
                         Gestion des Utilisateurs
                     </h1>
-                    <p className="text-white/60 mt-1">
-                        {pagination.total} utilisateur{pagination.total > 1 ? 's' : ''} en attente
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-white/60">
+                            {pagination.total} utilisateur{pagination.total > 1 ? 's' : ''} en attente
+                        </p>
+                        {isValidating && !isLoading && (
+                            <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -55,7 +91,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
 
             {/* Filters */}
             <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-4 lg:p-6">
-                <form className="flex flex-col lg:flex-row gap-4">
+                <form onSubmit={handleFilterSubmit} className="flex flex-col lg:flex-row gap-4">
                     {/* Search */}
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
@@ -90,8 +126,18 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                 </form>
             </div>
 
-            {/* Users Table */}
-            <UsersTable users={formattedUsers} pagination={pagination} />
+            {/* Loading State */}
+            {isLoading ? (
+                <div className="flex items-center justify-center min-h-[300px]">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+                        <p className="text-white/60">Chargement des utilisateurs...</p>
+                    </div>
+                </div>
+            ) : (
+                /* Users Table */
+                <UsersTable users={users} pagination={pagination} onMutate={mutate} />
+            )}
         </div>
     );
 }

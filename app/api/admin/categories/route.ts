@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { AdminService } from '@/services';
+import { revalidatePath } from 'next/cache';
+
+// Helper function to revalidate all category-related pages
+function revalidateCategoryPages(slug?: string) {
+    revalidatePath('/');                    // Homepage
+    revalidatePath('/categories');          // Categories list page
+    revalidatePath('/categories/[slug]', 'page'); // All category pages
+    if (slug) {
+        revalidatePath(`/categories/${slug}`); // Specific category page
+    }
+}
 
 // Create category
 export async function POST(request: NextRequest) {
@@ -27,10 +38,16 @@ export async function POST(request: NextRequest) {
             parentId: parentId || undefined,
         });
 
+        // Revalidate pages to show new category
+        revalidateCategoryPages(slug);
+
         return NextResponse.json({ success: true, category });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Create category error:', error);
-        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+        return NextResponse.json(
+            { error: error.message || 'Erreur serveur' },
+            { status: error.message?.includes('existe') ? 400 : 500 }
+        );
     }
 }
 
@@ -59,10 +76,16 @@ export async function PATCH(request: NextRequest) {
             order,
         });
 
+        // Revalidate pages to show updated category
+        revalidateCategoryPages(slug);
+
         return NextResponse.json({ success: true, category });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Update category error:', error);
-        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+        return NextResponse.json(
+            { error: error.message || 'Erreur serveur' },
+            { status: error.message?.includes('existe') ? 400 : 500 }
+        );
     }
 }
 
@@ -76,20 +99,54 @@ export async function DELETE(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { categoryId } = body;
+        const { categoryId, forceDelete } = body;
 
         if (!categoryId) {
             return NextResponse.json({ error: 'ID catégorie requis' }, { status: 400 });
         }
 
-        await AdminService.deleteCategory(categoryId);
+        // Si forceDelete est true, supprimer avec les annonces
+        if (forceDelete) {
+            const result = await AdminService.deleteCategoryWithAds(categoryId);
+
+            // Revalidate all pages after deletion
+            revalidateCategoryPages();
+
+            return NextResponse.json({
+                success: true,
+                message: result.message,
+                deletedAdsCount: result.deletedAdsCount
+            });
+        }
+
+        // Sinon, essayer de supprimer normalement
+        const result = await AdminService.deleteCategory(categoryId);
+
+        // Si la catégorie a des annonces, renvoyer l'info pour demander confirmation
+        if (result && 'hasAds' in result && result.hasAds) {
+            return NextResponse.json({
+                hasAds: true,
+                adsCount: result.adsCount,
+                categoryName: result.categoryName,
+                message: result.message,
+                requiresConfirmation: true
+            }, { status: 200 }); // 200 car c'est une réponse valide qui demande confirmation
+        }
+
+        // Revalidate pages after successful deletion
+        revalidateCategoryPages();
 
         return NextResponse.json({ success: true, message: 'Catégorie supprimée' });
     } catch (error: any) {
         console.error('Delete category error:', error);
+        // Déterminer si c'est une erreur métier (400) ou serveur (500)
+        const isBusinessError = error.message?.includes('annonce') ||
+            error.message?.includes('sous-catégorie') ||
+            error.message?.includes('introuvable');
         return NextResponse.json(
             { error: error.message || 'Erreur serveur' },
-            { status: error.message?.includes('annonce') ? 400 : 500 }
+            { status: isBusinessError ? 400 : 500 }
         );
     }
 }
+

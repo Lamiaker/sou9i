@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import CategoryFormModal from './CategoryFormModal';
 import Link from 'next/link';
+import { useToast } from '@/components/ui/Toast';
 
 interface Category {
     id: string;
@@ -39,6 +40,7 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({ name: '', slug: '', icon: '', description: '', parentId: '' });
     const [loading, setLoading] = useState(false);
+    const toast = useToast();
 
     useEffect(() => {
         setCategories(initialCategories);
@@ -63,7 +65,7 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
         setShowModal(true);
     };
 
-    const handleSave = async (data: any) => {
+    const handleSave = async (data: any): Promise<boolean> => {
         setLoading(true);
         try {
             const method = editingId ? 'PATCH' : 'POST';
@@ -76,15 +78,23 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
                 body: JSON.stringify(body),
             });
 
-            if (!res.ok) throw new Error('Failed to save');
+            const result = await res.json();
 
+            if (!res.ok) {
+                toast.error(result.error || 'Une erreur est survenue');
+                setLoading(false);
+                return false; // Retourner false pour garder le modal ouvert
+            }
+
+            toast.success(editingId ? 'Catégorie modifiée avec succès' : 'Catégorie créée avec succès');
             router.refresh();
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Une erreur est survenue');
-            throw error; // Re-throw to keep modal open if needed, or handle here
-        } finally {
             setLoading(false);
+            return true; // Succès
+        } catch (error: any) {
+            console.error('Error:', error);
+            toast.error('Une erreur réseau est survenue');
+            setLoading(false);
+            return false; // Erreur réseau
         }
     };
 
@@ -102,14 +112,15 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
             const data = await res.json();
 
             if (!res.ok) {
-                alert(data.error || 'Impossible de supprimer');
+                toast.error(data.error || 'Impossible de supprimer');
                 return;
             }
 
+            toast.success('Catégorie supprimée avec succès');
             router.refresh();
         } catch (error) {
             console.error('Error:', error);
-            alert('Une erreur est survenue');
+            toast.error('Une erreur est survenue');
         } finally {
             setLoading(false);
         }

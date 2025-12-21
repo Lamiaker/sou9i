@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Save, Plus } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
 
 interface CategoryFormModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: any) => Promise<void>;
+    onSubmit: (data: any) => Promise<boolean>;
     initialData?: {
         name: string;
         slug: string;
@@ -35,6 +36,7 @@ export default function CategoryFormModal({
         parentId: ''
     });
     const [loading, setLoading] = useState(false);
+    const toast = useToast();
 
     useEffect(() => {
         if (isOpen) {
@@ -57,14 +59,17 @@ export default function CategoryFormModal({
 
     const handleSubmit = async () => {
         if (!formData.name || !formData.slug) {
-            alert('Nom et slug sont requis');
+            toast.warning('Nom et slug sont requis');
             return;
         }
 
         setLoading(true);
         try {
-            await onSubmit(formData);
-            onClose();
+            const success = await onSubmit(formData);
+            // Fermer le modal seulement si le save a réussi
+            if (success !== false) {
+                onClose();
+            }
         } catch (error) {
             console.error('Submit error:', error);
         } finally {

@@ -595,6 +595,15 @@ export class AdminService {
         parentId?: string
         order?: number
     }) {
+        // Vérifier si une catégorie avec ce slug existe déjà
+        const existing = await prisma.category.findFirst({
+            where: { slug: data.slug }
+        });
+
+        if (existing) {
+            throw new Error('Une catégorie avec ce slug existe déjà');
+        }
+
         return prisma.category.create({
             data,
         })
@@ -614,6 +623,25 @@ export class AdminService {
             order: number
         }>
     ) {
+        // Empêcher une catégorie d'être son propre parent (boucle)
+        if (data.parentId && data.parentId === categoryId) {
+            throw new Error('Une catégorie ne peut pas être son propre parent');
+        }
+
+        // Vérifier si une autre catégorie avec ce slug existe déjà
+        if (data.slug) {
+            const existing = await prisma.category.findFirst({
+                where: {
+                    slug: data.slug,
+                    id: { not: categoryId } // Exclure la catégorie en cours de modification
+                }
+            });
+
+            if (existing) {
+                throw new Error('Une catégorie avec ce slug existe déjà');
+            }
+        }
+
         return prisma.category.update({
             where: { id: categoryId },
             data,
@@ -621,20 +649,122 @@ export class AdminService {
     }
 
     /**
-     * Supprimer une catégorie
+     * Récupérer le nombre total d'annonces dans une catégorie
      */
-    static async deleteCategory(categoryId: string) {
-        // Vérifier s'il y a des annonces dans cette catégorie
-        const adsCount = await prisma.ad.count({
-            where: { categoryId },
-        })
+    static async getCategoryAdsInfo(categoryId: string) {
+        const category = await prisma.category.findUnique({
+            where: { id: categoryId },
+            include: {
+                children: {
+                    include: {
+                        _count: { select: { ads: true } }
+                    }
+                },
+                _count: { select: { ads: true } }
+            }
+        });
 
-        if (adsCount > 0) {
-            throw new Error(`Impossible de supprimer: ${adsCount} annonce(s) dans cette catégorie`)
+        if (!category) {
+            return null;
         }
 
-        return prisma.category.delete({
+        // Calculer le total des annonces (catégorie + sous-catégories)
+        const directAds = (category as any)._count?.ads || 0;
+        let childrenAds = 0;
+        for (const child of category.children || []) {
+            childrenAds += (child as any)._count?.ads || 0;
+        }
+
+        return {
+            name: category.name,
+            childrenCount: category.children?.length || 0,
+            directAds,
+            childrenAds,
+            totalAds: directAds + childrenAds
+        };
+    }
+
+    /**
+     * Supprimer une catégorie avec toutes ses annonces (suppression forcée)
+     */
+    static async deleteCategoryWithAds(categoryId: string) {
+        const category = await prisma.category.findUnique({
             where: { id: categoryId },
-        })
+            include: {
+                children: true
+            }
+        });
+
+        if (!category) {
+            throw new Error('Catégorie introuvable');
+        }
+
+        // Vérifier s'il y a des sous-catégories (on ne peut pas supprimer récursivement)
+        if (category.children && category.children.length > 0) {
+            throw new Error(`Impossible de supprimer: cette catégorie contient ${category.children.length} sous-catégorie(s). Supprimez d'abord les sous-catégories.`);
+        }
+
+        // Supprimer les annonces de cette catégorie
+        const deletedAds = await prisma.ad.deleteMany({
+            where: { categoryId }
+        });
+
+        // Supprimer la catégorie
+        await prisma.category.delete({
+            where: { id: categoryId }
+        });
+
+        return {
+            deletedAdsCount: deletedAds.count,
+            message: `Catégorie supprimée avec ${deletedAds.count} annonce(s)`
+        };
+    }
+
+    /**
+     * Supprimer une catégorie (sans annonces)
+     */
+    static async deleteCategory(categoryId: string) {
+        // Récupérer la catégorie avec ses enfants
+        const category = await prisma.category.findUnique({
+            where: { id: categoryId },
+            include: {
+                children: {
+                    include: {
+                        children: true, // Sous-sous-catégories
+                        _count: { select: { ads: true } }
+                    },
+
+                },
+                _count: { select: { ads: true } }
+            }
+        });
+
+        if (!category) {
+            throw new Error('Catégorie introuvable');
+        }
+
+        // Vérifier s'il y a des sous-catégories
+        const childrenCount = category.children?.length || 0;
+        if (childrenCount > 0) {
+            throw new Error(`Impossible de supprimer: cette catégorie contient ${childrenCount} sous-catégorie(s). Supprimez d'abord les sous-catégories.`);
+        }
+
+        // Vérifier s'il y a des annonces dans cette catégorie
+        const adsCount = (category as any)._count?.ads || 0;
+        if (adsCount > 0) {
+            // Retourner un objet spécial pour indiquer qu'il y a des annonces
+            return {
+                hasAds: true,
+                adsCount,
+                categoryName: category.name,
+                message: `Cette catégorie contient ${adsCount} annonce(s). Voulez-vous les supprimer définitivement ?`
+            };
+        }
+
+        await prisma.category.delete({
+            where: { id: categoryId },
+        });
+
+        return { success: true, message: 'Catégorie supprimée' };
     }
 }

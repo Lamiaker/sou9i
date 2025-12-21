@@ -3,6 +3,53 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { AdminService } from '@/services';
 
+// GET: Récupérer les utilisateurs avec pagination et filtres (pour SWR polling)
+export async function GET(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session || session.user.role !== 'ADMIN') {
+            return NextResponse.json(
+                { error: 'Non autorisé' },
+                { status: 403 }
+            );
+        }
+
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '20');
+        const search = searchParams.get('search') || '';
+        const role = searchParams.get('role') || '';
+        const status = searchParams.get('status') || 'PENDING';
+
+        const { users, pagination } = await AdminService.getUsers({
+            page,
+            limit,
+            search,
+            role,
+            status,
+        });
+
+        // Format dates for client component serialization
+        const formattedUsers = users.map((user: any) => ({
+            ...user,
+            createdAt: new Date(user.createdAt).toISOString(),
+        }));
+
+        return NextResponse.json({
+            success: true,
+            users: formattedUsers,
+            pagination,
+        });
+    } catch (error) {
+        console.error('Admin users GET API error:', error);
+        return NextResponse.json(
+            { error: 'Erreur serveur' },
+            { status: 500 }
+        );
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         // Vérifier que l'utilisateur est admin

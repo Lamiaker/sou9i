@@ -51,9 +51,10 @@ interface Pagination {
 interface UsersTableProps {
     users: User[];
     pagination: Pagination;
+    onMutate?: () => void;
 }
 
-export default function UsersTable({ users, pagination }: UsersTableProps) {
+export default function UsersTable({ users, pagination, onMutate }: UsersTableProps) {
     const router = useRouter();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);
@@ -109,7 +110,12 @@ export default function UsersTable({ users, pagination }: UsersTableProps) {
 
             // Notification simple (idealement utiliser un toast)
             // alert(data.message); 
-            router.refresh();
+            // Use mutate for instant refresh, fallback to router.refresh
+            if (onMutate) {
+                onMutate();
+            } else {
+                router.refresh();
+            }
         } catch (error: any) {
             console.error('Error:', error);
             alert(error.message || 'Une erreur est survenue');
