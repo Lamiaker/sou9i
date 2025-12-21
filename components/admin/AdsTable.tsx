@@ -156,9 +156,9 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
     };
 
     return (
-        <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
+        <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-visible">
             {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
+            <div className="hidden lg:block overflow-visible">
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-white/10">

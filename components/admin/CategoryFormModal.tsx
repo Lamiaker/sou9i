@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Save, Plus } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Save, Plus, Check, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
 interface CategoryFormModalProps {
@@ -18,6 +18,23 @@ interface CategoryFormModalProps {
     categoryTree: { id: string; label: string }[];
     title: string;
     editingId?: string | null;
+}
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
 }
 
 export default function CategoryFormModal({
@@ -38,6 +55,10 @@ export default function CategoryFormModal({
     const [loading, setLoading] = useState(false);
     const toast = useToast();
 
+    // État de validation du slug
+    const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+    const debouncedSlug = useDebounce(formData.slug, 500);
+
     useEffect(() => {
         if (isOpen) {
             if (initialData) {
@@ -45,8 +66,50 @@ export default function CategoryFormModal({
             } else {
                 setFormData({ name: '', slug: '', icon: '', description: '', parentId: '' });
             }
+            setSlugStatus('idle');
         }
     }, [isOpen, initialData]);
+
+    // Vérifier le slug quand il change (debounced)
+    const checkSlug = useCallback(async (slug: string) => {
+        if (!slug || slug.length < 2) {
+            setSlugStatus('idle');
+            return;
+        }
+
+        // Si on édite et que le slug n'a pas changé, c'est valide
+        if (editingId && initialData?.slug === slug) {
+            setSlugStatus('available');
+            return;
+        }
+
+        setSlugStatus('checking');
+
+        try {
+            const params = new URLSearchParams({ slug });
+            if (editingId) {
+                params.append('excludeId', editingId);
+            }
+
+            const res = await fetch(`/api/admin/categories/check-slug?${params.toString()}`);
+            const data = await res.json();
+
+            if (data.exists) {
+                setSlugStatus('taken');
+            } else {
+                setSlugStatus('available');
+            }
+        } catch (error) {
+            console.error('Slug check error:', error);
+            setSlugStatus('idle');
+        }
+    }, [editingId, initialData?.slug]);
+
+    useEffect(() => {
+        if (debouncedSlug) {
+            checkSlug(debouncedSlug);
+        }
+    }, [debouncedSlug, checkSlug]);
 
     const generateSlug = (name: string) => {
         return name
@@ -63,6 +126,11 @@ export default function CategoryFormModal({
             return;
         }
 
+        if (slugStatus === 'taken') {
+            toast.error('Ce slug est déjà utilisé');
+            return;
+        }
+
         setLoading(true);
         try {
             const success = await onSubmit(formData);
@@ -74,6 +142,36 @@ export default function CategoryFormModal({
             console.error('Submit error:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Rendu de l'indicateur de statut du slug
+    const renderSlugStatus = () => {
+        switch (slugStatus) {
+            case 'checking':
+                return (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+                    </div>
+                );
+            case 'available':
+                return (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-emerald-400" />
+                        </div>
+                    </div>
+                );
+            case 'taken':
+                return (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
+                            <X className="w-4 h-4 text-red-400" />
+                        </div>
+                    </div>
+                );
+            default:
+                return null;
         }
     };
 
@@ -105,14 +203,35 @@ export default function CategoryFormModal({
                     </div>
 
                     <div>
-                        <label className="block text-white/60 text-sm mb-2">Slug</label>
-                        <input
-                            type="text"
-                            value={formData.slug}
-                            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                            placeholder="mode-femme"
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                        />
+                        <label className="block text-white/60 text-sm mb-2">
+                            Slug
+                            {slugStatus === 'taken' && (
+                                <span className="text-red-400 ml-2 text-xs">
+                                    Ce slug existe déjà
+                                </span>
+                            )}
+                            {slugStatus === 'available' && (
+                                <span className="text-emerald-400 ml-2 text-xs">
+                                    Disponible
+                                </span>
+                            )}
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={formData.slug}
+                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                placeholder="mode-femme"
+                                className={`w-full px-4 py-3 pr-12 bg-white/5 border rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 transition-colors
+                                    ${slugStatus === 'taken'
+                                        ? 'border-red-500/50 focus:ring-red-500/50'
+                                        : slugStatus === 'available'
+                                            ? 'border-emerald-500/50 focus:ring-emerald-500/50'
+                                            : 'border-white/10 focus:ring-cyan-500/50'
+                                    }`}
+                            />
+                            {renderSlugStatus()}
+                        </div>
                     </div>
 
                     <div>
@@ -152,7 +271,7 @@ export default function CategoryFormModal({
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={loading || !formData.name || !formData.slug}
+                        disabled={loading || !formData.name || !formData.slug || slugStatus === 'taken' || slugStatus === 'checking'}
                         className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {editingId ? <Save className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
