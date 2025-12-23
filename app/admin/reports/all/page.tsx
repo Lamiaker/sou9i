@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import ReportsTable from '@/components/admin/ReportsTable';
 import ReportsNav from '@/components/admin/ReportsNav';
@@ -8,19 +8,17 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-export default function AdminReportsPage() {
+export default function AllReportsPage() {
     const searchParams = useSearchParams();
-    const router = useRouter();
 
     const page = parseInt(searchParams?.get('page') || '1');
-    const status = 'PENDING'; // Page principale = en attente
+    // Pas de filtre status = tous les signalements
 
-    const apiUrl = `/api/admin/reports/list?page=${page}&limit=20&status=${status}`;
+    const apiUrl = `/api/admin/reports/list?page=${page}&limit=20`;
 
     const { data, error, isLoading, isValidating, mutate } = useSWR(apiUrl, fetcher, {
-        refreshInterval: 10000,
+        refreshInterval: 15000,
         revalidateOnFocus: true,
-        dedupingInterval: 2000,
     });
 
     const reports = data?.reports || [];
@@ -51,11 +49,11 @@ export default function AdminReportsPage() {
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
                             <AlertTriangle className="w-5 h-5 text-white" />
                         </div>
-                        Signalements en attente
+                        Tous les signalements
                     </h1>
                     <div className="flex items-center gap-2 mt-1">
                         <p className="text-white/60">
-                            {pagination.total} signalement{pagination.total > 1 ? 's' : ''} à traiter
+                            {pagination.total} signalement{pagination.total > 1 ? 's' : ''} au total
                         </p>
                         {isValidating && !isLoading && (
                             <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
@@ -75,7 +73,7 @@ export default function AdminReportsPage() {
                     </div>
                 </div>
             ) : (
-                <ReportsTable reports={reports} pagination={pagination} onMutate={mutate} basePath="/admin/reports" />
+                <ReportsTable reports={reports} pagination={pagination} onMutate={mutate} basePath="/admin/reports/all" />
             )}
         </div>
     );

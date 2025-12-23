@@ -9,9 +9,13 @@ import {
     ChevronRight,
     AlertTriangle,
     Clock,
-    User,
     ShoppingBag,
-    ExternalLink
+    ExternalLink,
+    Trash2,
+    Ban,
+    Eye,
+    ChevronDown,
+    X
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -53,6 +57,8 @@ interface Pagination {
 interface ReportsTableProps {
     reports: Report[];
     pagination: Pagination;
+    onMutate?: () => void;
+    basePath?: string;
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
@@ -61,37 +67,56 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
     REJECTED: { label: 'Rejeté', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: XCircle },
 };
 
-export default function ReportsTable({ reports, pagination }: ReportsTableProps) {
+export default function ReportsTable({ reports, pagination, onMutate, basePath = '/admin/reports' }: ReportsTableProps) {
     const router = useRouter();
     const [loading, setLoading] = useState<string | null>(null);
+    const [showActionModal, setShowActionModal] = useState<string | null>(null);
+    const [actionReason, setActionReason] = useState('');
 
-    const handleAction = async (action: string, reportId: string) => {
+    const handleAction = async (action: string, reportId: string, reason?: string) => {
         setLoading(reportId);
+        setShowActionModal(null);
 
         try {
             const res = await fetch('/api/admin/reports', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, reportId }),
+                body: JSON.stringify({ action, reportId, reason }),
             });
 
+            const data = await res.json();
+
             if (!res.ok) {
-                throw new Error('Action failed');
+                throw new Error(data.error || 'Action failed');
             }
 
-            router.refresh();
-        } catch (error) {
+            // Afficher un message de succès
+            alert(data.message || 'Action effectuée avec succès');
+
+            // Rafraîchir via SWR ou router
+            if (onMutate) {
+                onMutate();
+            } else {
+                router.refresh();
+            }
+        } catch (error: any) {
             console.error('Error:', error);
-            alert('Une erreur est survenue');
+            alert(error.message || 'Une erreur est survenue');
         } finally {
             setLoading(null);
+            setActionReason('');
         }
     };
 
     const goToPage = (page: number) => {
         const params = new URLSearchParams(window.location.search);
         params.set('page', page.toString());
-        router.push(`/admin/reports?${params.toString()}`);
+        router.push(`${basePath}?${params.toString()}`);
+    };
+
+    // Déterminer le type de signalement
+    const getReportType = (report: Report): 'ad' | 'user' => {
+        return report.ad ? 'ad' : 'user';
     };
 
     return (
@@ -110,6 +135,7 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                 reports.map((report) => {
                     const statusInfo = statusConfig[report.status] || statusConfig.PENDING;
                     const StatusIcon = statusInfo.icon;
+                    const reportType = getReportType(report);
 
                     return (
                         <div
@@ -133,10 +159,25 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
                                             </p>
                                         </div>
                                     </div>
-                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${statusInfo.color}`}>
-                                        <StatusIcon className="w-3.5 h-3.5" />
-                                        {statusInfo.label}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${reportType === 'ad' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-purple-500/20 text-purple-400 border-purple-500/30'}`}>
+                                            {reportType === 'ad' ? (
+                                                <>
+                                                    <ShoppingBag className="w-3.5 h-3.5" />
+                                                    Annonce
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Ban className="w-3.5 h-3.5" />
+                                                    Utilisateur
+                                                </>
+                                            )}
+                                        </span>
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${statusInfo.color}`}>
+                                            <StatusIcon className="w-3.5 h-3.5" />
+                                            {statusInfo.label}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {/* Details */}
@@ -236,26 +277,141 @@ export default function ReportsTable({ reports, pagination }: ReportsTableProps)
 
                                 {/* Actions */}
                                 {report.status === 'PENDING' && (
-                                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/10">
-                                        <button
-                                            onClick={() => handleAction('resolve', report.id)}
-                                            disabled={loading === report.id}
-                                            className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
-                                        >
-                                            <CheckCircle className="w-5 h-5" />
-                                            Résoudre le signalement
-                                        </button>
-                                        <button
-                                            onClick={() => handleAction('reject', report.id)}
-                                            disabled={loading === report.id}
-                                            className="flex-1 px-4 py-3 bg-white/5 border border-white/10 text-white/80 font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                                        >
-                                            <XCircle className="w-5 h-5" />
-                                            Rejeter
-                                        </button>
+                                    <div className="pt-4 border-t border-white/10">
+                                        {/* Actions rapides */}
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            <button
+                                                onClick={() => handleAction('reject', report.id)}
+                                                disabled={loading === report.id}
+                                                className="px-3 py-2 bg-white/5 border border-white/10 text-white/60 text-sm font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                                title="Faux signalement, ignorer"
+                                            >
+                                                <XCircle className="w-4 h-4" />
+                                                Ignorer
+                                            </button>
+
+                                            <button
+                                                onClick={() => handleAction('resolve', report.id)}
+                                                disabled={loading === report.id}
+                                                className="px-3 py-2 bg-white/5 border border-white/10 text-white/60 text-sm font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                                title="Marquer comme résolu sans action"
+                                            >
+                                                <CheckCircle className="w-4 h-4" />
+                                                Résolu
+                                            </button>
+                                        </div>
+
+                                        {/* Actions avec conséquences */}
+                                        <div className="flex flex-wrap gap-2">
+                                            {reportType === 'ad' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => setShowActionModal(`reject_ad_${report.id}`)}
+                                                        disabled={loading === report.id}
+                                                        className="px-3 py-2 bg-orange-500/20 border border-orange-500/30 text-orange-400 text-sm font-medium rounded-xl hover:bg-orange-500/30 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                        Masquer l&apos;annonce
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            if (confirm('⚠️ Êtes-vous sûr de vouloir SUPPRIMER cette annonce définitivement ?')) {
+                                                                handleAction('delete_ad', report.id);
+                                                            }
+                                                        }}
+                                                        disabled={loading === report.id}
+                                                        className="px-3 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/30 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                        Supprimer l&apos;annonce
+                                                    </button>
+                                                </>
+                                            )}
+
+                                            <button
+                                                onClick={() => setShowActionModal(`ban_user_${report.id}`)}
+                                                disabled={loading === report.id}
+                                                className="px-3 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/30 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                            >
+                                                <Ban className="w-4 h-4" />
+                                                Bannir l&apos;utilisateur
+                                            </button>
+
+                                            {reportType === 'ad' && (
+                                                <button
+                                                    onClick={() => setShowActionModal(`delete_ad_ban_user_${report.id}`)}
+                                                    disabled={loading === report.id}
+                                                    className="px-3 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-50"
+                                                >
+                                                    <AlertTriangle className="w-4 h-4" />
+                                                    Supprimer + Bannir
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>
+
+                            {/* Modal pour saisir la raison */}
+                            {showActionModal?.includes(report.id) && (
+                                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                                    <div className="bg-slate-800 rounded-2xl border border-white/10 p-6 max-w-md w-full shadow-2xl">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-semibold text-white">
+                                                {showActionModal.startsWith('ban_user') && '🚫 Bannir l\'utilisateur'}
+                                                {showActionModal.startsWith('reject_ad') && '👁️ Masquer l\'annonce'}
+                                                {showActionModal.startsWith('delete_ad_ban_user') && '⚠️ Action sévère'}
+                                            </h3>
+                                            <button
+                                                onClick={() => {
+                                                    setShowActionModal(null);
+                                                    setActionReason('');
+                                                }}
+                                                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                                            >
+                                                <X className="w-5 h-5 text-white/60" />
+                                            </button>
+                                        </div>
+
+                                        <p className="text-white/60 text-sm mb-4">
+                                            {showActionModal.startsWith('ban_user') && 'L\'utilisateur ne pourra plus se connecter. Veuillez indiquer la raison du bannissement.'}
+                                            {showActionModal.startsWith('reject_ad') && 'L\'annonce sera masquée mais pas supprimée. Indiquez la raison du rejet.'}
+                                            {showActionModal.startsWith('delete_ad_ban_user') && 'L\'annonce sera supprimée ET l\'utilisateur sera banni. Cette action est irréversible.'}
+                                        </p>
+
+                                        <textarea
+                                            value={actionReason}
+                                            onChange={(e) => setActionReason(e.target.value)}
+                                            placeholder="Raison (optionnel mais recommandé)..."
+                                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all resize-none"
+                                            rows={3}
+                                        />
+
+                                        <div className="flex gap-3 mt-4">
+                                            <button
+                                                onClick={() => {
+                                                    setShowActionModal(null);
+                                                    setActionReason('');
+                                                }}
+                                                className="flex-1 px-4 py-3 bg-white/5 border border-white/10 text-white/80 font-medium rounded-xl hover:bg-white/10 transition-colors"
+                                            >
+                                                Annuler
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const action = showActionModal.split('_').slice(0, -1).join('_');
+                                                    handleAction(action, report.id, actionReason);
+                                                }}
+                                                disabled={loading === report.id}
+                                                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+                                            >
+                                                Confirmer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     );
                 })

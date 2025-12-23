@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ error: 'Raison du blocage requise' }, { status: 400 });
             }
 
+            // 1. Bannir l'utilisateur
             await prisma.user.update({
                 where: { id: userId },
                 data: {
@@ -42,8 +43,21 @@ export async function POST(request: NextRequest) {
                 },
             } as any);
 
-            return NextResponse.json({ success: true, message: 'Utilisateur banni avec succès' });
+            // 2. Masquer uniquement les annonces APPROVED ou PENDING (pas celles déjà REJECTED)
+            await prisma.ad.updateMany({
+                where: {
+                    userId: userId,
+                    moderationStatus: { in: ['APPROVED', 'PENDING'] } // Ne pas toucher aux REJECTED
+                },
+                data: {
+                    moderationStatus: 'REJECTED',
+                    rejectionReason: 'Compte banni: ' + reason
+                } as any,
+            });
+
+            return NextResponse.json({ success: true, message: 'Utilisateur banni et annonces masquées' });
         } else if (action === 'unban') {
+            // 1. Débannir l'utilisateur
             await prisma.user.update({
                 where: { id: userId },
                 data: {
@@ -53,7 +67,20 @@ export async function POST(request: NextRequest) {
                 },
             } as any);
 
-            return NextResponse.json({ success: true, message: 'Utilisateur débanni avec succès' });
+            // 2. Remettre ses annonces en attente de modération (PENDING)
+            // Note: On ne les approuve pas automatiquement, l'admin devra les revalider
+            await prisma.ad.updateMany({
+                where: {
+                    userId: userId,
+                    rejectionReason: { startsWith: 'Compte banni' } // Seulement celles rejetées à cause du ban
+                },
+                data: {
+                    moderationStatus: 'PENDING',
+                    rejectionReason: null
+                } as any,
+            });
+
+            return NextResponse.json({ success: true, message: 'Utilisateur débanni - ses annonces sont en attente de modération' });
         }
 
         return NextResponse.json({ error: 'Action non reconnue' }, { status: 400 });

@@ -103,7 +103,7 @@ export class UserService {
                         ads: true,
                     }
                 }
-            } as any,
+            },
         })
     }
 

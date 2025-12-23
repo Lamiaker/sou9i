@@ -86,11 +86,8 @@ export async function PATCH(request: NextRequest) {
                 // Si l'ancien avatar est stocké localement
                 if (currentUser.avatar.startsWith('/uploads/')) {
                     try {
-                        // Retirer le slash initial pour path.join
-                        const relativePath = currentUser.avatar.startsWith('/')
-                            ? currentUser.avatar.substring(1)
-                            : currentUser.avatar;
-
+                        // Retirer le slash initial pour path.join (on sait qu'il existe car '/uploads/' commence par '/')
+                        const relativePath = currentUser.avatar.substring(1);
                         const filePath = path.join(process.cwd(), 'public', relativePath);
 
                         await unlink(filePath);

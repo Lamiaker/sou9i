@@ -493,7 +493,45 @@ export class AdminService {
     }
 
     /**
-     * Résoudre un signalement
+     * Récupérer un signalement par ID avec tous les détails
+     */
+    static async getReportById(reportId: string) {
+        return prisma.report.findUnique({
+            where: { id: reportId },
+            include: {
+                reporter: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        avatar: true,
+                    },
+                },
+                reportedUser: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        avatar: true,
+                        isBanned: true,
+                    },
+                },
+                ad: {
+                    select: {
+                        id: true,
+                        title: true,
+                        images: true,
+                        userId: true,
+                        status: true,
+                        moderationStatus: true,
+                    },
+                },
+            },
+        })
+    }
+
+    /**
+     * Résoudre un signalement (marquer comme résolu sans action)
      */
     static async resolveReport(reportId: string) {
         return prisma.report.update({
@@ -503,12 +541,214 @@ export class AdminService {
     }
 
     /**
-     * Rejeter un signalement
+     * Rejeter un signalement (faux signalement, pas d'action)
      */
     static async rejectReport(reportId: string) {
         return prisma.report.update({
             where: { id: reportId },
             data: { status: 'REJECTED' },
+        })
+    }
+
+    /**
+     * Résoudre un signalement d'annonce en supprimant l'annonce
+     */
+    static async resolveReportDeleteAd(reportId: string) {
+        const report = await this.getReportById(reportId)
+
+        if (!report) {
+            throw new Error('Signalement introuvable')
+        }
+
+        if (!report.adId) {
+            throw new Error('Ce signalement ne concerne pas une annonce')
+        }
+
+        // Supprimer l'annonce
+        await prisma.ad.delete({
+            where: { id: report.adId },
+        })
+
+        // Marquer tous les signalements liés à cette annonce comme résolus
+        await prisma.report.updateMany({
+            where: { adId: report.adId },
+            data: { status: 'RESOLVED' },
+        })
+
+        return { success: true, message: 'Annonce supprimée et signalement résolu' }
+    }
+
+    /**
+     * Résoudre un signalement d'annonce en rejetant l'annonce (la rend invisible)
+     */
+    static async resolveReportRejectAd(reportId: string, reason: string) {
+        const report = await this.getReportById(reportId)
+
+        if (!report) {
+            throw new Error('Signalement introuvable')
+        }
+
+        if (!report.adId) {
+            throw new Error('Ce signalement ne concerne pas une annonce')
+        }
+
+        // Rejeter l'annonce
+        await prisma.ad.update({
+            where: { id: report.adId },
+            data: {
+                moderationStatus: 'REJECTED',
+                rejectionReason: reason || 'Contenu signalé par la communauté'
+            } as any,
+        })
+
+        // Marquer le signalement comme résolu
+        await prisma.report.update({
+            where: { id: reportId },
+            data: { status: 'RESOLVED' },
+        })
+
+        return { success: true, message: 'Annonce rejetée et signalement résolu' }
+    }
+
+    /**
+     * Résoudre un signalement en bannissant l'utilisateur signalé
+     */
+    static async resolveReportBanUser(reportId: string, banReason: string) {
+        const report = await this.getReportById(reportId)
+
+        if (!report) {
+            throw new Error('Signalement introuvable')
+        }
+
+        // Déterminer l'utilisateur à bannir
+        let userIdToBan = report.reportedUserId
+
+        // Si c'est un signalement d'annonce, bannir le propriétaire de l'annonce
+        if (!userIdToBan && report.ad) {
+            userIdToBan = report.ad.userId
+        }
+
+        if (!userIdToBan) {
+            throw new Error('Aucun utilisateur à bannir pour ce signalement')
+        }
+
+        // Bannir l'utilisateur
+        await prisma.user.update({
+            where: { id: userIdToBan },
+            data: {
+                isBanned: true,
+                banReason: banReason || 'Compte signalé par la communauté',
+                bannedAt: new Date(),
+            },
+        })
+
+        // Rejeter les annonces APPROVED ou PENDING de cet utilisateur (pas celles déjà REJECTED)
+        await prisma.ad.updateMany({
+            where: {
+                userId: userIdToBan,
+                moderationStatus: { in: ['APPROVED', 'PENDING'] }
+            },
+            data: {
+                moderationStatus: 'REJECTED',
+                rejectionReason: 'Compte banni: ' + (banReason || 'Compte signalé')
+            } as any,
+        })
+
+        // Marquer tous les signalements liés à cet utilisateur comme résolus
+        await prisma.report.updateMany({
+            where: {
+                OR: [
+                    { reportedUserId: userIdToBan },
+                    { ad: { userId: userIdToBan } }
+                ]
+            },
+            data: { status: 'RESOLVED' },
+        })
+
+        return { success: true, message: 'Utilisateur banni et signalement résolu' }
+    }
+
+    /**
+     * Résoudre un signalement en supprimant l'annonce ET bannissant l'utilisateur
+     */
+    static async resolveReportDeleteAdAndBanUser(reportId: string, banReason: string) {
+        const report = await this.getReportById(reportId)
+
+        if (!report) {
+            throw new Error('Signalement introuvable')
+        }
+
+        if (!report.adId) {
+            throw new Error('Ce signalement ne concerne pas une annonce')
+        }
+
+        const ad = report.ad
+        if (!ad) {
+            throw new Error('Annonce introuvable')
+        }
+
+        // Supprimer l'annonce
+        await prisma.ad.delete({
+            where: { id: report.adId },
+        })
+
+        // Bannir l'utilisateur
+        await prisma.user.update({
+            where: { id: ad.userId },
+            data: {
+                isBanned: true,
+                banReason: banReason || 'Annonce frauduleuse',
+                bannedAt: new Date(),
+            },
+        })
+
+        // Rejeter les annonces APPROVED ou PENDING (pas celles déjà REJECTED)
+        await prisma.ad.updateMany({
+            where: {
+                userId: ad.userId,
+                moderationStatus: { in: ['APPROVED', 'PENDING'] }
+            },
+            data: {
+                moderationStatus: 'REJECTED',
+                rejectionReason: 'Compte banni: ' + (banReason || 'Annonce frauduleuse')
+            } as any,
+        })
+
+        // Marquer tous les signalements liés comme résolus
+        await prisma.report.updateMany({
+            where: {
+                OR: [
+                    { reportedUserId: ad.userId },
+                    { ad: { userId: ad.userId } }
+                ]
+            },
+            data: { status: 'RESOLVED' },
+        })
+
+        return { success: true, message: 'Annonce supprimée, utilisateur banni et signalement résolu' }
+    }
+
+    /**
+     * Compter les signalements en attente
+     */
+    static async getPendingReportsCount() {
+        return prisma.report.count({
+            where: { status: 'PENDING' }
+        })
+    }
+
+    /**
+     * Compter les signalements contre un utilisateur
+     */
+    static async getReportsCountForUser(userId: string) {
+        return prisma.report.count({
+            where: {
+                OR: [
+                    { reportedUserId: userId },
+                    { ad: { userId: userId } }
+                ],
+                status: 'PENDING'
+            }
         })
     }
 
