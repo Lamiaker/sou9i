@@ -14,6 +14,7 @@ import { useAd } from "@/hooks/useAds";
 import { useAds } from "@/hooks/useAds";
 import AdDetailSkeleton from "@/components/layout/AdDetailSkeleton";
 import ContactSellerButton from "@/components/messages/ContactSellerButton";
+import { DynamicFieldsDisplay } from "@/components/forms/DynamicFieldsInput";
 
 export default function AdDetailPage() {
     const params = useParams();
@@ -176,9 +177,6 @@ export default function AdDetailPage() {
                                 <div>
                                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{ad.title}</h1>
                                     <p className="text-3xl font-bold text-primary">{formatPrice(ad.price)}</p>
-                                    {ad.negotiable && (
-                                        <span className="inline-block mt-2 text-sm text-gray-500">Prix négociable</span>
-                                    )}
                                 </div>
                                 <div className="flex gap-2">
                                     <FavoriteButton adId={id} size={24} className="hover:bg-red-50" />
@@ -208,36 +206,11 @@ export default function AdDetailPage() {
                                 />
                             </div>
 
-                            {/* Specifications */}
-                            {(ad.condition || ad.brand || ad.size || ad.deliveryAvailable) && (
+                            {/* Champs dynamiques / Caractéristiques */}
+                            {ad.dynamicFields && ad.dynamicFields.length > 0 && (
                                 <div className="mb-8 mt-6">
                                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Caractéristiques</h2>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {ad.condition && (
-                                            <div className="flex justify-between border-b border-gray-100 pb-2">
-                                                <span className="text-gray-500">État</span>
-                                                <span className="font-medium text-gray-900">{ad.condition}</span>
-                                            </div>
-                                        )}
-                                        {ad.brand && (
-                                            <div className="flex justify-between border-b border-gray-100 pb-2">
-                                                <span className="text-gray-500">Marque</span>
-                                                <span className="font-medium text-gray-900">{ad.brand}</span>
-                                            </div>
-                                        )}
-                                        {ad.size && (
-                                            <div className="flex justify-between border-b border-gray-100 pb-2">
-                                                <span className="text-gray-500">Taille</span>
-                                                <span className="font-medium text-gray-900">{ad.size}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex justify-between border-b border-gray-100 pb-2">
-                                            <span className="text-gray-500">Livraison</span>
-                                            <span className="font-medium text-gray-900">
-                                                {ad.deliveryAvailable ? "Disponible" : "Non disponible"}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <DynamicFieldsDisplay fields={ad.dynamicFields} />
                                 </div>
                             )}
 

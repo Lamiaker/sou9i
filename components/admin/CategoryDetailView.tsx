@@ -8,10 +8,12 @@ import {
     Trash2,
     FolderTree,
     ShoppingBag,
-    AlertTriangle
+    AlertTriangle,
+    Type
 } from 'lucide-react';
 import Link from 'next/link';
 import CategoryFormModal from './CategoryFormModal';
+import CategoryFieldsManager from './CategoryFieldsManager';
 import { useToast } from '@/components/ui/Toast';
 
 interface CategoryDetailViewProps {
@@ -329,6 +331,29 @@ export default function CategoryDetailView({ category, allCategories }: Category
                             </div>
                         )}
                     </div>
+
+                    {/* Champs Dynamiques - Uniquement pour les sous-catégories */}
+                    {category.parentId ? (
+                        <CategoryFieldsManager
+                            categoryId={category.id}
+                            categoryName={category.name}
+                        />
+                    ) : (
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <h3 className="text-lg font-medium text-white flex items-center gap-2 mb-3">
+                                <Type className="w-5 h-5 text-purple-400" />
+                                Champs Dynamiques
+                            </h3>
+                            <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                                <p className="text-white/80">
+                                    Les champs dynamiques sont définis au niveau des <strong>sous-catégories</strong>.
+                                </p>
+                                <p className="text-white/60 text-sm mt-2">
+                                    Sélectionnez une sous-catégorie ci-dessus pour gérer ses champs personnalisés.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Sidebar Stats */}

@@ -40,6 +40,16 @@ enum VerificationStatus {
   REJECTED  // Rejeté avec raison
 }
 
+// Types de champs dynamiques pour les sous-catégories
+enum FieldType {
+  TEXT      // Champ texte simple
+  TEXTAREA  // Champ texte long
+  NUMBER    // Champ numérique
+  SELECT    // Liste déroulante
+  BOOLEAN   // Case à cocher
+  IMAGE     // Upload d'image
+}
+
 // ============================================
 // MODÈLES UTILISATEUR
 // ============================================
@@ -104,6 +114,7 @@ model Category {
   children    Category[]  @relation("CategoryChildren")
 
   ads         Ad[]
+  fields      SubcategoryField[]  // Champs dynamiques de cette catégorie
 
   @@index([slug])
   @@index([parentId])
@@ -142,15 +153,70 @@ model Ad {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   categoryId  String
   category    Category  @relation(fields: [categoryId], references: [id])
-  favorites   Favorite[]
-  reviews     Review[]
-  reports     Report[]
+  favorites     Favorite[]
+  reviews       Review[]
+  reports       Report[]
+  dynamicFields AdFieldValue[]  // Valeurs des champs dynamiques
 
   @@index([userId])
   @@index([categoryId])
   @@index([status])
   @@index([moderationStatus])
   @@index([createdAt])
+}
+
+// ============================================
+// MODÈLES CHAMPS DYNAMIQUES
+// ============================================
+
+// Définition des champs par sous-catégorie
+model SubcategoryField {
+  id            String    @id @default(cuid())
+  categoryId    String
+  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  name          String    // Nom technique du champ (ex: "kilometrage")
+  label         String    // Label affiché (ex: "Kilométrage")
+  type          FieldType // TEXT, NUMBER, SELECT, BOOLEAN, IMAGE, TEXTAREA
+  placeholder   String?   // Texte indicatif
+  required      Boolean   @default(false)
+  order         Int       @default(0) // Ordre d'affichage
+  
+  // Pour les champs de type "SELECT" : options en JSON
+  options       Json?     // ["Option 1", "Option 2", ...]
+  
+  // Contraintes optionnelles pour validation
+  minValue      Float?    // Pour NUMBER : valeur minimale
+  maxValue      Float?    // Pour NUMBER : valeur maximale
+  minLength     Int?      // Pour TEXT/TEXTAREA : longueur minimale
+  maxLength     Int?      // Pour TEXT/TEXTAREA : longueur maximale
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Valeurs associées
+  values        AdFieldValue[]
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+}
+
+// Valeurs des champs dynamiques pour chaque annonce
+model AdFieldValue {
+  id        String           @id @default(cuid())
+  adId      String
+  ad        Ad               @relation(fields: [adId], references: [id], onDelete: Cascade)
+  fieldId   String
+  field     SubcategoryField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  
+  // Valeur stockée (toujours en string, conversion selon le type)
+  value     String           @db.Text
+  
+  createdAt DateTime         @default(now())
+
+  @@unique([adId, fieldId])
+  @@index([adId])
+  @@index([fieldId])
 }
 
 // ============================================

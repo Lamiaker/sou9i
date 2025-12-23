@@ -1,6 +1,30 @@
 import { prisma } from '@/lib/prisma'
 import type { AdFilters } from '@/lib/prisma-types'
 import { AdStatus } from '@prisma/client'
+import { SubcategoryFieldService, type FieldValueInput } from './subcategoryFieldService'
+import fs from 'fs'
+import path from 'path'
+
+/**
+ * Supprimer les fichiers images d'une annonce du système de fichiers
+ */
+async function deleteAdImages(imageUrls: string[]): Promise<void> {
+    if (!imageUrls || imageUrls.length === 0) return;
+
+    for (const imageUrl of imageUrls) {
+        try {
+            if (imageUrl.startsWith('/uploads/')) {
+                const filePath = path.join(process.cwd(), 'public', imageUrl);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    console.log(`Image supprimée: ${filePath}`);
+                }
+            }
+        } catch (error) {
+            console.error(`Erreur lors de la suppression de l'image ${imageUrl}:`, error);
+        }
+    }
+}
 
 export class AdService {
     /**
@@ -165,6 +189,16 @@ export class AdService {
                         userId: true,
                     },
                 },
+                dynamicFields: {
+                    include: {
+                        field: true,
+                    },
+                    orderBy: {
+                        field: {
+                            order: 'asc',
+                        },
+                    },
+                },
                 _count: {
                     select: {
                         favorites: true,
@@ -210,6 +244,7 @@ export class AdService {
         size?: string
         deliveryAvailable?: boolean
         negotiable?: boolean
+        dynamicFields?: FieldValueInput[]
     }) {
         // Vérifier si l'utilisateur est de confiance (Trusted)
         const user = await prisma.user.findUnique({
@@ -219,7 +254,8 @@ export class AdService {
 
         const moderationStatus = user?.isTrusted ? AdStatus.APPROVED : AdStatus.PENDING;
 
-        return prisma.ad.create({
+        // Créer l'annonce
+        const ad = await prisma.ad.create({
             data: {
                 title: data.title,
                 description: data.description,
@@ -231,7 +267,7 @@ export class AdService {
                 images: data.images || [],
                 deliveryAvailable: data.deliveryAvailable || false,
                 negotiable: data.negotiable !== undefined ? data.negotiable : true,
-                moderationStatus: moderationStatus, // Auto-approve if trusted
+                moderationStatus: moderationStatus,
                 user: {
                     connect: { id: data.userId },
                 },
@@ -251,6 +287,14 @@ export class AdService {
                 category: true,
             },
         })
+
+        // Sauvegarder les champs dynamiques si fournis
+        if (data.dynamicFields && data.dynamicFields.length > 0) {
+            await SubcategoryFieldService.saveAdFieldValues(ad.id, data.dynamicFields)
+        }
+
+        // Retourner l'annonce avec les champs dynamiques
+        return this.getAdById(ad.id)
     }
 
     /**
@@ -308,13 +352,13 @@ export class AdService {
     }
 
     /**
-     * Supprimer une annonce
+     * Supprimer une annonce et ses images associées
      */
     static async deleteAd(id: string, userId: string) {
-        // Vérifier que l'utilisateur est le propriétaire
+        // Vérifier que l'utilisateur est le propriétaire et récupérer les images
         const ad = await prisma.ad.findUnique({
             where: { id },
-            select: { userId: true },
+            select: { userId: true, images: true },
         })
 
         if (!ad) {
@@ -323,6 +367,11 @@ export class AdService {
 
         if (ad.userId !== userId) {
             throw new Error('Non autorisé')
+        }
+
+        // Supprimer les fichiers images du système de fichiers
+        if (ad.images) {
+            await deleteAdImages(ad.images);
         }
 
         return prisma.ad.delete({

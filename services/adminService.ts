@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma'
+import fs from 'fs'
+import path from 'path'
 
 // Helper function to serialize dates to strings for API responses
 function serializeDates<T>(obj: T): T {
@@ -11,6 +13,33 @@ function serializeDates<T>(obj: T): T {
         ) as T;
     }
     return obj;
+}
+
+/**
+ * Supprimer les fichiers images d'une annonce du système de fichiers
+ * @param imageUrls - Array des URLs des images (ex: /uploads/ads/123-abc.jpg)
+ */
+async function deleteAdImages(imageUrls: string[]): Promise<void> {
+    if (!imageUrls || imageUrls.length === 0) return;
+
+    for (const imageUrl of imageUrls) {
+        try {
+            // Convertir l'URL en chemin de fichier
+            // /uploads/ads/123-abc.jpg -> public/uploads/ads/123-abc.jpg
+            if (imageUrl.startsWith('/uploads/')) {
+                const filePath = path.join(process.cwd(), 'public', imageUrl);
+
+                // Vérifier si le fichier existe avant de supprimer
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    console.log(`Image supprimée: ${filePath}`);
+                }
+            }
+        } catch (error) {
+            // Log l'erreur mais ne pas bloquer la suppression de l'annonce
+            console.error(`Erreur lors de la suppression de l'image ${imageUrl}:`, error);
+        }
+    }
 }
 
 export class AdminService {
@@ -414,9 +443,21 @@ export class AdminService {
     }
 
     /**
-     * Supprimer une annonce
+     * Supprimer une annonce et ses images associées
      */
     static async deleteAd(adId: string) {
+        // Récupérer l'annonce avec ses images avant suppression
+        const ad = await prisma.ad.findUnique({
+            where: { id: adId },
+            select: { images: true }
+        });
+
+        // Supprimer les fichiers images du système de fichiers
+        if (ad?.images) {
+            await deleteAdImages(ad.images);
+        }
+
+        // Supprimer l'annonce de la base de données
         return prisma.ad.delete({
             where: { id: adId },
         })
@@ -551,7 +592,7 @@ export class AdminService {
     }
 
     /**
-     * Résoudre un signalement d'annonce en supprimant l'annonce
+     * Résoudre un signalement d'annonce en supprimant l'annonce et ses images
      */
     static async resolveReportDeleteAd(reportId: string) {
         const report = await this.getReportById(reportId)
@@ -562,6 +603,17 @@ export class AdminService {
 
         if (!report.adId) {
             throw new Error('Ce signalement ne concerne pas une annonce')
+        }
+
+        // Récupérer l'annonce avec ses images avant suppression
+        const ad = await prisma.ad.findUnique({
+            where: { id: report.adId },
+            select: { images: true }
+        });
+
+        // Supprimer les fichiers images du système de fichiers
+        if (ad?.images) {
+            await deleteAdImages(ad.images);
         }
 
         // Supprimer l'annonce
@@ -669,7 +721,7 @@ export class AdminService {
     }
 
     /**
-     * Résoudre un signalement en supprimant l'annonce ET bannissant l'utilisateur
+     * Résoudre un signalement en supprimant l'annonce, ses images ET bannissant l'utilisateur
      */
     static async resolveReportDeleteAdAndBanUser(reportId: string, banReason: string) {
         const report = await this.getReportById(reportId)
@@ -682,9 +734,22 @@ export class AdminService {
             throw new Error('Ce signalement ne concerne pas une annonce')
         }
 
-        const ad = report.ad
+        // Récupérer l'annonce avec toutes ses images
+        const ad = await prisma.ad.findUnique({
+            where: { id: report.adId },
+            select: {
+                images: true,
+                userId: true
+            }
+        });
+
         if (!ad) {
             throw new Error('Annonce introuvable')
+        }
+
+        // Supprimer les fichiers images du système de fichiers
+        if (ad.images) {
+            await deleteAdImages(ad.images);
         }
 
         // Supprimer l'annonce
@@ -941,7 +1006,7 @@ export class AdminService {
     }
 
     /**
-     * Supprimer une catégorie avec toutes ses annonces (suppression forcée)
+     * Supprimer une catégorie avec toutes ses annonces et images (suppression forcée)
      */
     static async deleteCategoryWithAds(categoryId: string) {
         const category = await prisma.category.findUnique({
@@ -958,6 +1023,19 @@ export class AdminService {
         // Vérifier s'il y a des sous-catégories (on ne peut pas supprimer récursivement)
         if (category.children && category.children.length > 0) {
             throw new Error(`Impossible de supprimer: cette catégorie contient ${category.children.length} sous-catégorie(s). Supprimez d'abord les sous-catégories.`);
+        }
+
+        // Récupérer toutes les annonces avec leurs images avant suppression
+        const ads = await prisma.ad.findMany({
+            where: { categoryId },
+            select: { images: true }
+        });
+
+        // Supprimer les fichiers images de toutes les annonces
+        for (const ad of ads) {
+            if (ad.images) {
+                await deleteAdImages(ad.images);
+            }
         }
 
         // Supprimer les annonces de cette catégorie

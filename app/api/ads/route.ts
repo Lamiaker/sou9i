@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
             size,
             deliveryAvailable,
             negotiable,
+            dynamicFields,
         } = body
 
         // Validation basique
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
             images,
             deliveryAvailable,
             negotiable,
+            dynamicFields,
         })
 
         // Revalider les chemins pour mettre à jour les caches

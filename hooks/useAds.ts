@@ -38,6 +38,16 @@ export interface Ad {
     _count?: {
         favorites: number;
     };
+    dynamicFields?: Array<{
+        id: string;
+        value: string;
+        field: {
+            id: string;
+            name: string;
+            label: string;
+            type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'SELECT' | 'BOOLEAN' | 'IMAGE';
+        };
+    }>;
 }
 
 export interface AdFilters {

@@ -11,6 +11,9 @@ import {
 import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import DynamicFieldsInput from "@/components/forms/DynamicFieldsInput";
+import { validateAllFields } from "@/hooks/useDynamicFields";
+import { useDynamicFields } from "@/hooks/useDynamicFields";
 
 interface FormData {
     title: string;
@@ -19,11 +22,6 @@ interface FormData {
     categoryId: string;
     subcategoryId: string;
     location: string;
-    condition: string;
-    brand: string;
-    size: string;
-    deliveryAvailable: boolean;
-    negotiable: boolean;
 }
 
 export default function DeposerAnnonce() {
@@ -43,11 +41,6 @@ export default function DeposerAnnonce() {
         categoryId: '',
         subcategoryId: '',
         location: '',
-        condition: 'Neuf',
-        brand: '',
-        size: '',
-        deliveryAvailable: false,
-        negotiable: true,
     });
 
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -55,6 +48,14 @@ export default function DeposerAnnonce() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+
+    // État pour les champs dynamiques
+    const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, string>>({});
+    const [dynamicFieldErrors, setDynamicFieldErrors] = useState<Record<string, string>>({});
+
+    // Récupérer les champs dynamiques de la catégorie sélectionnée
+    const effectiveCategoryId = formData.subcategoryId || formData.categoryId;
+    const { fields: dynamicFields } = useDynamicFields(effectiveCategoryId);
 
     // Redirection si non connecté
     if (!authLoading && !isAuthenticated) {
@@ -74,30 +75,7 @@ export default function DeposerAnnonce() {
         );
     }
 
-    // Déterminer si la catégorie nécessite les champs État/Marque/Taille
-    const getCategoryType = (categoryId: string) => {
-        const category = categories.find(cat => cat.id === categoryId);
-        if (!category) return 'other';
 
-        const categoryName = category.name.toLowerCase();
-
-        // Catégories nécessitant État/Marque/Taille (produits physiques)
-        const productCategories = [
-            'mode', 'beauté', 'vêtement', 'chaussure', 'accessoire',
-            'électronique', 'téléphone', 'ordinateur', 'tablette',
-            'meuble', 'décoration', 'maison',
-            'bébé', 'enfant', 'jouet', 'puériculture'
-        ];
-
-        const isProduct = productCategories.some(keyword =>
-            categoryName.includes(keyword)
-        );
-
-        return isProduct ? 'product' : 'other';
-    };
-
-    const selectedCategoryType = getCategoryType(formData.categoryId || formData.subcategoryId);
-    const showProductFields = selectedCategoryType === 'product';
 
     // Handlers
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -108,6 +86,19 @@ export default function DeposerAnnonce() {
             setFormData(prev => ({ ...prev, [name]: checked }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    // Handler pour les champs dynamiques
+    const handleDynamicFieldChange = (fieldId: string, value: string) => {
+        setDynamicFieldValues(prev => ({ ...prev, [fieldId]: value }));
+        // Effacer l'erreur quand l'utilisateur modifie
+        if (dynamicFieldErrors[fieldId]) {
+            setDynamicFieldErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[fieldId];
+                return newErrors;
+            });
         }
     };
 
@@ -182,6 +173,16 @@ export default function DeposerAnnonce() {
             return;
         }
 
+        // Validation des champs dynamiques
+        if (dynamicFields.length > 0) {
+            const validation = validateAllFields(dynamicFields, dynamicFieldValues);
+            if (!validation.valid) {
+                setDynamicFieldErrors(validation.errors);
+                setError('Veuillez corriger les erreurs dans les champs supplémentaires');
+                return;
+            }
+        }
+
         try {
             setSubmitting(true);
 
@@ -192,20 +193,21 @@ export default function DeposerAnnonce() {
             // 1. Upload des images
             const imageUrls = await uploadImages(selectedFiles);
 
-            // 2. Créer l&apos;annonce
+            // 2. Créer l'annonce
+            // Préparer les champs dynamiques pour l'envoi
+            const dynamicFieldsData = Object.entries(dynamicFieldValues)
+                .filter(([, value]) => value && value.trim() !== '')
+                .map(([fieldId, value]) => ({ fieldId, value }));
+
             const createData = {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
                 price: parseFloat(formData.price),
                 categoryId: formData.subcategoryId || formData.categoryId,
                 location: formData.location.trim(),
-                condition: showProductFields ? formData.condition : null,
-                brand: showProductFields ? formData.brand.trim() || null : null,
-                size: showProductFields ? formData.size.trim() || null : null,
                 images: imageUrls,
-                deliveryAvailable: formData.deliveryAvailable,
-                negotiable: formData.negotiable,
                 userId: user?.id,
+                dynamicFields: dynamicFieldsData,
             };
 
             const response = await fetch('/api/ads', {
@@ -483,88 +485,16 @@ export default function DeposerAnnonce() {
                                 </div>
                             </div>
 
-                            {/* Caractéristiques - UNIQUEMENT pour produits physiques */}
-                            {showProductFields && (
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div>
-                                        <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
-                                            État
-                                        </label>
-                                        <select
-                                            id="condition"
-                                            name="condition"
-                                            value={formData.condition}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
-                                            disabled={isLoading}
-                                        >
-                                            <option value="Neuf">Neuf</option>
-                                            <option value="Très bon état">Très bon état</option>
-                                            <option value="Bon état">Bon état</option>
-                                            <option value="Satisfaisant">Satisfaisant</option>
-                                        </select>
-                                    </div>
 
-                                    <div>
-                                        <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Marque
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="brand"
-                                            name="brand"
-                                            value={formData.brand}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                            placeholder="Ex: Apple"
-                                            disabled={isLoading}
-                                        />
-                                    </div>
 
-                                    <div>
-                                        <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Taille
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="size"
-                                            name="size"
-                                            value={formData.size}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                            placeholder="Ex: 256 GB"
-                                            disabled={isLoading}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Options */}
-                            <div className="space-y-3">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="deliveryAvailable"
-                                        checked={formData.deliveryAvailable}
-                                        onChange={handleInputChange}
-                                        className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary"
-                                        disabled={isLoading}
-                                    />
-                                    <span className="text-gray-700">Livraison disponible</span>
-                                </label>
-
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="negotiable"
-                                        checked={formData.negotiable}
-                                        onChange={handleInputChange}
-                                        className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary"
-                                        disabled={isLoading}
-                                    />
-                                    <span className="text-gray-700">Prix négociable</span>
-                                </label>
-                            </div>
+                            {/* Champs dynamiques */}
+                            <DynamicFieldsInput
+                                categoryId={formData.subcategoryId || formData.categoryId}
+                                values={dynamicFieldValues}
+                                onChange={handleDynamicFieldChange}
+                                errors={dynamicFieldErrors}
+                                disabled={isLoading}
+                            />
                         </div>
 
                         {/* Bouton Submit */}
