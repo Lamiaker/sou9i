@@ -14,6 +14,7 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import DynamicFieldsInput from "@/components/forms/DynamicFieldsInput";
 import { validateAllFields } from "@/hooks/useDynamicFields";
 import { useDynamicFields } from "@/hooks/useDynamicFields";
+import CategorySelect from "@/components/ui/CategorySelect";
 
 interface FormData {
     title: string;
@@ -394,49 +395,43 @@ export default function DeposerAnnonce() {
 
                             {/* Catégorie */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Catégorie <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        id="categoryId"
-                                        name="categoryId"
-                                        value={formData.categoryId}
-                                        onChange={(e) => {
-                                            handleInputChange(e);
-                                            setFormData(prev => ({ ...prev, subcategoryId: '' }));
-                                        }}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
-                                        disabled={isLoading}
-                                        required
-                                    >
-                                        <option value="">Choisir une catégorie</option>
-                                        {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <CategorySelect
+                                    id="categoryId"
+                                    label="Catégorie"
+                                    required
+                                    value={formData.categoryId}
+                                    onChange={(value) => {
+                                        setFormData(prev => ({ ...prev, categoryId: value, subcategoryId: '' }));
+                                        setDynamicFieldValues({});
+                                    }}
+                                    options={categories.map(cat => ({
+                                        id: cat.id,
+                                        name: cat.name,
+                                        icon: cat.icon
+                                    }))}
+                                    placeholder="Choisir une catégorie"
+                                    disabled={isLoading}
+                                    variant="category"
+                                />
 
                                 {/* Sous-catégorie */}
                                 {selectedCat && selectedCat.children && selectedCat.children.length > 0 && (
-                                    <div>
-                                        <label htmlFor="subcategoryId" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Sous-catégorie
-                                        </label>
-                                        <select
-                                            id="subcategoryId"
-                                            name="subcategoryId"
-                                            value={formData.subcategoryId}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
-                                            disabled={isLoading}
-                                        >
-                                            <option value="">Choisir (optionnel)</option>
-                                            {selectedCat.children.map(child => (
-                                                <option key={child.id} value={child.id}>{child.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <CategorySelect
+                                        id="subcategoryId"
+                                        label="Sous-catégorie"
+                                        value={formData.subcategoryId}
+                                        onChange={(value) => {
+                                            setFormData(prev => ({ ...prev, subcategoryId: value }));
+                                        }}
+                                        options={selectedCat.children.map(child => ({
+                                            id: child.id,
+                                            name: child.name,
+                                            icon: child.icon
+                                        }))}
+                                        placeholder="Choisir (optionnel)"
+                                        disabled={isLoading}
+                                        variant="subcategory"
+                                    />
                                 )}
                             </div>
 
