@@ -70,7 +70,7 @@ export class AdminService {
             prisma.ad.count(),
             prisma.ad.count({ where: { status: 'active' } }),
             prisma.report.count({ where: { status: 'PENDING' } }),
-            prisma.category.count(),
+            prisma.category.count({ where: { parentId: null } }),
         ])
 
         return {

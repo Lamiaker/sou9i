@@ -83,10 +83,10 @@ export async function PATCH(request: NextRequest) {
             const currentUser = await UserService.getUserById(session.user.id);
 
             if (currentUser && currentUser.avatar && currentUser.avatar !== body.avatar) {
-                // Si l'ancien avatar est stocké localement
+                // Ne supprimer que les images uploadées (pas l'image par défaut /user.png)
+                // Supporte les deux dossiers : /uploads/avatars/ et /uploads/ads/
                 if (currentUser.avatar.startsWith('/uploads/')) {
                     try {
-                        // Retirer le slash initial pour path.join (on sait qu'il existe car '/uploads/' commence par '/')
                         const relativePath = currentUser.avatar.substring(1);
                         const filePath = path.join(process.cwd(), 'public', relativePath);
 

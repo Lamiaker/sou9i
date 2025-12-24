@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { User, Mail, Phone, MapPin, Camera, Save, ShieldCheck, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
-import { useImageUpload } from "@/hooks/useImageUpload";
+import { useAvatarUpload } from "@/hooks/useAvatarUpload";
 import { useRouter } from "next/navigation";
 import { ProfileSkeleton } from "@/components/layout/DashboardInnerSkeletons";
 
 export default function ProfilePage() {
     const { user: sessionUser, update: updateSession } = useAuth();
-    const { uploadImages, uploading } = useImageUpload();
+    const { uploadAvatar, uploading } = useAvatarUpload();
 
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
@@ -49,37 +49,24 @@ export default function ProfilePage() {
 
         try {
             setMessage(null);
-            // 1. Upload vers le serveur/cloudinary
-            const urls = await uploadImages(Array.from(files));
-            const newAvatarUrl = urls[0];
+            // Upload vers le serveur avec le nouveau endpoint dédié
+            // Ce endpoint gère automatiquement :
+            // - L'upload dans /uploads/avatars/
+            // - La suppression de l'ancien avatar
+            // - La mise à jour en base de données
+            const newAvatarUrl = await uploadAvatar(files[0]);
 
-            // 2. Mise à jour du profil utilisateur via API
-            // Note: Notre route API attend un patch avec les champs à modifier.
-            // On peut envoyer juste l&apos;avatar.
+            // Update local state
+            setUserData((prev: any) => ({ ...prev, avatar: newAvatarUrl }));
 
-            // Mais attendez, notre route API actuelle ne gère pas 'avatar' dans PATCH ! 
-            // Je dois vérifier ou modifier l&apos;API pour accepter 'avatar'.
-            // Je vais supposer que je peux modifier l&apos;API rapidement après.
-
-            const response = await fetch('/api/user/profile', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ avatar: newAvatarUrl })
-            });
-
-            if (response.ok) {
-                // 3. Update local state
-                setUserData((prev: any) => ({ ...prev, avatar: newAvatarUrl }));
-
-                if (updateSession) {
-                    await updateSession({ image: newAvatarUrl });
-                }
-                setMessage({ type: 'success', text: 'Photo de profil mise à jour' });
+            if (updateSession) {
+                await updateSession({ image: newAvatarUrl });
             }
+            setMessage({ type: 'success', text: 'Photo de profil mise à jour' });
 
-        } catch {
-            console.error("Upload error");
-            setMessage({ type: 'error', text: 'Erreur lors du téléchargement de l\'image' });
+        } catch (err) {
+            console.error("Upload error:", err);
+            setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Erreur lors du téléchargement de l\'image' });
         }
     };
 
