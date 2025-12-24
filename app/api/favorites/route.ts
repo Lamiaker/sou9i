@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { FavoriteService } from '@/services'
 
 // GET /api/favorites - Récupérer les favoris d'un utilisateur
 export async function GET(request: NextRequest) {
     try {
-        const searchParams = request.nextUrl.searchParams
-        const userId = searchParams.get('userId')
+        const session = await getServerSession(authOptions)
 
-        if (!userId) {
+        if (!session?.user?.id) {
             return NextResponse.json(
-                { success: false, error: 'userId requis' },
-                { status: 400 }
+                { success: false, error: 'Non authentifié' },
+                { status: 401 }
             )
         }
 
-        // Appel du service
-        const favorites = await FavoriteService.getUserFavorites(userId)
+        // Appel du service avec l'ID de la session (sécurisé)
+        const favorites = await FavoriteService.getUserFavorites(session.user.id)
 
         return NextResponse.json({
             success: true,
@@ -36,18 +37,27 @@ export async function GET(request: NextRequest) {
 // POST /api/favorites - Ajouter aux favoris
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json()
-        const { userId, adId } = body
+        const session = await getServerSession(authOptions)
 
-        if (!userId || !adId) {
+        if (!session?.user?.id) {
             return NextResponse.json(
-                { success: false, error: 'userId et adId requis' },
+                { success: false, error: 'Non authentifié' },
+                { status: 401 }
+            )
+        }
+
+        const body = await request.json()
+        const { adId } = body
+
+        if (!adId) {
+            return NextResponse.json(
+                { success: false, error: 'adId requis' },
                 { status: 400 }
             )
         }
 
-        // Appel du service
-        const favorite = await FavoriteService.addFavorite(userId, adId)
+        // Appel du service avec l'ID de la session (sécurisé)
+        const favorite = await FavoriteService.addFavorite(session.user.id, adId)
 
         return NextResponse.json({
             success: true,
@@ -78,19 +88,27 @@ export async function POST(request: NextRequest) {
 // DELETE /api/favorites - Retirer des favoris
 export async function DELETE(request: NextRequest) {
     try {
+        const session = await getServerSession(authOptions)
+
+        if (!session?.user?.id) {
+            return NextResponse.json(
+                { success: false, error: 'Non authentifié' },
+                { status: 401 }
+            )
+        }
+
         const searchParams = request.nextUrl.searchParams
-        const userId = searchParams.get('userId')
         const adId = searchParams.get('adId')
 
-        if (!userId || !adId) {
+        if (!adId) {
             return NextResponse.json(
-                { success: false, error: 'userId et adId requis' },
+                { success: false, error: 'adId requis' },
                 { status: 400 }
             )
         }
 
-        // Appel du service
-        await FavoriteService.removeFavorite(userId, adId)
+        // Appel du service avec l'ID de la session (sécurisé)
+        await FavoriteService.removeFavorite(session.user.id, adId)
 
         return NextResponse.json({
             success: true,

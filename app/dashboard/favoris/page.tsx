@@ -2,20 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import Image from "next/image";
-import { Heart, MapPin } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useFavorites } from "@/context/FavoritesContext";
-import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
-
-// Helper to format currency
-const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-DZ', {
-        style: 'currency',
-        currency: 'DZD',
-        maximumFractionDigits: 0,
-    }).format(price);
-};
+import AdCard from "@/components/ui/AdCard";
 
 export default function FavorisPage() {
     const { data: session, status } = useSession();
@@ -29,7 +18,8 @@ export default function FavorisPage() {
 
             if (status === "authenticated" && session?.user?.id) {
                 try {
-                    const response = await fetch(`/api/favorites?userId=${session.user.id}`);
+                    // L'API utilise maintenant la session serveur, pas besoin de passer userId
+                    const response = await fetch('/api/favorites');
                     if (response.ok) {
                         const resData = await response.json();
                         if (resData.success) {
@@ -39,13 +29,6 @@ export default function FavorisPage() {
                 } catch (error) {
                     console.error("Error fetching favorites:", error);
                 }
-            } else {
-                // If not logged in, we rely on existing logic or show empty.
-                // Since this is a dashboard page, we assume auth.
-                // Unauthenticated users will see empty or redirect (middleware handles protection usually).
-                // However, if we want to support local favorites display here:
-                // We'd need to fetch Ad details for IDs in localStorage.
-                // For now, let's keep it simple and focus on authenticated users as per backend integration request.
             }
             setLoading(false);
         };
@@ -100,54 +83,19 @@ export default function FavorisPage() {
                 {favoritesList.map((item) => {
                     const ad = item.ad;
                     // Handle image array (schema: images, frontend mockup: photos)
-                    const imageSrc = (ad.images && ad.images.length > 0) ? ad.images[0] : (ad.photos && ad.photos.length > 0 ? ad.photos[0] : "https://via.placeholder.com/300");
+                    const images = (ad.images && ad.images.length > 0) ? ad.images : (ad.photos || []);
 
                     return (
-                        <div key={item.id || item.adId} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition h-full flex flex-col relative group">
-                            <Link href={`/annonces/${ad.id}`}>
-                                <div className="aspect-[4/3] relative bg-gray-100">
-                                    <Image
-                                        src={imageSrc}
-                                        alt={ad.title}
-                                        fill
-                                        className="object-cover group-hover:scale-105 transition duration-300"
-                                    />
-
-                                    {/* Delete from favorites button */}
-                                    <button
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleRemove(ad.id);
-                                        }}
-                                        className="absolute top-3 right-3 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition z-10"
-                                        title="Retirer des favoris"
-                                    >
-                                        <Heart size={18} fill="currentColor" />
-                                    </button>
-                                </div>
-                            </Link>
-
-                            <div className="p-4 flex flex-col flex-1">
-                                <Link href={`/annonces/${ad.id}`}>
-                                    <div className="flex-1">
-                                        <h3 className="font-medium text-gray-900 line-clamp-2 group-hover:text-primary transition mb-1">
-                                            {ad.title}
-                                        </h3>
-                                        <p className="text-lg font-bold text-primary">{formatPrice(ad.price)}</p>
-                                    </div>
-                                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
-                                        <div className="flex items-center gap-1">
-                                            <MapPin size={12} />
-                                            {ad.location || "Algérie"}
-                                        </div>
-                                        <span>
-                                            {ad.createdAt ? formatDistanceToNow(new Date(ad.createdAt), { addSuffix: true, locale: fr }) : "Récemment"}
-                                        </span>
-                                    </div>
-                                </Link>
-                            </div>
-                        </div>
+                        <AdCard
+                            key={item.id || item.adId}
+                            id={ad.id}
+                            title={ad.title}
+                            price={ad.price}
+                            images={images}
+                            location={ad.location}
+                            createdAt={ad.createdAt}
+                            onRemove={handleRemove}
+                        />
                     );
                 })}
             </div>

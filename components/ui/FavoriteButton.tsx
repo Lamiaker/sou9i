@@ -14,15 +14,22 @@ export default function FavoriteButton({ adId, className, size = 20 }: FavoriteB
     const { isFavorite, toggleFavorite } = useFavorites();
     const active = isFavorite(adId);
 
-    const handleClick = (e: React.MouseEvent) => {
-        e.preventDefault(); // Empêcher la navigation si le bouton est dans un lien
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        // Empêcher la navigation et la propagation de l'événement
+        e.preventDefault();
         e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+
+        // Toggle le favori sans navigation
         toggleFavorite(adId);
     };
 
     return (
         <button
+            type="button"
             onClick={handleClick}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             className={cn(
                 "p-2 rounded-full transition shadow-sm flex items-center justify-center",
                 active
@@ -36,3 +43,4 @@ export default function FavoriteButton({ adId, className, size = 20 }: FavoriteB
         </button>
     );
 }
+

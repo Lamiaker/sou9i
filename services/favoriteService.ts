@@ -163,4 +163,76 @@ export class FavoriteService {
 
         return favorites.map((f: { adId: string }) => f.adId)
     }
+
+    /**
+     * Synchroniser les favoris locaux (visiteur) avec le compte utilisateur
+     * 
+     * @param userId - ID de l'utilisateur authentifié
+     * @param localAdIds - Liste des IDs d'annonces stockés localement
+     * @returns Résultat de la synchronisation (ajoutés, ignorés, favoris finaux)
+     */
+    static async syncFavorites(userId: string, localAdIds: string[]): Promise<{
+        added: number,
+        skipped: number,
+        favorites: string[]
+    }> {
+        let added = 0
+        let skipped = 0
+
+        // 1. Récupérer les favoris existants de l'utilisateur
+        const existingFavorites = await this.getUserFavoriteIds(userId)
+        const existingSet = new Set(existingFavorites)
+
+        // 2. Filtrer les IDs qui ne sont pas déjà en favoris
+        const newAdIds = localAdIds.filter(id => !existingSet.has(id))
+
+        // 3. Vérifier quelles annonces existent réellement et sont valides
+        const validAds = await prisma.ad.findMany({
+            where: {
+                id: { in: newAdIds },
+                // Optionnel: filtrer uniquement les annonces actives et approuvées
+                status: 'active',
+                moderationStatus: 'APPROVED'
+            },
+            select: { id: true }
+        })
+
+        const validAdIds = new Set(validAds.map(ad => ad.id))
+
+        // 4. Créer les nouveaux favoris en batch (transaction pour atomicité)
+        const favoritesToCreate = newAdIds.filter(id => validAdIds.has(id))
+
+        if (favoritesToCreate.length > 0) {
+            await prisma.$transaction(async (tx) => {
+                for (const adId of favoritesToCreate) {
+                    try {
+                        await tx.favorite.create({
+                            data: {
+                                userId,
+                                adId,
+                            }
+                        })
+                        added++
+                    } catch {
+                        // Ignorer les erreurs (doublon possible en cas de race condition)
+                        skipped++
+                    }
+                }
+            })
+        }
+
+        // 5. Calculer les favoris ignorés (doublons + annonces invalides)
+        skipped += (localAdIds.length - newAdIds.length) // Doublons existants
+        skipped += (newAdIds.length - favoritesToCreate.length) // Annonces invalides
+
+        // 6. Retourner les favoris finaux
+        const finalFavorites = await this.getUserFavoriteIds(userId)
+
+        return {
+            added,
+            skipped,
+            favorites: finalFavorites
+        }
+    }
 }
+

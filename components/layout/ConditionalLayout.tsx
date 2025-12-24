@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNav from "@/components/layout/MobileNav";
 import { FavoritesProvider } from "@/context/FavoritesContext";
+import { FavoritesSyncNotifier } from "@/components/FavoritesSyncNotifier";
 
 interface ConditionalLayoutProps {
     children: React.ReactNode;
@@ -16,10 +17,11 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
     // Routes où le header/footer ne doit PAS apparaître
     const isAdminRoute = pathname?.startsWith('/admin');
 
-    // Si c&apos;est une route admin, afficher uniquement le contenu sans header/footer
+    // Si c'est une route admin, afficher uniquement le contenu sans header/footer
     if (isAdminRoute) {
         return (
             <FavoritesProvider>
+                <FavoritesSyncNotifier />
                 {children}
             </FavoritesProvider>
         );
@@ -28,6 +30,7 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
     // Sinon, afficher le layout complet avec header/footer
     return (
         <FavoritesProvider>
+            <FavoritesSyncNotifier />
             <Header />
             <main className="flex-grow">
                 {children}
@@ -37,3 +40,4 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
         </FavoritesProvider>
     );
 }
+

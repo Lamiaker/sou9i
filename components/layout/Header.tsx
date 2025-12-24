@@ -117,7 +117,7 @@ export default function Header() {
               <IconButtonWithLabel
                 icon={Heart}
                 label="Favoris"
-                href="/dashboard/favoris"
+                href="/favoris"
               />
               {favorites.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -206,7 +206,7 @@ export default function Header() {
                 <MenuButton
                   icon={Heart}
                   text="Favoris"
-                  href="/dashboard/favoris"
+                  href="/favoris"
                   onClick={closeMobileMenu}
                 />
                 {favorites.length > 0 && (

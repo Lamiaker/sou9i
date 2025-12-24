@@ -1,22 +1,9 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
 import { MapPin, Filter, Search } from "lucide-react";
-import FavoriteButton from "@/components/ui/FavoriteButton";
+import AdCard from "@/components/ui/AdCard";
 import { useState, useEffect, useCallback } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
-
-// Helper for formatting price
-const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-DZ', {
-        style: 'currency',
-        currency: 'DZD',
-        maximumFractionDigits: 0,
-    }).format(price);
-};
 
 export default function SearchPage() {
     const searchParams = useSearchParams();
@@ -200,39 +187,15 @@ export default function SearchPage() {
                         ) : results.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {results.map((ad) => (
-                                    <Link href={`/annonces/${ad.id}`} key={ad.id} className="group">
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition h-full flex flex-col relative">
-                                            <div className="aspect-[4/3] relative bg-gray-100">
-                                                <Image
-                                                    src={ad.images?.[0] || "/user.png"}
-                                                    alt={ad.title}
-                                                    fill
-                                                    className="object-cover group-hover:scale-105 transition duration-300"
-                                                    unoptimized
-                                                />
-                                                <div className="absolute top-3 right-3 z-10">
-                                                    <FavoriteButton adId={ad.id} size={18} />
-                                                </div>
-                                            </div>
-                                            <div className="p-4 flex flex-col flex-1">
-                                                <div className="flex-1">
-                                                    <h3 className="font-medium text-gray-900 line-clamp-2 group-hover:text-primary transition mb-1">
-                                                        {ad.title}
-                                                    </h3>
-                                                    <p className="text-lg font-bold text-primary">{formatPrice(ad.price)}</p>
-                                                </div>
-                                                <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
-                                                    <div className="flex items-center gap-1">
-                                                        <MapPin size={12} />
-                                                        {ad.location || "Algérie"}
-                                                    </div>
-                                                    <span>
-                                                        {ad.createdAt ? formatDistanceToNow(new Date(ad.createdAt), { addSuffix: true, locale: fr }) : ""}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Link>
+                                    <AdCard
+                                        key={ad.id}
+                                        id={ad.id}
+                                        title={ad.title}
+                                        price={ad.price}
+                                        images={ad.images}
+                                        location={ad.location}
+                                        createdAt={ad.createdAt}
+                                    />
                                 ))}
                             </div>
                         ) : (
