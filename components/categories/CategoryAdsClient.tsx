@@ -50,6 +50,10 @@ export default function CategoryAdsClient({ category, initialAds }: CategoryAdsC
     const [priceMin, setPriceMin] = useState<string>('');
     const [priceMax, setPriceMax] = useState<string>('');
     const [locationFilter, setLocationFilter] = useState<string>('');
+    const [showAllSubcategories, setShowAllSubcategories] = useState(false);
+
+    // Constante pour le nombre max de sous-catégories affichées par défaut
+    const MAX_VISIBLE_SUBCATEGORIES = 6;
 
     // Mettre à jour les annonces quand initialAds change
     useEffect(() => {
@@ -129,6 +133,7 @@ export default function CategoryAdsClient({ category, initialAds }: CategoryAdsC
                         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <SlidersHorizontal size={18} />
                             Sous-catégories
+                            <span className="text-xs text-gray-400 font-normal">({category.children.length})</span>
                         </h3>
                         <div className="space-y-2">
                             <label className="flex items-center gap-2 cursor-pointer group">
@@ -144,7 +149,11 @@ export default function CategoryAdsClient({ category, initialAds }: CategoryAdsC
                                 </span>
                             </label>
 
-                            {category.children.map((child) => (
+                            {/* Afficher les sous-catégories avec limite */}
+                            {(showAllSubcategories
+                                ? category.children
+                                : category.children.slice(0, MAX_VISIBLE_SUBCATEGORIES)
+                            ).map((child) => (
                                 <label key={child.id} className="flex items-center gap-2 cursor-pointer group">
                                     <input
                                         type="radio"
@@ -158,6 +167,31 @@ export default function CategoryAdsClient({ category, initialAds }: CategoryAdsC
                                     </span>
                                 </label>
                             ))}
+
+                            {/* Bouton Voir plus / Voir moins */}
+                            {category.children.length > MAX_VISIBLE_SUBCATEGORIES && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAllSubcategories(!showAllSubcategories)}
+                                    className="w-full mt-3 py-2 px-3 text-sm font-medium text-primary hover:bg-primary/5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                >
+                                    {showAllSubcategories ? (
+                                        <>
+                                            <span>Voir moins</span>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                            </svg>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Voir plus ({category.children.length - MAX_VISIBLE_SUBCATEGORIES})</span>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
