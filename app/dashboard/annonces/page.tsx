@@ -11,6 +11,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useAds } from "@/hooks/useAds";
 import { AnnoncesSkeleton } from "@/components/layout/DashboardInnerSkeletons";
+import SimpleSelect from "@/components/ui/SimpleSelect";
 
 export default function MesAnnoncesPage() {
     const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -191,16 +192,16 @@ export default function MesAnnoncesPage() {
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
                     />
                 </div>
-                <select
+                <SimpleSelect
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"
-                >
-                    <option value="all">Tous</option>
-                    <option value="active">En ligne</option>
-                    <option value="pending">En attente / Brouillon</option>
-                    <option value="sold">Vendu</option>
-                </select>
+                    onChange={setStatusFilter}
+                    options={[
+                        { value: "all", label: "Tous" },
+                        { value: "active", label: "En ligne" },
+                        { value: "pending", label: "En attente / Brouillon" },
+                        { value: "sold", label: "Vendu" },
+                    ]}
+                />
             </div>
 
             {/* List */}

@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { MapPin, Filter, Search } from "lucide-react";
 import AdCard from "@/components/ui/AdCard";
+import CategorySelect from "@/components/ui/CategorySelect";
 import { useState, useEffect, useCallback } from "react";
 
 export default function SearchPage() {
@@ -110,21 +111,18 @@ export default function SearchPage() {
                             </div>
 
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-                                    <select
-                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"
-                                        value={filters.categoryId}
-                                        onChange={(e) => setFilters({ ...filters, categoryId: e.target.value })}
-                                    >
-                                        <option value="Toutes">Toutes les catégories</option>
-                                        {categories.map((cat) => (
-                                            <option key={cat.id} value={cat.id}>
-                                                {cat.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <CategorySelect
+                                    label="Catégorie"
+                                    value={filters.categoryId === "Toutes" ? "" : filters.categoryId}
+                                    onChange={(value) => setFilters({ ...filters, categoryId: value || "Toutes" })}
+                                    options={categories.map((cat) => ({
+                                        id: cat.id,
+                                        name: cat.name,
+                                        icon: cat.icon
+                                    }))}
+                                    placeholder="Toutes les catégories"
+                                    variant="category"
+                                />
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Localisation</label>

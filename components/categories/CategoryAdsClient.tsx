@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { MapPin, Filter, SlidersHorizontal } from "lucide-react";
 import AdCard from "@/components/ui/AdCard";
+import SimpleSelect from "@/components/ui/SimpleSelect";
 
 interface Category {
     id: string;
@@ -228,15 +229,15 @@ export default function CategoryAdsClient({ category, initialAds }: CategoryAdsC
                     </span>
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-500 hidden sm:inline">Trier par:</span>
-                        <select
+                        <SimpleSelect
                             value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as any)}
-                            className="text-sm font-medium text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 outline-none focus:border-primary"
-                        >
-                            <option value="recent">Plus récents</option>
-                            <option value="price-asc">Prix croissant</option>
-                            <option value="price-desc">Prix décroissant</option>
-                        </select>
+                            onChange={(value) => setSortBy(value as any)}
+                            options={[
+                                { value: "recent", label: "Plus récents" },
+                                { value: "price-asc", label: "Prix croissant" },
+                                { value: "price-desc", label: "Prix décroissant" },
+                            ]}
+                        />
                     </div>
                 </div>
 

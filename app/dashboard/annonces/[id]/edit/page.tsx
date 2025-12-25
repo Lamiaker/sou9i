@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useAd } from "@/hooks/useAds";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import SimpleSelect from "@/components/ui/SimpleSelect";
 
 interface FormData {
     title: string;
@@ -378,22 +379,15 @@ export default function EditAnnoncePage() {
                                 <Tag className="text-primary" size={20} />
                                 Statut
                             </h2>
-                            <div className="relative">
-                                <select
-                                    id="status"
-                                    name="status"
-                                    value={formData.status}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 appearance-none rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition cursor-pointer"
-                                    disabled={isLoading}
-                                >
-                                    <option value="active">En ligne (Visible)</option>
-                                    <option value="sold">Marquer comme Vendu</option>
-                                </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-                            </div>
+                            <SimpleSelect
+                                value={formData.status}
+                                onChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                                options={[
+                                    { value: "active", label: "En ligne (Visible)" },
+                                    { value: "sold", label: "Marquer comme Vendu" },
+                                ]}
+                                disabled={isLoading}
+                            />
                             <p className="text-xs text-gray-500 mt-3 leading-relaxed">
                                 Marquez l&apos;annonce comme &quot;Vendu&quot; si l&apos;article n&apos;est plus disponible. Cela le masquera des résultats de recherche.
                             </p>

@@ -2,6 +2,8 @@
 
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useDynamicFields, type DynamicField } from '@/hooks/useDynamicFields';
+import DynamicSelect from '@/components/ui/DynamicSelect';
+import ToggleSwitch from '@/components/ui/ToggleSwitch';
 
 interface DynamicFieldsInputProps {
     categoryId: string | null | undefined;
@@ -158,46 +160,31 @@ function FieldInput({ field, value, onChange, error, disabled }: FieldInputProps
 
         case 'SELECT':
             return (
-                <div>
-                    {label}
-                    <select
-                        id={`field-${field.id}`}
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        disabled={disabled}
-                        className={baseClasses}
-                    >
-                        <option value="">
-                            {field.placeholder || 'Sélectionner...'}
-                        </option>
-                        {field.options?.map((option) => (
-                            <option key={option} value={option}>
-                                {option}
-                            </option>
-                        ))}
-                    </select>
-                    {errorMessage}
-                </div>
+                <DynamicSelect
+                    id={`field-${field.id}`}
+                    label={field.label}
+                    required={field.required}
+                    value={value}
+                    onChange={onChange}
+                    options={field.options || []}
+                    placeholder={field.placeholder || 'Sélectionner...'}
+                    disabled={disabled}
+                    error={error}
+                />
             );
 
         case 'BOOLEAN':
             return (
-                <div className="flex items-center">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            id={`field-${field.id}`}
-                            checked={value === 'true'}
-                            onChange={(e) => onChange(e.target.checked ? 'true' : 'false')}
-                            disabled={disabled}
-                            className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary"
-                        />
-                        <span className="text-gray-700">
-                            {field.label}
-                            {field.required && <span className="text-red-500 ml-1">*</span>}
-                        </span>
-                    </label>
-                    {errorMessage}
+                <div className="sm:col-span-2">
+                    <ToggleSwitch
+                        id={`field-${field.id}`}
+                        label={field.label}
+                        required={field.required}
+                        checked={value === 'true'}
+                        onChange={(checked) => onChange(checked ? 'true' : 'false')}
+                        disabled={disabled}
+                        error={error}
+                    />
                 </div>
             );
 
