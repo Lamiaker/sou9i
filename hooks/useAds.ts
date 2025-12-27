@@ -11,6 +11,7 @@ export interface Ad {
     condition?: string | null;
     brand?: string | null;
     size?: string | null;
+    contactPhone?: string | null; // Numéro de contact spécifique (si différent du profil)
     status: string;
     moderationStatus?: string;
     rejectionReason?: string;

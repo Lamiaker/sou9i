@@ -16,7 +16,9 @@ import {
     MapPin,
     ShoppingBag,
     Star,
-    AlertCircle
+    AlertCircle,
+    Copy,
+    Check
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -58,6 +60,18 @@ export default function UsersTable({ users, pagination, onMutate }: UsersTablePr
     const router = useRouter();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    // Fonction pour copier l'ID utilisateur
+    const handleCopyId = async (userId: string) => {
+        try {
+            await navigator.clipboard.writeText(userId);
+            setCopiedId(userId);
+            setTimeout(() => setCopiedId(null), 2000); // Reset après 2 secondes
+        } catch (err) {
+            console.error('Erreur lors de la copie:', err);
+        }
+    };
 
     // Fermer le menu si on clique en dehors
     useEffect(() => {
@@ -207,6 +221,7 @@ export default function UsersTable({ users, pagination, onMutate }: UsersTablePr
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-white/10">
+                            <th className="text-left px-6 py-4 text-white/60 text-sm font-medium">ID</th>
                             <th className="text-left px-6 py-4 text-white/60 text-sm font-medium">Utilisateur</th>
                             <th className="text-left px-6 py-4 text-white/60 text-sm font-medium">État du compte</th>
                             <th className="text-left px-6 py-4 text-white/60 text-sm font-medium">Rôle</th>
@@ -221,6 +236,25 @@ export default function UsersTable({ users, pagination, onMutate }: UsersTablePr
                                 key={user.id}
                                 className={`hover:bg-white/5 transition-colors ${loading === user.id ? 'opacity-50' : ''} ${activeDropdown === user.id ? 'relative z-50' : ''}`}
                             >
+                                {/* Colonne ID avec bouton copie */}
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white/60 text-xs font-mono bg-white/5 px-2 py-1 rounded" title={user.id}>
+                                            {user.id.slice(0, 8)}...
+                                        </span>
+                                        <button
+                                            onClick={() => handleCopyId(user.id)}
+                                            className="p-1.5 hover:bg-white/10 rounded-lg transition-all group"
+                                            title="Copier l'ID complet"
+                                        >
+                                            {copiedId === user.id ? (
+                                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                            ) : (
+                                                <Copy className="w-3.5 h-3.5 text-white/40 group-hover:text-cyan-400 transition-colors" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-white/10">
@@ -424,6 +458,24 @@ export default function UsersTable({ users, pagination, onMutate }: UsersTablePr
                                         </span>
                                     </div>
                                     <p className="text-white/40 text-sm truncate mb-2">{user.email}</p>
+
+                                    {/* ID avec bouton copie - Mobile */}
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-white/50 text-xs font-mono bg-white/5 px-2 py-1 rounded" title={user.id}>
+                                            ID: {user.id.slice(0, 12)}...
+                                        </span>
+                                        <button
+                                            onClick={() => handleCopyId(user.id)}
+                                            className="p-1 hover:bg-white/10 rounded transition-all"
+                                            title="Copier l'ID complet"
+                                        >
+                                            {copiedId === user.id ? (
+                                                <Check className="w-3 h-3 text-emerald-400" />
+                                            ) : (
+                                                <Copy className="w-3 h-3 text-white/40" />
+                                            )}
+                                        </button>
+                                    </div>
 
                                     <div className="mb-2">
                                         {getStatusBadge(user)}

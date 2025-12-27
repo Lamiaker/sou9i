@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Clock, CheckCircle, Star, XCircle, Ban, Users } from 'lucide-react';
+import { Clock, CheckCircle, Star, XCircle, Ban, Users, Search } from 'lucide-react';
 
 const tabs = [
     { name: 'En attente', href: '/admin/users', icon: Clock },
@@ -11,6 +11,7 @@ const tabs = [
     { name: 'Rejetés', href: '/admin/users/rejected', icon: XCircle },
     { name: 'Bannis', href: '/admin/users/banned', icon: Ban },
     { name: 'Tous', href: '/admin/users/all', icon: Users },
+    { name: 'Recherche ID', href: '/admin/search', icon: Search },
 ];
 
 export default function UsersNav() {
