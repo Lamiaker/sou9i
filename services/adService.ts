@@ -239,6 +239,7 @@ export class AdService {
         userId: string
         images?: string[]
         location: string
+        contactPhone?: string | null
         condition?: string
         brand?: string
         size?: string
@@ -261,6 +262,7 @@ export class AdService {
                 description: data.description,
                 price: data.price,
                 location: data.location,
+                contactPhone: data.contactPhone || null,
                 condition: data.condition,
                 brand: data.brand,
                 size: data.size,

@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
             userId, // Temporaire - à remplacer par session
             images,
             location,
+            contactPhone,
             condition,
             brand,
             size,
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
             description,
             price: parseFloat(price),
             location,
+            contactPhone: contactPhone || null,
             categoryId,
             userId,
             condition,

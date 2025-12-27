@@ -18,6 +18,7 @@ declare module 'next-auth' {
             email: string
             name?: string | null
             image?: string | null
+            phone?: string | null
             role: 'USER' | 'ADMIN'
             isBanned: boolean
             banReason?: string | null
@@ -29,6 +30,7 @@ declare module 'next-auth/jwt' {
     interface JWT {
         id: string
         role: 'USER' | 'ADMIN'
+        phone?: string | null
         isBanned: boolean
         banReason?: string | null
     }
@@ -65,6 +67,7 @@ export const authOptions: NextAuthOptions = {
                         id: true,
                         email: true,
                         name: true,
+                        phone: true,
                         avatar: true,
                         password: true,
                         role: true,
@@ -98,6 +101,7 @@ export const authOptions: NextAuthOptions = {
                     id: user.id,
                     email: user.email,
                     name: user.name,
+                    phone: user.phone,
                     image: user.avatar,
                     role: user.role as 'USER' | 'ADMIN',
                     isBanned: user.isBanned,
@@ -117,6 +121,7 @@ export const authOptions: NextAuthOptions = {
             if (user) {
                 token.id = user.id
                 token.role = user.role || 'USER'
+                token.phone = (user as any).phone || null
                 token.isBanned = user.isBanned || false
                 token.banReason = user.banReason || null
             }
@@ -127,7 +132,7 @@ export const authOptions: NextAuthOptions = {
                 try {
                     const dbUser: any = await prisma.user.findUnique({
                         where: { id: token.id },
-                        select: { isBanned: true, role: true, banReason: true, name: true, avatar: true }
+                        select: { isBanned: true, role: true, banReason: true, name: true, phone: true, avatar: true }
                     } as any);
 
                     if (dbUser) {
@@ -135,6 +140,7 @@ export const authOptions: NextAuthOptions = {
                         token.role = dbUser.role || 'USER';
                         token.banReason = dbUser.banReason || null;
                         token.name = dbUser.name;
+                        token.phone = dbUser.phone || null;
                         token.picture = dbUser.avatar;
                     } else {
                         // Utilisateur supprimé
@@ -160,6 +166,7 @@ export const authOptions: NextAuthOptions = {
             if (session.user) {
                 session.user.id = token.id as string
                 session.user.role = token.role as 'USER' | 'ADMIN'
+                session.user.phone = token.phone as string | null
                 session.user.isBanned = token.isBanned as boolean
                 session.user.banReason = token.banReason as string | null
                 session.user.name = token.name as string

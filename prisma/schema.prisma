@@ -131,6 +131,7 @@ model Ad {
   brand       String?
   size        String?
   location    String   // Ville
+  contactPhone String?  // Numéro de contact spécifique (si différent du profil)
   status      String   @default("active") // "active", "sold", "archived"
   views       Int      @default(0)
   

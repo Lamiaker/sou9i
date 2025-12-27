@@ -272,7 +272,7 @@ export default function AdDetailPage() {
                                     >
                                         <Phone size={20} />
                                         {showPhone
-                                            ? (ad.user.phone || "Numéro non renseigné")
+                                            ? (ad.contactPhone || ad.user.phone || "Numéro non renseigné")
                                             : "Voir le numéro"}
                                     </button>
 

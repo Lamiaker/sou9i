@@ -6,7 +6,7 @@ import { mutate } from "swr";
 import Image from "next/image";
 import {
     Camera, MapPin, Tag, DollarSign, Upload, X,
-    AlertCircle, CheckCircle, Loader2
+    AlertCircle, CheckCircle, Loader2, Phone
 } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +23,8 @@ interface FormData {
     categoryId: string;
     subcategoryId: string;
     location: string;
+    useProfilePhone: boolean;
+    contactPhone: string;
 }
 
 export default function DeposerAnnonce() {
@@ -42,6 +44,8 @@ export default function DeposerAnnonce() {
         categoryId: '',
         subcategoryId: '',
         location: '',
+        useProfilePhone: true, // Par défaut, utiliser le numéro du profil
+        contactPhone: '',
     });
 
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -174,6 +178,20 @@ export default function DeposerAnnonce() {
             return;
         }
 
+        // Validation du numéro de contact
+        if (!formData.useProfilePhone) {
+            if (!formData.contactPhone.trim()) {
+                setError('Veuillez entrer un numéro de contact');
+                return;
+            }
+            // Validation basique du format de téléphone (chiffres uniquement, min 8 caractères)
+            const phoneRegex = /^[0-9+\s-]{8,}$/;
+            if (!phoneRegex.test(formData.contactPhone.trim())) {
+                setError('Le numéro de téléphone n\'est pas valide');
+                return;
+            }
+        }
+
         // Validation des champs dynamiques
         if (dynamicFields.length > 0) {
             const validation = validateAllFields(dynamicFields, dynamicFieldValues);
@@ -200,12 +218,18 @@ export default function DeposerAnnonce() {
                 .filter(([, value]) => value && value.trim() !== '')
                 .map(([fieldId, value]) => ({ fieldId, value }));
 
+            // Déterminer le numéro de contact à utiliser
+            const contactPhone = formData.useProfilePhone
+                ? null // Utiliser le numéro du profil (sera géré côté affichage)
+                : formData.contactPhone.trim();
+
             const createData = {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
                 price: parseFloat(formData.price),
                 categoryId: formData.subcategoryId || formData.categoryId,
                 location: formData.location.trim(),
+                contactPhone,
                 images: imageUrls,
                 userId: user?.id,
                 dynamicFields: dynamicFieldsData,
@@ -490,6 +514,116 @@ export default function DeposerAnnonce() {
                                 errors={dynamicFieldErrors}
                                 disabled={isLoading}
                             />
+
+                            {/* Section Numéro de contact */}
+                            <div className="space-y-4 pt-6 border-t border-gray-100">
+                                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                                    <Phone className="text-primary" size={24} />
+                                    Numéro de contact
+                                </h2>
+
+                                <p className="text-sm text-gray-500">
+                                    Ce numéro sera visible par les acheteurs intéressés par votre annonce.
+                                </p>
+
+                                <div className="space-y-3">
+                                    {/* Option 1: Utiliser le numéro du profil */}
+                                    <label
+                                        className={`
+                                            flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
+                                            ${formData.useProfilePhone
+                                                ? 'border-primary bg-primary/5 shadow-sm'
+                                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                                            }
+                                        `}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="phoneChoice"
+                                            checked={formData.useProfilePhone}
+                                            onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: true, contactPhone: '' }))}
+                                            className="w-5 h-5 text-primary focus:ring-primary"
+                                            disabled={isLoading}
+                                        />
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-gray-900">
+                                                    Utiliser mon numéro d&apos;inscription
+                                                </span>
+                                                {formData.useProfilePhone && (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                                        Recommandé
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {user?.phone ? (
+                                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                                                    <Phone size={14} className="text-gray-400" />
+                                                    {user.phone}
+                                                </p>
+                                            ) : (
+                                                <p className="text-sm text-orange-500 mt-1">
+                                                    ⚠️ Aucun numéro enregistré dans votre profil
+                                                </p>
+                                            )}
+                                        </div>
+                                    </label>
+
+                                    {/* Option 2: Utiliser un autre numéro */}
+                                    <label
+                                        className={`
+                                            flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
+                                            ${!formData.useProfilePhone
+                                                ? 'border-primary bg-primary/5 shadow-sm'
+                                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                                            }
+                                        `}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="phoneChoice"
+                                            checked={!formData.useProfilePhone}
+                                            onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: false }))}
+                                            className="w-5 h-5 text-primary focus:ring-primary mt-0.5"
+                                            disabled={isLoading}
+                                        />
+                                        <div className="flex-1 space-y-3">
+                                            <span className="font-medium text-gray-900">
+                                                Utiliser un autre numéro
+                                            </span>
+
+                                            {!formData.useProfilePhone && (
+                                                <div className="relative animate-fadeIn">
+                                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                                    <input
+                                                        type="tel"
+                                                        value={formData.contactPhone}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
+                                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                                        placeholder="Ex: 0555 12 34 56"
+                                                        disabled={isLoading}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </label>
+                                </div>
+
+                                {/* Avertissement si pas de numéro du profil et option 1 sélectionnée */}
+                                {formData.useProfilePhone && !user?.phone && (
+                                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
+                                        <AlertCircle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
+                                        <div>
+                                            <p className="text-sm text-orange-700 font-medium">
+                                                Vous n&apos;avez pas de numéro enregistré
+                                            </p>
+                                            <p className="text-sm text-orange-600 mt-1">
+                                                Veuillez sélectionner &quot;Utiliser un autre numéro&quot; et entrer votre numéro de contact.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Bouton Submit */}
