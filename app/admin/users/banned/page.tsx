@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 interface PageProps {
     searchParams: Promise<{
         page?: string;
+        limit?: string;
         search?: string;
         role?: string;
     }>;
@@ -16,13 +17,14 @@ interface PageProps {
 export default async function BannedUsersPage({ searchParams }: PageProps) {
     const params = await searchParams;
     const page = parseInt(params.page || '1');
+    const limit = parseInt(params.limit || '20');
     const search = params.search || '';
     const role = params.role || '';
     const status = 'BANNED';
 
     const { users, pagination } = await AdminService.getUsers({
         page,
-        limit: 20,
+        limit,
         search,
         role,
         status,
@@ -85,7 +87,7 @@ export default async function BannedUsersPage({ searchParams }: PageProps) {
                 </form>
             </div>
 
-            <UsersTable users={formattedUsers} pagination={pagination} />
+            <UsersTable users={formattedUsers} pagination={pagination} basePath="/admin/users/banned" />
         </div>
     );
 }

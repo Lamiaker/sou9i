@@ -4,8 +4,25 @@ import { FolderTree } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminCategoriesPage() {
-    const categories = await AdminService.getCategories();
+interface PageProps {
+    searchParams: Promise<{
+        page?: string;
+        limit?: string;
+        search?: string;
+    }>;
+}
+
+export default async function AdminCategoriesPage({ searchParams }: PageProps) {
+    const params = await searchParams;
+    const page = parseInt(params.page || '1');
+    const limit = parseInt(params.limit || '20');
+    const search = params.search || '';
+
+    const { categories, pagination } = await AdminService.getCategories({
+        page,
+        limit,
+        search,
+    });
 
     return (
         <div className="space-y-6">
@@ -19,13 +36,17 @@ export default async function AdminCategoriesPage() {
                         Gestion des Catégories
                     </h1>
                     <p className="text-white/60 mt-1">
-                        Gérez la structure arborescente des catégories
+                        {pagination.total} catégorie{pagination.total > 1 ? 's' : ''} au total
                     </p>
                 </div>
             </div>
 
             {/* Categories Manager */}
-            <CategoriesManager initialCategories={categories as any} />
+            <CategoriesManager
+                initialCategories={categories as any}
+                pagination={pagination}
+                currentSearch={search}
+            />
         </div>
     );
 }

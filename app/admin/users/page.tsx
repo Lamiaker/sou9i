@@ -16,12 +16,13 @@ export default function AdminUsersPage() {
 
     // Get params from URL
     const page = parseInt(searchParams?.get('page') || '1');
+    const limit = parseInt(searchParams?.get('limit') || '20');
     const search = searchParams?.get('search') || '';
     const role = searchParams?.get('role') || '';
     const status = 'PENDING'; // Défaut pour la page principale
 
     // Build API URL with query params
-    const apiUrl = `/api/admin/users?page=${page}&limit=20&search=${encodeURIComponent(search)}&role=${role}&status=${status}`;
+    const apiUrl = `/api/admin/users?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&role=${role}&status=${status}`;
 
     // SWR with auto-refresh every 10 seconds
     const { data, error, isLoading, isValidating, mutate } = useSWR(apiUrl, fetcher, {

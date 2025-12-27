@@ -9,9 +9,12 @@ import {
     FolderTree,
     ShoppingBag,
     Eye,
-    AlertTriangle
+    AlertTriangle,
+    Search,
+    Filter
 } from 'lucide-react';
 import CategoryFormModal from './CategoryFormModal';
+import AdminPagination from './AdminPagination';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/Toast';
 
@@ -29,11 +32,20 @@ interface Category {
     };
 }
 
-interface CategoriesManagerProps {
-    initialCategories: Category[];
+interface Pagination {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
 }
 
-export default function CategoriesManager({ initialCategories }: CategoriesManagerProps) {
+interface CategoriesManagerProps {
+    initialCategories: Category[];
+    pagination: Pagination;
+    currentSearch?: string;
+}
+
+export default function CategoriesManager({ initialCategories, pagination, currentSearch = '' }: CategoriesManagerProps) {
     const router = useRouter();
     const [categories, setCategories] = useState<Category[]>(initialCategories);
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -263,14 +275,38 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
 
     return (
         <div className="space-y-6">
-            {/* Add Button */}
-            <button
-                onClick={() => openCreateModal()}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2"
-            >
-                <Plus className="w-5 h-5" />
-                Ajouter une catégorie
-            </button>
+            {/* Search and Add Button */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                {/* Search Form */}
+                <form className="flex-1 flex gap-2">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                        <input
+                            type="text"
+                            name="search"
+                            defaultValue={currentSearch}
+                            placeholder="Rechercher une catégorie..."
+                            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="px-4 py-3 bg-white/5 border border-white/10 text-white/80 font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center gap-2"
+                    >
+                        <Filter className="w-4 h-4" />
+                        Filtrer
+                    </button>
+                </form>
+
+                {/* Add Button */}
+                <button
+                    onClick={() => openCreateModal()}
+                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2"
+                >
+                    <Plus className="w-5 h-5" />
+                    Ajouter une catégorie
+                </button>
+            </div>
 
             {/* Categories Tree */}
             <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
@@ -279,10 +315,17 @@ export default function CategoriesManager({ initialCategories }: CategoriesManag
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                             <FolderTree className="w-8 h-8 text-white/20" />
                         </div>
-                        <p className="text-white/60">Aucune catégorie</p>
+                        <p className="text-white/60">
+                            {currentSearch ? `Aucune catégorie trouvée pour "${currentSearch}"` : 'Aucune catégorie'}
+                        </p>
                     </div>
                 ) : (
-                    categories.map((category) => renderCategory(category))
+                    <>
+                        {categories.map((category) => renderCategory(category))}
+
+                        {/* Pagination */}
+                        <AdminPagination pagination={pagination} basePath="/admin/categories" />
+                    </>
                 )}
             </div>
 

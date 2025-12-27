@@ -822,31 +822,68 @@ export class AdminService {
     // ============================================
 
     /**
-     * Récupérer toutes les catégories avec leur structure arborescente
+     * Récupérer toutes les catégories avec leur structure arborescente (avec pagination)
      */
-    static async getCategories() {
-        const categories = await prisma.category.findMany({
-            where: { parentId: null },
-            orderBy: { order: 'asc' },
-            include: {
-                children: {
-                    orderBy: { order: 'asc' },
-                    include: {
-                        children: {
-                            orderBy: { order: 'asc' },
-                        },
-                        _count: {
-                            select: { ads: true },
+    static async getCategories({
+        page = 1,
+        limit = 20,
+        search = '',
+    }: {
+        page?: number
+        limit?: number
+        search?: string
+    } = {}) {
+        const skip = (page - 1) * limit;
+
+        const where: any = { parentId: null };
+
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: 'insensitive' } },
+                { slug: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
+        const [categories, total] = await Promise.all([
+            prisma.category.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { order: 'asc' },
+                include: {
+                    children: {
+                        orderBy: { order: 'asc' },
+                        include: {
+                            children: {
+                                orderBy: { order: 'asc' },
+                                include: {
+                                    _count: {
+                                        select: { ads: true },
+                                    },
+                                },
+                            },
+                            _count: {
+                                select: { ads: true },
+                            },
                         },
                     },
+                    _count: {
+                        select: { ads: true },
+                    },
+                },
+            }),
+            prisma.category.count({ where }),
+        ]);
 
-                },
-                _count: {
-                    select: { ads: true },
-                },
+        return {
+            categories: serializeDates(categories),
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
             },
-        });
-        return serializeDates(categories);
+        };
     }
 
     /**

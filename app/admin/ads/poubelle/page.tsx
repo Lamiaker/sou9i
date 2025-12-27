@@ -9,6 +9,7 @@ import AdsNav from '@/components/admin/AdsNav';
 interface PageProps {
     searchParams: Promise<{
         page?: string;
+        limit?: string;
         search?: string;
         status?: string;
     }>;
@@ -17,11 +18,12 @@ interface PageProps {
 export default function DeletedAdsPage({ searchParams }: PageProps) {
     const params = use(searchParams);
     const page = parseInt(params.page || '1');
+    const limit = parseInt(params.limit || '20');
     const search = params.search || '';
 
     const { ads, pagination, loading } = useAds({
         page,
-        limit: 20,
+        limit,
         filters: {
             search,
             status: 'deleted' // Uniquement les annonces supprimées par le vendeur
@@ -82,7 +84,7 @@ export default function DeletedAdsPage({ searchParams }: PageProps) {
             </div>
 
             {/* Ads Table */}
-            <AdsTable ads={ads as any} pagination={safePagination} />
+            <AdsTable ads={ads as any} pagination={safePagination} basePath="/admin/ads/poubelle" />
         </div>
     );
 }

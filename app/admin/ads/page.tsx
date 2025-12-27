@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 interface PageProps {
     searchParams: Promise<{
         page?: string;
+        limit?: string;
         search?: string;
         status?: string;
     }>;
@@ -19,12 +20,13 @@ interface PageProps {
 export default function AdminAdsPage({ searchParams }: PageProps) {
     const params = use(searchParams);
     const page = parseInt(params.page || '1');
+    const limit = parseInt(params.limit || '20');
     const search = params.search || '';
     const status = params.status || '';
 
     const { ads, pagination, loading } = useAds({
         page,
-        limit: 20,
+        limit,
         filters: {
             search,
             moderationStatus: 'PENDING' // Uniquement les annonces en attente

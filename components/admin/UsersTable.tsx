@@ -9,8 +9,6 @@ import {
     BadgeCheck,
     BadgeX,
     Trash2,
-    ChevronLeft,
-    ChevronRight,
     User,
     Phone,
     MapPin,
@@ -23,6 +21,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
+import AdminPagination from './AdminPagination';
 
 interface User {
     id: string;
@@ -54,9 +53,10 @@ interface UsersTableProps {
     users: User[];
     pagination: Pagination;
     onMutate?: () => void;
+    basePath?: string; // Chemin de base pour la pagination (par défaut: /admin/users)
 }
 
-export default function UsersTable({ users, pagination, onMutate }: UsersTableProps) {
+export default function UsersTable({ users, pagination, onMutate, basePath = '/admin/users' }: UsersTableProps) {
     const router = useRouter();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);
@@ -150,12 +150,6 @@ export default function UsersTable({ users, pagination, onMutate }: UsersTablePr
         if (reason) {
             handleAction('ban', userId, { reason });
         }
-    };
-
-    const goToPage = (page: number) => {
-        const params = new URLSearchParams(window.location.search);
-        params.set('page', page.toString());
-        router.push(`/admin/users?${params.toString()}`);
     };
 
     const getStatusBadge = (user: User) => {
@@ -595,31 +589,7 @@ export default function UsersTable({ users, pagination, onMutate }: UsersTablePr
             }
 
             {/* Pagination */}
-            {
-                pagination.totalPages > 1 && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
-                        <p className="text-white/40 text-sm">
-                            Page {pagination.page} sur {pagination.totalPages}
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => goToPage(pagination.page - 1)}
-                                disabled={pagination.page === 1}
-                                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronLeft className="w-5 h-5 text-white" />
-                            </button>
-                            <button
-                                onClick={() => goToPage(pagination.page + 1)}
-                                disabled={pagination.page === pagination.totalPages}
-                                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronRight className="w-5 h-5 text-white" />
-                            </button>
-                        </div>
-                    </div>
-                )
-            }
+            <AdminPagination pagination={pagination} basePath={basePath} />
         </div >
     );
 }

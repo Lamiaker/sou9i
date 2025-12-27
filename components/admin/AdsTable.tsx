@@ -6,8 +6,6 @@ import { mutate } from 'swr';
 import {
     MoreVertical,
     Trash2,
-    ChevronLeft,
-    ChevronRight,
     Eye,
     AlertTriangle,
     CheckCircle,
@@ -22,6 +20,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
 import Image from 'next/image';
+import AdminPagination from './AdminPagination';
 
 interface Ad {
     id: string;
@@ -61,6 +60,7 @@ interface Pagination {
 interface AdsTableProps {
     ads: Ad[];
     pagination: Pagination;
+    basePath?: string; // Chemin de base pour la pagination (par défaut: /admin/ads)
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
@@ -76,7 +76,7 @@ const moderationConfig: Record<string, { label: string; color: string; icon: any
     REJECTED: { label: 'Rejetée', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle },
 };
 
-export default function AdsTable({ ads, pagination }: AdsTableProps) {
+export default function AdsTable({ ads, pagination, basePath = '/admin/ads' }: AdsTableProps) {
     const router = useRouter();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);
@@ -147,12 +147,6 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
         if (reason) {
             handleAction('reject', adId, { reason });
         }
-    };
-
-    const goToPage = (page: number) => {
-        const params = new URLSearchParams(window.location.search);
-        params.set('page', page.toString());
-        router.push(`/admin/ads?${params.toString()}`);
     };
 
     return (
@@ -501,29 +495,7 @@ export default function AdsTable({ ads, pagination }: AdsTableProps) {
             )}
 
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
-                    <p className="text-white/40 text-sm">
-                        Page {pagination.page} sur {pagination.totalPages}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => goToPage(pagination.page - 1)}
-                            disabled={pagination.page === 1}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <ChevronLeft className="w-5 h-5 text-white" />
-                        </button>
-                        <button
-                            onClick={() => goToPage(pagination.page + 1)}
-                            disabled={pagination.page === pagination.totalPages}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <ChevronRight className="w-5 h-5 text-white" />
-                        </button>
-                    </div>
-                </div>
-            )}
+            <AdminPagination pagination={pagination} basePath={basePath} />
         </div>
     );
 }
