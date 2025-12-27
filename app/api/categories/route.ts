@@ -8,8 +8,11 @@ export async function GET(request: NextRequest) {
         const type = searchParams.get('type') // 'all', 'hierarchy', 'parents'
         const withCount = searchParams.get('withCount') === 'true'
         const parentId = searchParams.get('parentId')
+        const page = parseInt(searchParams.get('page') || '1')
+        const limit = parseInt(searchParams.get('limit') || '20')
 
         let categories
+        let pagination = null
 
         // Si on demande les enfants d'une catégorie spécifique
         if (parentId) {
@@ -23,8 +26,10 @@ export async function GET(request: NextRequest) {
         // Selon le type demandé
         switch (type) {
             case 'hierarchy':
-                // Catégories hiérarchiques (parents avec leurs enfants)
-                categories = await CategoryService.getCategoriesHierarchy()
+                // Catégories hiérarchiques (parents avec leurs enfants) - avec pagination
+                const result = await CategoryService.getCategoriesHierarchyPaginated({ page, limit })
+                categories = result.categories
+                pagination = result.pagination
                 break
 
             case 'parents':
@@ -46,6 +51,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             success: true,
             data: categories,
+            ...(pagination && { pagination }),
         })
     } catch (error) {
         console.error('Error fetching categories:', error)

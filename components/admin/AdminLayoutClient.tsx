@@ -17,6 +17,7 @@ import {
     Menu,
     X,
     Search,
+    HelpCircle,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -28,6 +29,7 @@ const menuItems = [
     { name: "Annonces", href: "/admin/ads", icon: ShoppingBag },
     { name: "Signalements", href: "/admin/reports", icon: AlertTriangle },
     { name: "Catégories", href: "/admin/categories", icon: FolderTree },
+    { name: "Support", href: "/admin/support", icon: HelpCircle },
 ];
 
 export default function AdminLayoutClient({

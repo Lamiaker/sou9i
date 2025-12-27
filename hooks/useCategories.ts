@@ -17,25 +17,36 @@ export interface Category {
     };
 }
 
+interface Pagination {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
 interface UseCategoriesOptions {
     type?: 'all' | 'hierarchy' | 'parents';
     withCount?: boolean;
     parentId?: string;
+    page?: number;
+    limit?: number;
 }
 
 interface UseCategoriesReturn {
     categories: Category[];
     loading: boolean;
     error: string | null;
+    pagination: Pagination | null;
     refetch: () => void;
 }
 
 export function useCategories(options: UseCategoriesOptions = {}): UseCategoriesReturn {
-    const { type = 'hierarchy', withCount = true, parentId } = options;
+    const { type = 'hierarchy', withCount = true, parentId, page = 1, limit = 20 } = options;
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
 
     const fetchCategories = async () => {
         try {
@@ -47,6 +58,8 @@ export function useCategories(options: UseCategoriesOptions = {}): UseCategories
             if (type) params.append('type', type);
             if (withCount) params.append('withCount', 'true');
             if (parentId) params.append('parentId', parentId);
+            params.append('page', page.toString());
+            params.append('limit', limit.toString());
 
             const url = `/api/categories?${params.toString()}`;
             const response = await fetch(url);
@@ -59,6 +72,9 @@ export function useCategories(options: UseCategoriesOptions = {}): UseCategories
 
             if (data.success) {
                 setCategories(data.data);
+                if (data.pagination) {
+                    setPagination(data.pagination);
+                }
             } else {
                 throw new Error(data.error || 'Erreur lors de la récupération des catégories');
             }
@@ -73,12 +89,13 @@ export function useCategories(options: UseCategoriesOptions = {}): UseCategories
     useEffect(() => {
         fetchCategories();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [type, withCount, parentId]);
+    }, [type, withCount, parentId, page, limit]);
 
     return {
         categories,
         loading,
         error,
+        pagination,
         refetch: fetchCategories,
     };
 }

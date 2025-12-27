@@ -101,6 +101,88 @@ export class CategoryService {
     }
 
     /**
+     * Récupérer les catégories hiérarchiques avec pagination
+     */
+    static async getCategoriesHierarchyPaginated({
+        page = 1,
+        limit = 12,
+    }: {
+        page?: number;
+        limit?: number;
+    } = {}) {
+        const skip = (page - 1) * limit;
+
+        const [parents, total] = await Promise.all([
+            prisma.category.findMany({
+                where: {
+                    parentId: null,
+                },
+                skip,
+                take: limit,
+                include: {
+                    children: {
+                        include: {
+                            _count: {
+                                select: {
+                                    ads: {
+                                        where: {
+                                            status: 'active',
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        orderBy: {
+                            name: 'asc',
+                        },
+                    },
+                    _count: {
+                        select: {
+                            ads: {
+                                where: {
+                                    status: 'active',
+                                },
+                            },
+                            children: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    order: 'asc',
+                },
+            }),
+            prisma.category.count({
+                where: { parentId: null }
+            }),
+        ]);
+
+        // Calculer le total des annonces (parent + enfants)
+        const categories = parents.map(parent => {
+            const childrenAdsCount = parent.children.reduce((acc, child) => {
+                return acc + (child._count?.ads || 0);
+            }, 0);
+
+            return {
+                ...parent,
+                _count: {
+                    ...parent._count,
+                    ads: (parent._count?.ads || 0) + childrenAdsCount
+                }
+            };
+        });
+
+        return {
+            categories,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
+
+    /**
      * Récupérer une catégorie par ID avec ses relations
      */
     static async getCategoryById(id: string, includeRelations = true) {

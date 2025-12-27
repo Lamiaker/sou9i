@@ -55,10 +55,17 @@ export async function generateStaticParams() {
 
 interface PageProps {
     params: Promise<{ slug: string }>;
+    searchParams: Promise<{
+        page?: string;
+        limit?: string;
+    }>;
 }
 
-export default async function CategoryPage({ params }: PageProps) {
+export default async function CategoryPage({ params, searchParams }: PageProps) {
     const { slug } = await params;
+    const queryParams = await searchParams;
+    const page = parseInt(queryParams.page || '1');
+    const limit = parseInt(queryParams.limit || '12');
 
     // Récupérer la catégorie depuis la base de données
     let category;
@@ -72,8 +79,10 @@ export default async function CategoryPage({ params }: PageProps) {
         notFound();
     }
 
-    // Récupérer les annonces de la catégorie
+    // Récupérer les annonces de la catégorie avec pagination
     let ads: any[] = [];
+    let pagination = { page: 1, limit: 12, total: 0, totalPages: 1 };
+
     try {
         const result = await AdService.getAds(
             {
@@ -81,10 +90,11 @@ export default async function CategoryPage({ params }: PageProps) {
                 status: 'active',
                 moderationStatus: 'APPROVED',
             },
-            1,  // page
-            50  // limit
+            page,
+            limit
         );
         ads = result.ads || [];
+        pagination = result.pagination;
     } catch (error) {
         console.error('Error fetching ads:', error);
     }
@@ -163,6 +173,7 @@ export default async function CategoryPage({ params }: PageProps) {
                 <CategoryAdsClient
                     category={formattedCategory}
                     initialAds={formattedAds}
+                    pagination={pagination}
                 />
             </div>
         </div>

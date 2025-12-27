@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { MapPin, Filter, SlidersHorizontal } from "lucide-react";
 import AdCard from "@/components/ui/AdCard";
 import SimpleSelect from "@/components/ui/SimpleSelect";
+import Pagination from "@/components/ui/Pagination";
+import { usePathname } from "next/navigation";
 
 interface Category {
     id: string;
@@ -35,12 +37,21 @@ interface Ad {
     createdAt: string;
 }
 
+interface PaginationType {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
 interface CategoryAdsClientProps {
     category: Category;
     initialAds: Ad[];
+    pagination?: PaginationType;
 }
 
-export default function CategoryAdsClient({ category, initialAds }: CategoryAdsClientProps) {
+export default function CategoryAdsClient({ category, initialAds, pagination }: CategoryAdsClientProps) {
+    const pathname = usePathname();
     // States pour les filtres
     const [ads, setAds] = useState<Ad[]>(initialAds);
     const [loading, setLoading] = useState(false);
@@ -314,6 +325,15 @@ export default function CategoryAdsClient({ category, initialAds }: CategoryAdsC
                                 : 'Aucune annonce n\'est disponible dans cette catégorie pour le moment.'}
                         </p>
                     </div>
+                )}
+
+                {/* Pagination */}
+                {pagination && pagination.totalPages > 1 && !hasFilters && (
+                    <Pagination
+                        pagination={pagination}
+                        basePath={pathname || `/categories/${category.slug}`}
+                        showItemsPerPage={true}
+                    />
                 )}
             </main>
         </div>

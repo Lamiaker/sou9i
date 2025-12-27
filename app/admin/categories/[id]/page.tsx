@@ -19,7 +19,7 @@ export default async function CategoryDetailPage(props: { params: Promise<{ id: 
     }
 
     // Get all categories for the "Parent" dropdown in case we edit
-    const allCategories = await AdminService.getCategories();
+    const { categories: allCategories } = await AdminService.getCategories();
 
     return (
         <CategoryDetailView

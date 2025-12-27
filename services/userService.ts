@@ -202,17 +202,78 @@ export class UserService {
     }
 
     /**
-     * Obtenir les statistiques d'un utilisateur
+     * Obtenir les statistiques complètes d'un utilisateur pour le dashboard
      */
     static async getUserStats(id: string) {
-        const [adsCount, favoritesCount] = await Promise.all([
-            prisma.ad.count({ where: { userId: id, status: 'active' } }),
-            prisma.favorite.count({ where: { userId: id } }),
-        ])
+        // Récupérer les annonces actives de l'utilisateur avec leurs vues
+        const userAds = await prisma.ad.findMany({
+            where: {
+                userId: id,
+                status: 'active',
+                moderationStatus: 'APPROVED'
+            },
+            select: {
+                id: true,
+                views: true,
+                _count: {
+                    select: {
+                        favorites: true
+                    }
+                }
+            }
+        });
+
+        // Calculer les totaux
+        const adsCount = userAds.length;
+        const totalViews = userAds.reduce((sum, ad) => sum + (ad.views || 0), 0);
+        const favoritesReceived = userAds.reduce((sum, ad) => sum + (ad._count?.favorites || 0), 0);
+
+        // Compter les messages non lus (messages dans les conversations où l'utilisateur participe, non envoyés par lui et non lus)
+        const unreadMessages = await prisma.message.count({
+            where: {
+                read: false,
+                senderId: {
+                    not: id // Messages non envoyés par l'utilisateur
+                },
+                conversation: {
+                    participants: {
+                        some: {
+                            id: id // L'utilisateur fait partie de la conversation
+                        }
+                    }
+                }
+            }
+        });
+
+        // Annonces en attente de modération
+        const pendingAds = await prisma.ad.count({
+            where: {
+                userId: id,
+                moderationStatus: 'PENDING'
+            }
+        });
+
+        // Annonces rejetées
+        const rejectedAds = await prisma.ad.count({
+            where: {
+                userId: id,
+                moderationStatus: 'REJECTED'
+            }
+        });
+
+        // Favoris de l'utilisateur (annonces qu'il a mis en favori)
+        const userFavorites = await prisma.favorite.count({
+            where: { userId: id }
+        });
 
         return {
-            adsCount,
-            favoritesCount,
-        }
+            adsCount,           // Annonces actives et approuvées
+            totalViews,         // Vues totales de toutes les annonces
+            unreadMessages,     // Messages non lus
+            favoritesReceived,  // Favoris reçus sur les annonces
+            pendingAds,         // Annonces en attente
+            rejectedAds,        // Annonces rejetées
+            userFavorites,      // Favoris de l'utilisateur
+        };
     }
 }

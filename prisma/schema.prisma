@@ -90,6 +90,9 @@ model User {
   // Relations Signalements
   reportsSent     Report[]     @relation("Reporter")
   reportsReceived Report[]     @relation("ReportedUser")
+  
+  // Relations Support
+  supportTickets  SupportTicket[]
 
   @@index([email])
   @@index([role])
@@ -325,4 +328,54 @@ model Review {
 
   @@index([receiverId])
   @@index([authorId])
+}
+
+// ============================================
+// MODÈLES SUPPORT & AIDE
+// ============================================
+
+enum TicketStatus {
+  OPEN      // Nouveau ticket
+  IN_PROGRESS // En cours de traitement
+  RESOLVED  // Résolu
+  CLOSED    // Fermé
+}
+
+enum TicketCategory {
+  QUESTION        // Question générale
+  BUG             // Signaler un bug
+  REPORT_CONTENT  // Signaler un contenu
+  SUGGESTION      // Suggestion d'amélioration
+  ACCOUNT         // Problème de compte
+  PAYMENT         // Problème de paiement
+  OTHER           // Autre
+}
+
+model SupportTicket {
+  id          String         @id @default(cuid())
+  subject     String         // Sujet du ticket
+  message     String         @db.Text // Message détaillé
+  category    TicketCategory // Catégorie du problème
+  status      TicketStatus   @default(OPEN)
+  
+  // Réponse admin
+  adminResponse   String?    @db.Text
+  respondedAt     DateTime?
+  respondedById   String?    // ID de l'admin qui a répondu
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relation utilisateur (optionnel pour permettre tickets anonymes)
+  userId      String?
+  user        User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Email pour les utilisateurs non connectés
+  guestEmail  String?
+  guestName   String?
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
 }

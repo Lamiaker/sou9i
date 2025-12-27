@@ -4,12 +4,20 @@ import { useCategories } from "@/hooks/useCategories";
 import Link from "next/link";
 import { ChevronRight, Grid3x3, List } from "lucide-react";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import CategorySkeleton from "@/components/layout/CategorySkeleton";
+import Pagination from "@/components/ui/Pagination";
 
 export default function CategoriesPage() {
-    const { categories, loading, error } = useCategories({
+    const searchParams = useSearchParams();
+    const page = parseInt(searchParams?.get('page') || '1');
+    const limit = parseInt(searchParams?.get('limit') || '12');
+
+    const { categories, loading, error, pagination } = useCategories({
         type: 'hierarchy',
-        withCount: true
+        withCount: true,
+        page,
+        limit
     });
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -38,7 +46,7 @@ export default function CategoriesPage() {
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">Toutes les catégories</h1>
                             <p className="mt-2 text-gray-600">
-                                Explorez nos {categories.length} catégories disponibles
+                                Explorez nos {pagination?.total || categories.length} catégories disponibles
                             </p>
                         </div>
 
@@ -168,6 +176,15 @@ export default function CategoriesPage() {
                             </div>
                         ))}
                     </div>
+                )}
+
+                {/* Pagination */}
+                {pagination && pagination.totalPages > 1 && (
+                    <Pagination
+                        pagination={pagination}
+                        basePath="/categories"
+                        showItemsPerPage={true}
+                    />
                 )}
             </div>
         </div>
