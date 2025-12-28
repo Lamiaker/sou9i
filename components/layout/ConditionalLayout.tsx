@@ -17,12 +17,29 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
     // Routes où le header/footer ne doit PAS apparaître
     const isAdminRoute = pathname?.startsWith('/admin');
 
+    // Routes du dashboard (ont leur propre layout avec MobileNav)
+    const isDashboardRoute = pathname?.startsWith('/dashboard');
+
     // Si c'est une route admin, afficher uniquement le contenu sans header/footer
     if (isAdminRoute) {
         return (
             <FavoritesProvider>
                 <FavoritesSyncNotifier />
                 {children}
+            </FavoritesProvider>
+        );
+    }
+
+    // Pour les routes dashboard : header + contenu + MobileNav (pas de Footer)
+    if (isDashboardRoute) {
+        return (
+            <FavoritesProvider>
+                <FavoritesSyncNotifier />
+                <Header />
+                <main className="flex-grow pb-20 lg:pb-0">
+                    {children}
+                </main>
+                <MobileNav />
             </FavoritesProvider>
         );
     }

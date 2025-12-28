@@ -3,7 +3,7 @@ import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from "lucide-react"
 
 export default function Footer() {
     return (
-        <footer className="bg-gray-900 text-gray-300 pt-12 pb-8 mt-auto">
+        <footer className="bg-gray-900 text-gray-300 pt-12 pb-24 lg:pb-8 mt-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                     {/* Brand & Description */}
@@ -101,15 +101,15 @@ export default function Footer() {
 
                 <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
                     <p>&copy; {new Date().getFullYear()} MarchéFemme. Tous droits réservés.</p>
-                    <div className="flex gap-6">
-                        <Link href="#" className="hover:text-white transition-colors">
-                            Mentions légales
+                    <div className="flex flex-wrap gap-4 md:gap-6">
+                        <Link href="/conditions" className="hover:text-white transition-colors">
+                            Conditions d&apos;utilisation
                         </Link>
-                        <Link href="#" className="hover:text-white transition-colors">
-                            Politique de confidentialité
+                        <Link href="/confidentialite" className="hover:text-white transition-colors">
+                            Confidentialité
                         </Link>
-                        <Link href="#" className="hover:text-white transition-colors">
-                            CGU
+                        <Link href="/faq" className="hover:text-white transition-colors">
+                            FAQ
                         </Link>
                     </div>
                 </div>
