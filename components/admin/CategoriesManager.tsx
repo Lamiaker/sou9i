@@ -23,9 +23,12 @@ interface Category {
     name: string;
     slug: string;
     icon: string | null;
+    image: string | null;
     description: string | null;
     order: number;
     parentId: string | null;
+    isTrending: boolean;
+    trendingOrder: number | null;
     children?: Category[];
     _count: {
         ads: number;
@@ -51,7 +54,7 @@ export default function CategoriesManager({ initialCategories, pagination, curre
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     const [editingId, setEditingId] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({ name: '', slug: '', icon: '', description: '', parentId: '' });
+    const [formData, setFormData] = useState({ name: '', slug: '', icon: '', image: '', description: '', parentId: '', isTrending: false, trendingOrder: null as number | null });
     const [loading, setLoading] = useState(false);
     const toast = useToast();
     const [confirmDelete, setConfirmDelete] = useState<{
@@ -68,7 +71,7 @@ export default function CategoriesManager({ initialCategories, pagination, curre
 
     const openCreateModal = (parentId: string = '') => {
         // We pass parentId in initialData so the Modal knows to hide the selection
-        setFormData({ name: '', slug: '', icon: '', description: '', parentId });
+        setFormData({ name: '', slug: '', icon: '', image: '', description: '', parentId, isTrending: false, trendingOrder: null });
         setEditingId(null);
         setShowModal(true);
     };
@@ -78,8 +81,11 @@ export default function CategoriesManager({ initialCategories, pagination, curre
             name: category.name,
             slug: category.slug,
             icon: category.icon || '',
+            image: category.image || '',
             description: category.description || '',
-            parentId: category.parentId || ''
+            parentId: category.parentId || '',
+            isTrending: category.isTrending || false,
+            trendingOrder: category.trendingOrder ?? null
         });
         setEditingId(category.id);
         setShowModal(true);

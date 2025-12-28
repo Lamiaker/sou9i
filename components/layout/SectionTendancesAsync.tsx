@@ -1,14 +1,25 @@
 import { SectionTendances } from "./SectionTendances";
-import { TendanceItem } from "@/lib/data/tendances";
+import { CategoryService } from "@/services/categoryService";
 
 interface SectionTendancesProps {
     title: string;
-    items: TendanceItem[];
 }
 
-export async function SectionTendancesAsync(props: SectionTendancesProps) {
-    // Simuler un délai réseau pour voir le skeleton (pour la démo)
-    // await new Promise(resolve => setTimeout(resolve, 1000));
+export async function SectionTendancesAsync({ title }: SectionTendancesProps) {
+    // Récupérer les catégories tendances depuis la base de données
+    const trendingCategories = await CategoryService.getTrendingCategories();
 
-    return <SectionTendances {...props} />;
+    // Si aucune tendance configurée, ne rien afficher
+    if (trendingCategories.length === 0) {
+        return null;
+    }
+
+    // Mapper vers le format attendu par SectionTendances
+    const items = trendingCategories.map(cat => ({
+        title: cat.name,
+        img: cat.image,
+        slug: cat.slug,
+    }));
+
+    return <SectionTendances title={title} items={items} />;
 }

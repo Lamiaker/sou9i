@@ -12,8 +12,11 @@ interface CategoryFormModalProps {
         name: string;
         slug: string;
         icon: string;
+        image: string;
         description: string;
         parentId: string;
+        isTrending: boolean;
+        trendingOrder: number | null;
     };
     categoryTree: { id: string; label: string }[];
     title: string;
@@ -49,8 +52,11 @@ export default function CategoryFormModal({
         name: '',
         slug: '',
         icon: '',
+        image: '',
         description: '',
-        parentId: ''
+        parentId: '',
+        isTrending: false,
+        trendingOrder: null as number | null
     });
     const [loading, setLoading] = useState(false);
     const toast = useToast();
@@ -62,9 +68,12 @@ export default function CategoryFormModal({
     useEffect(() => {
         if (isOpen) {
             if (initialData) {
-                setFormData(initialData);
+                setFormData({
+                    ...initialData,
+                    trendingOrder: initialData.trendingOrder ?? null
+                });
             } else {
-                setFormData({ name: '', slug: '', icon: '', description: '', parentId: '' });
+                setFormData({ name: '', slug: '', icon: '', image: '', description: '', parentId: '', isTrending: false, trendingOrder: null });
             }
             setSlugStatus('idle');
         }
@@ -245,10 +254,17 @@ export default function CategoryFormModal({
                         />
                     </div>
 
-                    {/* Parent Category field removed as per user request. 
-                        Hierarchy is determined by the action context (Create Root or Add Sub) 
-                        and cannot be changed in the form. 
-                    */}
+                    <div>
+                        <label className="block text-white/60 text-sm mb-2">Image URL (pour tendances)</label>
+                        <input
+                            type="text"
+                            value={formData.image}
+                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                            placeholder="https://example.com/image.jpg"
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                        />
+                        <p className="text-white/40 text-xs mt-1">Optionnel. Si vide, utilise l&apos;image de la première annonce.</p>
+                    </div>
 
                     <div>
                         <label className="block text-white/60 text-sm mb-2">Description</label>
@@ -259,6 +275,42 @@ export default function CategoryFormModal({
                             rows={2}
                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
                         />
+                    </div>
+
+                    {/* Section Tendances */}
+                    <div className="border-t border-white/10 pt-4 mt-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <label className="block text-white text-sm font-medium">Afficher dans Tendances</label>
+                                <p className="text-white/40 text-xs">Cette catégorie apparaîtra sur la page d&apos;accueil</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({
+                                    ...formData,
+                                    isTrending: !formData.isTrending,
+                                    trendingOrder: !formData.isTrending ? 1 : null
+                                })}
+                                className={`relative w-12 h-6 rounded-full transition-colors ${formData.isTrending ? 'bg-cyan-500' : 'bg-white/20'
+                                    }`}
+                            >
+                                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.isTrending ? 'translate-x-6' : ''
+                                    }`} />
+                            </button>
+                        </div>
+
+                        {formData.isTrending && (
+                            <div>
+                                <label className="block text-white/60 text-sm mb-2">Ordre d&apos;affichage</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={formData.trendingOrder ?? 1}
+                                    onChange={(e) => setFormData({ ...formData, trendingOrder: parseInt(e.target.value) || 1 })}
+                                    className="w-24 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 

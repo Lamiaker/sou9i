@@ -212,8 +212,8 @@ function CategoryCard({ category, isActive, onClick }: { category: FAQCategory; 
         <button
             onClick={onClick}
             className={`flex items-center gap-3 p-4 rounded-xl border transition-all text-left w-full ${isActive
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                ? 'border-primary bg-primary/5 shadow-sm'
+                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
                 }`}
         >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${category.color} flex items-center justify-center flex-shrink-0`}>
@@ -375,7 +375,7 @@ export default function FAQPage() {
                         Notre équipe de support est là pour vous aider. Envoyez-nous votre question et nous vous répondrons rapidement.
                     </p>
                     <Link
-                        href="/support"
+                        href="/dashboard/support"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all"
                     >
                         <span>Contacter le support</span>

@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, slug, icon, description, parentId } = body;
+        const { name, slug, icon, image, description, parentId, isTrending, trendingOrder } = body;
 
         if (!name || !slug) {
             return NextResponse.json({ error: 'Nom et slug requis' }, { status: 400 });
@@ -34,8 +34,11 @@ export async function POST(request: NextRequest) {
             name,
             slug,
             icon: icon || undefined,
+            image: image || undefined,
             description: description || undefined,
             parentId: parentId || undefined,
+            isTrending: isTrending || false,
+            trendingOrder: isTrending ? trendingOrder : null,
         });
 
         // Revalidate pages to show new category
@@ -61,7 +64,7 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { categoryId, name, slug, icon, description, parentId, order } = body;
+        const { categoryId, name, slug, icon, image, description, parentId, order, isTrending, trendingOrder } = body;
 
         if (!categoryId) {
             return NextResponse.json({ error: 'ID catégorie requis' }, { status: 400 });
@@ -71,9 +74,12 @@ export async function PATCH(request: NextRequest) {
             name,
             slug,
             icon,
+            image,
             description,
             parentId,
             order,
+            isTrending,
+            trendingOrder: isTrending ? trendingOrder : null,
         });
 
         // Revalidate pages to show updated category

@@ -4,11 +4,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRef } from "react";
 import ArrowButton from "../ui/ArrowButton";
-import { TendanceItem } from "@/lib/data/tendances";
+
+// Interface mise à jour pour les tendances dynamiques
+interface TendanceItem {
+  title: string;
+  img: string;
+  slug?: string; // Slug de la catégorie pour le lien
+}
+
 interface SectionTendancesProps {
   title: string;
   items: TendanceItem[];
 }
+
 export function SectionTendances({ title, items }: SectionTendancesProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -69,7 +77,7 @@ export function SectionTendances({ title, items }: SectionTendancesProps) {
         >
           {items.map((item, index) => (
             <Link
-              href={`/search?q=${encodeURIComponent(item.title)}`}
+              href={item.slug ? `/categories/${item.slug}` : `/search?q=${encodeURIComponent(item.title)}`}
               key={index}
               className="
                 relative min-w-[200px] h-64

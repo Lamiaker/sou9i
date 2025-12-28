@@ -3,12 +3,13 @@ import { Suspense } from "react";
 import { SectionMomentDeVendreAsync } from "@/components/layout/SectionMomentDeVendreAsync";
 import { SectionPubliciteAsync } from "@/components/layout/SectionPubliciteAsync";
 import { SectionTendancesAsync } from "@/components/layout/SectionTendancesAsync";
-import { tendances } from "@/lib/data/tendances";
 
 // Skeletons
-import SectionFeaturedAsync from "@/components/layout/SectionFeaturedAsync";
 import SectionFeaturedSkeleton from "@/components/layout/SectionFeaturedSkeleton";
 import SectionPubliciteSkeleton, { SectionMomentDeVendreSkeleton, SectionTendancesSkeleton } from "@/components/layout/HomeSkeletons";
+
+// Nouveau: Composant dynamique pour les catégories
+import DynamicCategorySections from "@/components/layout/DynamicCategorySections";
 
 export const dynamic = 'force-dynamic';
 
@@ -33,53 +34,26 @@ export default function Home() {
       {/* Moment de vendre : Deposer une annonce */}
       <Suspense fallback={<SectionMomentDeVendreSkeleton />}>
         <SectionMomentDeVendreAsync
-          title="c&apos;est le moment de vendre"
+          title="C'est le moment de vendre"
           buttonText="Déposer une annonce"
         />
       </Suspense>
 
-      {/* Tendances */}
+      {/* Tendances - Maintenant dynamique depuis l'admin */}
       <Suspense fallback={<SectionTendancesSkeleton />}>
-        <SectionTendancesAsync
-          title="Tendance en ce moment"
-          items={tendances}
-        />
+        <SectionTendancesAsync title="Tendance en ce moment" />
       </Suspense>
 
-      {/* Featured Section - Cakes */}
-      <Suspense fallback={<SectionFeaturedSkeleton />}>
-        <SectionFeaturedAsync
-          slug="gateaux"
-          title="Gâteaux & Pâtisserie"
-          viewAllLink="/categories/gateaux-patisserie"
-        />
-      </Suspense>
-
-      {/* Featured Section - Decoration */}
-      <Suspense fallback={<SectionFeaturedSkeleton />}>
-        <SectionFeaturedAsync
-          slug="decoration"
-          title="Décoration & Événements"
-          viewAllLink="/categories/decoration-evenements"
-        />
-      </Suspense>
-
-      {/* Featured Section - Beauty */}
-      <Suspense fallback={<SectionFeaturedSkeleton />}>
-        <SectionFeaturedAsync
-          slug="mode"
-          title="Mode & Beauté"
-          viewAllLink="/categories/mode-beaute"
-        />
-      </Suspense>
-
-      {/* Featured Section - Kids */}
-      <Suspense fallback={<SectionFeaturedSkeleton />}>
-        <SectionFeaturedAsync
-          slug="bebe"
-          title="Bébé & Enfants"
-          viewAllLink="/categories/bebe-enfants"
-        />
+      {/* Sections de catégories dynamiques avec streaming + Load More */}
+      <Suspense fallback={
+        <div className="space-y-8">
+          <SectionFeaturedSkeleton />
+          <SectionFeaturedSkeleton />
+          <SectionFeaturedSkeleton />
+          <SectionFeaturedSkeleton />
+        </div>
+      }>
+        <DynamicCategorySections />
       </Suspense>
     </main>
   );

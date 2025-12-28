@@ -382,8 +382,11 @@ export default function CategoryDetailView({ category, allCategories }: Category
                     name: editingCategory.name,
                     slug: editingCategory.slug,
                     icon: editingCategory.icon || '',
+                    image: editingCategory.image || '',
                     description: editingCategory.description || '',
-                    parentId: editingCategory.parentId || ''
+                    parentId: editingCategory.parentId || '',
+                    isTrending: editingCategory.isTrending || false,
+                    trendingOrder: editingCategory.trendingOrder ?? null
                 } : undefined}
                 categoryTree={flatCategories}
                 title={`Modifier: ${editingCategory?.name}`}

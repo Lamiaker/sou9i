@@ -44,6 +44,101 @@ export class CategoryService {
     }
 
     /**
+     * Récupérer les catégories marquées comme "Tendance"
+     * Avec fallback: utilise category.image ou première image d'annonce
+     */
+    static async getTrendingCategories() {
+        // Récupérer les catégories marquées comme tendance
+        const trendingCategories = await prisma.category.findMany({
+            where: {
+                isTrending: true,
+            },
+            include: {
+                ads: {
+                    where: {
+                        status: 'active',
+                        moderationStatus: 'APPROVED',
+                    },
+                    select: {
+                        images: true,
+                    },
+                    take: 1, // On ne prend que la première annonce pour l'image fallback
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                },
+                children: {
+                    include: {
+                        ads: {
+                            where: {
+                                status: 'active',
+                                moderationStatus: 'APPROVED',
+                            },
+                            select: {
+                                images: true,
+                            },
+                            take: 1,
+                            orderBy: {
+                                createdAt: 'desc',
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: [
+                { trendingOrder: 'asc' },
+                { name: 'asc' },
+            ],
+        });
+
+        // Mapper avec la logique de fallback pour l'image
+        return trendingCategories.map(category => {
+            // 1. Utiliser l'image de la catégorie si elle existe
+            let image = category.image;
+
+            // 2. Sinon, chercher la première image d'annonce de la catégorie
+            if (!image && category.ads.length > 0 && category.ads[0].images.length > 0) {
+                image = category.ads[0].images[0];
+            }
+
+            // 3. Sinon, chercher dans les sous-catégories
+            if (!image) {
+                for (const child of category.children) {
+                    if (child.ads.length > 0 && child.ads[0].images.length > 0) {
+                        image = child.ads[0].images[0];
+                        break;
+                    }
+                }
+            }
+
+            // 4. Image par défaut si rien trouvé
+            if (!image) {
+                image = '/images/placeholder-category.jpg';
+            }
+
+            return {
+                id: category.id,
+                name: category.name,
+                slug: category.slug,
+                image,
+            };
+        });
+    }
+
+    /**
+     * Mettre à jour le statut tendance d'une catégorie
+     */
+    static async updateTrendingStatus(id: string, isTrending: boolean, trendingOrder?: number) {
+        return prisma.category.update({
+            where: { id },
+            data: {
+                isTrending,
+                trendingOrder: isTrending ? trendingOrder : null,
+            },
+        });
+    }
+
+    /**
      * Récupérer les catégories hiérarchiques (parents avec leurs enfants)
      */
     static async getCategoriesHierarchy() {
@@ -349,6 +444,84 @@ export class CategoryService {
                 children: true,
             },
         })
+    }
+
+    /**
+     * Récupérer les catégories parentes non vides (avec au moins 1 annonce active)
+     * Utilisé pour l'affichage dynamique sur la page d'accueil
+     */
+    static async getCategoriesWithAds(options: {
+        skip?: number;
+        take?: number;
+    } = {}) {
+        const { skip = 0, take = 4 } = options;
+
+        // Récupérer toutes les catégories parentes avec leur count d'annonces
+        const parents = await prisma.category.findMany({
+            where: {
+                parentId: null,
+            },
+            include: {
+                children: {
+                    include: {
+                        _count: {
+                            select: {
+                                ads: {
+                                    where: {
+                                        status: 'active',
+                                    }
+                                },
+                            },
+                        },
+                    },
+                },
+                _count: {
+                    select: {
+                        ads: {
+                            where: {
+                                status: 'active',
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                order: 'asc',
+            },
+        });
+
+        // Calculer le total des annonces pour chaque catégorie parent (parent + enfants)
+        const categoriesWithTotalAds = parents.map(parent => {
+            const childrenAdsCount = parent.children.reduce((acc, child) => {
+                return acc + (child._count?.ads || 0);
+            }, 0);
+
+            const totalAds = (parent._count?.ads || 0) + childrenAdsCount;
+
+            return {
+                id: parent.id,
+                name: parent.name,
+                slug: parent.slug,
+                icon: parent.icon,
+                description: parent.description,
+                totalAds,
+            };
+        });
+
+        // Filtrer les catégories avec au moins 1 annonce
+        const nonEmptyCategories = categoriesWithTotalAds.filter(cat => cat.totalAds > 0);
+
+        // Appliquer la pagination
+        const paginatedCategories = nonEmptyCategories.slice(skip, skip + take);
+        const hasMore = nonEmptyCategories.length > skip + take;
+        const totalRemaining = Math.max(0, nonEmptyCategories.length - (skip + take));
+
+        return {
+            categories: paginatedCategories,
+            hasMore,
+            totalRemaining,
+            total: nonEmptyCategories.length,
+        };
     }
 
     /**

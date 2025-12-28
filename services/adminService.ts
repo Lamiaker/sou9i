@@ -933,9 +933,12 @@ export class AdminService {
         name: string
         slug: string
         icon?: string
+        image?: string
         description?: string
         parentId?: string
         order?: number
+        isTrending?: boolean
+        trendingOrder?: number | null
     }) {
         // Vérifier si une catégorie avec ce slug existe déjà
         const existing = await prisma.category.findFirst({
@@ -960,9 +963,12 @@ export class AdminService {
             name: string
             slug: string
             icon: string | null
+            image: string | null
             description: string | null
             parentId: string | null
             order: number
+            isTrending: boolean
+            trendingOrder: number | null
         }>
     ) {
         // Empêcher une catégorie d'être son propre parent (boucle)

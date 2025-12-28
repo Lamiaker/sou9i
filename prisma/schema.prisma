@@ -108,8 +108,14 @@ model Category {
   name        String
   slug        String    @unique
   icon        String?
+  image       String?   // Image de la catégorie (pour les tendances)
   description String?
   order       Int       @default(0)
+  
+  // Champs pour les tendances
+  isTrending      Boolean   @default(false) // Affiché dans "Tendances"
+  trendingOrder   Int?      // Ordre d'affichage dans les tendances
+  
   createdAt   DateTime  @default(now())
 
   parentId    String?
@@ -121,6 +127,7 @@ model Category {
 
   @@index([slug])
   @@index([parentId])
+  @@index([isTrending])
 }
 
 
