@@ -11,13 +11,26 @@ import SectionPubliciteSkeleton, { SectionMomentDeVendreSkeleton, SectionTendanc
 // Nouveau: Composant dynamique pour les catégories
 import DynamicCategorySections from "@/components/layout/DynamicCategorySections";
 
-export const dynamic = 'force-dynamic';
+// ISR - Revalidation toutes les 60 secondes (au lieu de force-dynamic)
+export const revalidate = 60;
 
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'FemMarket - Achat et Vente entre femmes en Algérie',
+  title: 'SweetLook - Achat et Vente entre femmes en Algérie',
   description: 'La première plateforme de vente et d\'achat dédiée aux femmes en Algérie. Mode, beauté, maison, enfants, et plus encore.',
+  openGraph: {
+    title: 'SweetLook - Achat et Vente entre femmes en Algérie',
+    description: 'La première plateforme de vente et d\'achat dédiée aux femmes en Algérie.',
+    type: 'website',
+    siteName: 'SweetLook',
+    locale: 'fr_FR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SweetLook - Achat et Vente entre femmes',
+    description: 'La première plateforme dédiée aux femmes en Algérie.',
+  },
 };
 
 export default function Home() {
