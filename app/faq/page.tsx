@@ -38,20 +38,20 @@ const FAQ_CATEGORIES: FAQCategory[] = [
         color: 'from-blue-500 to-blue-600',
         items: [
             {
-                question: "Qu'est-ce que Marche Femme ?",
-                answer: "Marche Femme est une plateforme de petites annonces dédiée aux femmes au Maroc. Elle permet de vendre et acheter des articles de mode, beauté, accessoires et bien plus encore, dans un environnement sécurisé et bienveillant."
+                question: "Qu'est-ce que cette plateforme ?",
+                answer: "Notre plateforme est une marketplace de petites annonces ouverte à tous en Algérie. Elle permet de publier et de découvrir des annonces dans plusieurs catégories telles que les services, le lifestyle, la beauté, la maison, l'artisanat, l'événementiel et d'autres prestations du quotidien, dans un environnement sécurisé et convivial."
             },
             {
                 question: "L'inscription est-elle gratuite ?",
-                answer: "Oui, l'inscription sur Marche Femme est entièrement gratuite ! Vous pouvez créer un compte, publier des annonces et contacter les vendeurs sans aucun frais."
+                answer: "Oui, l'inscription est entièrement gratuite ! Vous pouvez créer un compte, publier des annonces et contacter les vendeurs sans aucun frais."
             },
             {
                 question: "Comment puis-je contacter le support ?",
-                answer: "Vous pouvez nous contacter via notre page de support accessible depuis le menu ou en bas de chaque page. Nous répondons généralement sous 24 à 48 heures."
+                answer: "Connectez-vous d'abord à votre compte, puis accédez à notre page de support depuis votre tableau de bord ou via le menu principal. Nous répondons généralement sous 24 à 48 heures."
             },
             {
-                question: "Dans quelles villes êtes-vous disponibles ?",
-                answer: "Marche Femme est disponible dans toutes les grandes villes du Maroc : Casablanca, Rabat, Marrakech, Fès, Tanger, Agadir, et bien d'autres. Vous pouvez filtrer les annonces par ville."
+                question: "La plateforme est-elle disponible partout en Algérie ?",
+                answer: "Oui, notre plateforme est 100% en ligne et accessible depuis toute l'Algérie. Peu importe où vous vous trouvez, vous pouvez publier et consulter des annonces à tout moment."
             }
         ]
     },
@@ -71,7 +71,7 @@ const FAQ_CATEGORIES: FAQCategory[] = [
             },
             {
                 question: "Combien de temps reste une annonce en ligne ?",
-                answer: "Les annonces restent actives pendant 60 jours. Vous pouvez les renouveler gratuitement depuis votre espace personnel avant leur expiration."
+                answer: "Vos annonces restent actives sans limite de durée ! Elles resteront visibles tant que vous ne les supprimez pas ou ne les marquez pas comme vendues depuis votre espace personnel."
             },
             {
                 question: "Pourquoi mon annonce est-elle en attente de modération ?",
@@ -95,7 +95,7 @@ const FAQ_CATEGORIES: FAQCategory[] = [
             },
             {
                 question: "Les paiements sont-ils sécurisés ?",
-                answer: "Marche Femme facilite la mise en relation entre acheteurs et vendeurs. Les transactions se font directement entre les parties. Nous recommandons de privilégier les remises en main propre ou les méthodes de paiement sécurisées."
+                answer: "Notre plateforme facilite la mise en relation entre acheteurs et vendeurs. Les transactions se font directement entre les parties. Nous recommandons de privilégier les remises en main propre ou les méthodes de paiement sécurisées."
             },
             {
                 question: "Comment signaler une annonce suspecte ?",
@@ -123,7 +123,7 @@ const FAQ_CATEGORIES: FAQCategory[] = [
             },
             {
                 question: "Comment supprimer mon compte ?",
-                answer: "Pour supprimer votre compte, contactez notre support via la page d'aide. Notez que cette action est irréversible et supprimera toutes vos annonces et données."
+                answer: "Pour supprimer votre compte, rendez-vous dans votre espace personnel, puis accédez à la section « Paramètres ». Vous y trouverez l'option de suppression de compte. Notez que cette action est irréversible et supprimera toutes vos annonces et données."
             },
             {
                 question: "Comment vérifier mon compte ?",
@@ -139,7 +139,7 @@ const FAQ_CATEGORIES: FAQCategory[] = [
         items: [
             {
                 question: "Comment éviter les arnaques ?",
-                answer: "Voici nos conseils : 1) Privilégiez les remises en main propre, 2) Ne payez jamais avant d'avoir vu l'article, 3) Méfiez-vous des prix trop bas, 4) Vérifiez le profil du vendeur et ses évaluations, 5) N'envoyez jamais vos informations bancaires par message."
+                answer: "Voici nos conseils pour des transactions sécurisées : • Privilégiez les remises en main propre • Ne payez jamais avant d'avoir vu l'article • Méfiez-vous des prix trop bas • Vérifiez le profil du vendeur et ses évaluations • N'envoyez jamais vos informations bancaires par message."
             },
             {
                 question: "Que faire si je suis victime d'une arnaque ?",
