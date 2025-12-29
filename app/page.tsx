@@ -17,19 +17,19 @@ export const revalidate = 60;
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'SweetLook - Achat et Vente entre femmes en Algérie',
-  description: 'La première plateforme de vente et d\'achat dédiée aux femmes en Algérie. Mode, beauté, maison, enfants, et plus encore.',
+  title: 'SweetLook - Marketplace de Services et Articles en Algérie',
+  description: 'Votre plateforme en ligne pour acheter, vendre et proposer des services en Algérie. Mode, beauté, maison, artisanat et bien plus.',
   openGraph: {
-    title: 'SweetLook - Achat et Vente entre femmes en Algérie',
-    description: 'La première plateforme de vente et d\'achat dédiée aux femmes en Algérie.',
+    title: 'SweetLook - Marketplace de Services et Articles en Algérie',
+    description: 'Votre plateforme en ligne pour acheter, vendre et proposer des services en Algérie.',
     type: 'website',
     siteName: 'SweetLook',
     locale: 'fr_FR',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SweetLook - Achat et Vente entre femmes',
-    description: 'La première plateforme dédiée aux femmes en Algérie.',
+    title: 'SweetLook - Marketplace en Algérie',
+    description: 'Votre plateforme pour acheter, vendre et proposer des services.',
   },
 };
 

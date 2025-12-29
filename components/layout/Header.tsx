@@ -49,7 +49,7 @@ export default function Header() {
           <Link href="/">
             <Image
               src={logo}
-              alt="FemMarket"
+              alt="SweetLook"
               width={130}
               height={36}
               style={{ transform: "scale(1.5)" }}
@@ -80,7 +80,7 @@ export default function Header() {
             <Link href="/">
               <Image
                 src={logo}
-                alt="FemMarket"
+                alt="SweetLook"
                 width={130}
                 height={36}
                 style={{ transform: "scale(1)" }}
@@ -160,7 +160,7 @@ export default function Header() {
               <Link href="/">
                 <Image
                   src={logo}
-                  alt="FemMarket"
+                  alt="SweetLook"
                   width={130}
                   height={36}
                   className="object-contain"

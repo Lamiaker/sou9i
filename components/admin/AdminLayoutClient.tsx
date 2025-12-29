@@ -145,7 +145,7 @@ export default function AdminLayoutClient({
                         </div>
                         {!sidebarCollapsed && (
                             <div className="overflow-hidden">
-                                <h1 className="font-bold text-white text-lg">FemMarket</h1>
+                                <h1 className="font-bold text-white text-lg">SweetLook</h1>
                                 <p className="text-xs text-white/50">Administration</p>
                             </div>
                         )}

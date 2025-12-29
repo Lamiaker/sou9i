@@ -6,6 +6,9 @@ import AdDetailClient from "@/components/ads/AdDetailClient";
 // ISR - Revalidation toutes les 60 secondes
 export const revalidate = 60;
 
+// Configuration
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://sweetlook.dz';
+
 // Générer les métadonnées dynamiques pour le SEO et Open Graph
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     try {
@@ -24,16 +27,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             : ad.description;
 
         return {
-            title: `${ad.title} - ${formattedPrice} | SweetLook `,
+            title: `${ad.title} - ${formattedPrice} | SweetLook`,
             description: description || `Découvrez cette annonce sur SweetLook: ${ad.title} à ${formattedPrice}`,
             openGraph: {
                 title: `${ad.title} - ${formattedPrice}`,
                 description: description,
                 type: 'website',
-                siteName: 'FemMarket',
+                siteName: 'SweetLook',
                 images: ad.images && ad.images.length > 0 ? [
                     {
-                        url: ad.images[0],
+                        url: ad.images[0].startsWith('http') ? ad.images[0] : `${BASE_URL}${ad.images[0]}`,
                         width: 800,
                         height: 600,
                         alt: ad.title,
@@ -45,19 +48,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
                 card: 'summary_large_image',
                 title: `${ad.title} - ${formattedPrice}`,
                 description: description,
-                images: ad.images && ad.images.length > 0 ? [ad.images[0]] : undefined,
+                images: ad.images && ad.images.length > 0 ? [
+                    ad.images[0].startsWith('http') ? ad.images[0] : `${BASE_URL}${ad.images[0]}`
+                ] : undefined,
             },
             robots: {
                 index: true,
                 follow: true,
             },
             alternates: {
-                canonical: `/annonces/${id}`,
+                canonical: `${BASE_URL}/annonces/${id}`,
             },
         };
     } catch {
         return {
-            title: 'Annonce non trouvée | FemMarket',
+            title: 'Annonce non trouvée | SweetLook',
             description: 'Cette annonce n\'existe pas ou a été supprimée.',
             robots: {
                 index: false,
@@ -69,6 +74,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 interface PageProps {
     params: Promise<{ id: string }>;
+}
+
+// Composant JSON-LD pour les données structurées
+function JsonLd({ data }: { data: object }) {
+    return (
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+        />
+    );
 }
 
 export default async function AdDetailPage({ params }: PageProps) {
@@ -106,6 +121,64 @@ export default async function AdDetailPage({ params }: PageProps) {
     } catch (error) {
         console.error('Error fetching similar ads:', error);
     }
+
+    // Données structurées Schema.org (Product + Offer)
+    const structuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: ad.title,
+        description: ad.description,
+        image: ad.images && ad.images.length > 0
+            ? ad.images.map((img: string) => img.startsWith('http') ? img : `${BASE_URL}${img}`)
+            : undefined,
+        offers: {
+            '@type': 'Offer',
+            price: ad.price,
+            priceCurrency: 'DZD',
+            availability: 'https://schema.org/InStock',
+            url: `${BASE_URL}/annonces/${ad.id}`,
+            seller: {
+                '@type': 'Person',
+                name: ad.user.name || 'Vendeur',
+                address: {
+                    '@type': 'PostalAddress',
+                    addressLocality: ad.location,
+                    addressCountry: 'DZ',
+                },
+            },
+        },
+        category: ad.category?.name,
+        brand: {
+            '@type': 'Brand',
+            name: 'SweetLook',
+        },
+    };
+
+    // Données structurées BreadcrumbList
+    const breadcrumbData = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Accueil',
+                item: BASE_URL,
+            },
+            ...(ad.category ? [{
+                '@type': 'ListItem',
+                position: 2,
+                name: ad.category.name,
+                item: `${BASE_URL}/categories/${ad.category.slug}`,
+            }] : []),
+            {
+                '@type': 'ListItem',
+                position: ad.category ? 3 : 2,
+                name: ad.title,
+                item: `${BASE_URL}/annonces/${ad.id}`,
+            },
+        ],
+    };
 
     // Formatter les données pour le composant client
     const formattedAd = {
@@ -155,5 +228,14 @@ export default async function AdDetailPage({ params }: PageProps) {
             images: similarAd.images || [],
         }));
 
-    return <AdDetailClient ad={formattedAd} similarAds={formattedSimilarAds} />;
+    return (
+        <>
+            {/* Données structurées JSON-LD */}
+            <JsonLd data={structuredData} />
+            <JsonLd data={breadcrumbData} />
+
+            {/* Composant client */}
+            <AdDetailClient ad={formattedAd} similarAds={formattedSimilarAds} />
+        </>
+    );
 }

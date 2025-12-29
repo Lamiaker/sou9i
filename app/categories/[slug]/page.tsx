@@ -15,17 +15,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         const category = await CategoryService.getCategoryBySlug(slug);
 
         return {
-            title: `${category.name} | FemMarket - Achat et Vente entre femmes`,
-            description: category.description || `Découvrez les meilleures annonces de ${category.name} sur FemMarket. Achetez et vendez entre femmes en toute confiance.`,
+            title: `${category.name} | SweetLook`,
+            description: category.description || `Découvrez les meilleures annonces de ${category.name} sur SweetLook. Achetez et vendez en toute confiance.`,
             openGraph: {
-                title: `${category.name} | FemMarket`,
-                description: category.description || `Annonces ${category.name} sur FemMarket`,
+                title: `${category.name} | SweetLook`,
+                description: category.description || `Annonces ${category.name} sur SweetLook`,
                 type: 'website',
             },
         };
     } catch {
         return {
-            title: 'Catégorie non trouvée | FemMarket',
+            title: 'Catégorie non trouvée | SweetLook',
         };
     }
 }

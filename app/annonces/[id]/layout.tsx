@@ -18,8 +18,8 @@ export async function generateMetadata(
         const adImages = ad.images && ad.images.length > 0 ? ad.images : [];
 
         return {
-            title: `${ad.title} | FemMarket`,
-            description: ad.description ? ad.description.substring(0, 150) + '...' : 'Découvrez cette annonce sur FemMarket',
+            title: `${ad.title} | SweetLook`,
+            description: ad.description ? ad.description.substring(0, 150) + '...' : 'Découvrez cette annonce sur SweetLook',
             openGraph: {
                 title: ad.title,
                 description: ad.description ? ad.description.substring(0, 150) + '...' : undefined,
@@ -28,8 +28,8 @@ export async function generateMetadata(
         };
     } catch (e) {
         return {
-            title: 'Annonce | FemMarket',
-            description: 'Détails de l\'annonce sur FemMarket',
+            title: 'Annonce | SweetLook',
+            description: 'Détails de l\'annonce sur SweetLook',
         };
     }
 }

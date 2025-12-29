@@ -71,7 +71,7 @@ export default function ConnexionRequise() {
                         <div className="relative w-64 h-64 rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 border border-white/50">
                             <Image
                                 src="/images/connexion-illustration.png"
-                                alt="Rejoignez FemMarket"
+                                alt="Rejoignez SweetLook"
                                 fill
                                 className="object-cover"
                                 priority
@@ -170,7 +170,7 @@ export default function ConnexionRequise() {
                             </div>
                             <div className="relative flex justify-center">
                                 <span className="px-4 bg-white text-sm text-gray-400 font-medium">
-                                    Nouveau sur FemMarket ?
+                                    Nouveau sur SweetLook ?
                                 </span>
                             </div>
                         </div>
@@ -196,8 +196,8 @@ export default function ConnexionRequise() {
                     {/* Footer message */}
                     <div className="mt-8 text-center">
                         <p className="text-sm text-gray-400 leading-relaxed">
-                            🌸 Rejoignez <span className="font-semibold text-primary">+10 000</span> vendeuses<br />
-                            qui font confiance à FemMarket
+                            🌸 Rejoignez <span className="font-semibold text-primary">+10 000</span> utilisateurs<br />
+                            qui font confiance à SweetLook
                         </p>
                     </div>
                 </div>

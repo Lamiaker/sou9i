@@ -4,7 +4,7 @@ import { signOut, useSession } from "next-auth/react";
 import { ShieldX, LogOut, MessageCircle, Mail, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const SUPPORT_EMAIL = "support@femmarket.dz";
+const SUPPORT_EMAIL = "support@sweetlook.dz";
 
 export default function BannedPage() {
     const { data: session } = useSession();
@@ -42,7 +42,7 @@ export default function BannedPage() {
 
                         <h1 className="text-2xl font-bold text-white mb-2">Compte Suspendu</h1>
                         <p className="text-white/60 mb-8 leading-relaxed">
-                            Votre accès à FemMarket a été restreint par l&apos;administration.
+                            Votre accès à SweetLook a été restreint par l&apos;administration.
                         </p>
 
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-8 text-left">
@@ -74,8 +74,8 @@ export default function BannedPage() {
                                         type="button"
                                         onClick={handleCopyEmail}
                                         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${copied
-                                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                                : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                            : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
                                             }`}
                                     >
                                         {copied ? (

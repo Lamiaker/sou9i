@@ -176,9 +176,9 @@ export default function DashboardPage() {
                         <div className="flex items-start gap-3">
                             <span className="text-2xl">🎉</span>
                             <div>
-                                <h3 className="font-medium text-gray-900">Bienvenue sur FemMarket !</h3>
+                                <h3 className="font-medium text-gray-900">Bienvenue sur SweetLook !</h3>
                                 <p className="text-sm text-gray-600 mt-1">
-                                    Votre plateforme de confiance pour acheter et vendre entre femmes.
+                                    Votre plateforme de confiance pour acheter, vendre et proposer des services.
                                 </p>
                             </div>
                         </div>

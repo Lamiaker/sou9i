@@ -76,7 +76,7 @@ export default function AdminDashboardPage() {
                     Tableau de bord
                 </h1>
                 <p className="text-white/60">
-                    Bienvenue dans l'espace d'administration FemMarket
+                    Bienvenue dans l'espace d'administration SweetLook
                 </p>
             </div>
 

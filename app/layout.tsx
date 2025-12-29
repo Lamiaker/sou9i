@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FemMarket - Achat et Vente entre femmes en Algérie",
-  description: "La première plateforme de vente et d'achat dédiée aux femmes en Algérie.",
+  title: "SweetLook - Marketplace de Services et Articles en Algérie",
+  description: "Votre plateforme en ligne pour acheter, vendre et proposer des services en Algérie. Mode, beauté, maison, artisanat et bien plus.",
 };
 
 export default function RootLayout({
