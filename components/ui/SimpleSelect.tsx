@@ -60,7 +60,7 @@ export default function SimpleSelect({
                 onClick={() => !disabled && setIsOpen(!isOpen)}
                 disabled={disabled}
                 className={cn(
-                    "px-4 py-2.5 bg-white border-2 rounded-xl text-left transition-all duration-200 flex items-center gap-2 min-w-[160px]",
+                    "w-full px-4 py-2.5 bg-white border-2 rounded-xl text-left transition-all duration-200 flex items-center gap-2",
                     "hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
                     isOpen && "border-primary ring-2 ring-primary/20",
                     !isOpen && "border-gray-200",

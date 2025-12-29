@@ -386,3 +386,52 @@ model SupportTicket {
   @@index([category])
   @@index([createdAt])
 }
+
+// ============================================
+// MODÈLES DEMANDES DE SERVICES
+// ============================================
+
+enum ServiceRequestStatus {
+  NEW         // Nouvelle demande
+  CONTACTED   // Client contacté
+  IN_PROGRESS // En cours de réalisation
+  COMPLETED   // Terminé
+  CANCELLED   // Annulé
+}
+
+enum ServiceType {
+  SITE_VITRINE    // Site vitrine
+  ECOMMERCE       // Site e-commerce
+  APP_WEB         // Application web
+  APP_MOBILE      // Application mobile
+  DESIGN_UX       // Design & UX
+  CONSULTING      // Conseil & Stratégie
+  OTHER           // Autre
+}
+
+model ServiceRequest {
+  id          String               @id @default(cuid())
+  
+  // Informations contact
+  name        String               // Nom complet
+  email       String               // Email
+  phone       String?              // Téléphone (optionnel)
+  company     String?              // Nom de l'entreprise (optionnel)
+  
+  // Détails de la demande
+  serviceType ServiceType          // Type de service demandé
+  budget      String?              // Budget estimé
+  deadline    String?              // Délai souhaité
+  description String               @db.Text // Description du projet
+  
+  // Statut
+  status      ServiceRequestStatus @default(NEW)
+  adminNotes  String?              @db.Text // Notes internes de l'admin
+  
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([status])
+  @@index([serviceType])
+  @@index([createdAt])
+}

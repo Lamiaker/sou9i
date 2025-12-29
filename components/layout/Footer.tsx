@@ -1,28 +1,23 @@
+"use client";
+
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, ChevronRight } from "lucide-react";
+import { useCategories } from "@/hooks/useCategories";
 
 export default function Footer() {
+    const { categories } = useCategories();
+    const displayedCategories = categories?.slice(0, 4) || [];
+
     return (
         <footer className="bg-gray-900 text-gray-300 pt-12 pb-24 lg:pb-8 mt-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                     {/* Brand & Description */}
                     <div>
-                        <h3 className="text-2xl font-bold text-white mb-4">MarchéFemme</h3>
+                        <h3 className="text-2xl font-bold text-white mb-4">SweetLook</h3>
                         <p className="text-sm text-gray-400 mb-4">
-                            La première marketplace dédiée aux femmes en Algérie. Trouvez tout ce dont vous avez besoin, de la mode à la décoration.
+                            La marketplace de petites annonces ouverte à tous en Algérie. Découvrez des services, articles et prestations du quotidien dans un espace sécurisé et convivial.
                         </p>
-                        <div className="flex gap-4">
-                            <Link href="#" className="hover:text-primary transition-colors">
-                                <Facebook size={20} />
-                            </Link>
-                            <Link href="#" className="hover:text-primary transition-colors">
-                                <Instagram size={20} />
-                            </Link>
-                            <Link href="#" className="hover:text-primary transition-colors">
-                                <Twitter size={20} />
-                            </Link>
-                        </div>
                     </div>
 
                     {/* Quick Links */}
@@ -52,28 +47,21 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    {/* Categories */}
+                    {/* Categories - Dynamic */}
                     <div>
                         <h4 className="text-lg font-semibold text-white mb-4">Catégories</h4>
                         <ul className="space-y-2 text-sm">
+                            {displayedCategories.map((category) => (
+                                <li key={category.id}>
+                                    <Link href={`/categories/${category.slug}`} className="hover:text-white transition-colors">
+                                        {category.name}
+                                    </Link>
+                                </li>
+                            ))}
                             <li>
-                                <Link href="/categories/vetements" className="hover:text-white transition-colors">
-                                    Vêtements
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/categories/beaute" className="hover:text-white transition-colors">
-                                    Beauté & Bien-être
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/categories/maison" className="hover:text-white transition-colors">
-                                    Maison & Déco
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/categories/enfants" className="hover:text-white transition-colors">
-                                    Bébé & Enfant
+                                <Link href="/categories" className="inline-flex items-center gap-1 text-primary hover:text-white transition-colors font-medium">
+                                    En savoir plus
+                                    <ChevronRight size={14} />
                                 </Link>
                             </li>
                         </ul>
@@ -100,7 +88,7 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-                    <p>&copy; {new Date().getFullYear()} MarchéFemme. Tous droits réservés.</p>
+                    <p>&copy; {new Date().getFullYear()} SweetLook. Tous droits réservés.</p>
                     <div className="flex flex-wrap gap-4 md:gap-6">
                         <Link href="/conditions" className="hover:text-white transition-colors">
                             Conditions d&apos;utilisation

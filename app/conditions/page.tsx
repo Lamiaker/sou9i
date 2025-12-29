@@ -31,12 +31,12 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    En accédant et en utilisant la plateforme MarchéFemme, vous acceptez d'être lié par les présentes
+                    En accédant et en utilisant notre plateforme, vous acceptez d'être lié par les présentes
                     Conditions Générales d'Utilisation (CGU). Si vous n'acceptez pas ces conditions, veuillez ne pas
                     utiliser notre service.
                 </p>
                 <p>
-                    MarchéFemme se réserve le droit de modifier ces conditions à tout moment. Les modifications
+                    Notre plateforme se réserve le droit de modifier ces conditions à tout moment. Les modifications
                     prennent effet dès leur publication sur le site. Il est de votre responsabilité de consulter
                     régulièrement cette page.
                 </p>
@@ -50,18 +50,18 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    MarchéFemme est une plateforme de petites annonces en ligne dédiée aux femmes en Algérie.
+                    Notre plateforme est une marketplace de petites annonces en ligne ouverte à tous en Algérie.
                     Elle permet aux utilisateurs de :
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                    <li>Publier des annonces pour vendre des articles</li>
+                    <li>Publier des annonces pour vendre des articles ou proposer des services</li>
                     <li>Rechercher et consulter des annonces</li>
                     <li>Contacter d'autres utilisateurs via la messagerie intégrée</li>
                     <li>Gérer leur profil et leurs annonces</li>
                     <li>Sauvegarder des annonces en favoris</li>
                 </ul>
                 <p>
-                    MarchéFemme agit uniquement en tant qu'intermédiaire technique entre vendeurs et acheteurs.
+                    Notre plateforme agit uniquement en tant qu'intermédiaire technique entre vendeurs et acheteurs.
                     Nous ne sommes pas partie prenante aux transactions effectuées entre utilisateurs.
                 </p>
             </div>
@@ -74,7 +74,7 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    Pour utiliser certaines fonctionnalités de MarchéFemme (publier des annonces, contacter des vendeurs),
+                    Pour utiliser certaines fonctionnalités (publier des annonces, contacter des vendeurs),
                     vous devez créer un compte. Lors de l'inscription, vous vous engagez à :
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -89,7 +89,7 @@ const SECTIONS: Section[] = [
                 </p>
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
                     <p className="text-amber-800 text-sm">
-                        <strong>Important :</strong> MarchéFemme se réserve le droit de suspendre ou supprimer tout compte
+                        <strong>Important :</strong> Notre plateforme se réserve le droit de suspendre ou supprimer tout compte
                         en cas de violation de ces conditions ou d'activité suspecte.
                     </p>
                 </div>
@@ -103,16 +103,16 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    En publiant une annonce sur MarchéFemme, vous vous engagez à respecter les règles suivantes :
+                    En publiant une annonce sur notre plateforme, vous vous engagez à respecter les règles suivantes :
                 </p>
                 <div className="space-y-3">
                     <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span>Décrire honnêtement l'article proposé (état, caractéristiques, défauts éventuels)</span>
+                        <span>Décrire honnêtement l'article ou le service proposé (caractéristiques, conditions, défauts éventuels)</span>
                     </div>
                     <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span>Utiliser des photos authentiques représentant réellement l'article</span>
+                        <span>Utiliser des photos authentiques représentant réellement l'article ou le service</span>
                     </div>
                     <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
@@ -120,7 +120,7 @@ const SECTIONS: Section[] = [
                     </div>
                     <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span>Ne publier que des articles dont vous êtes propriétaire ou autorisé à vendre</span>
+                        <span>Ne publier que des articles dont vous êtes propriétaire ou des services que vous pouvez réellement fournir</span>
                     </div>
                     <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
@@ -128,7 +128,7 @@ const SECTIONS: Section[] = [
                     </div>
                 </div>
                 <p className="mt-4">
-                    Toutes les annonces sont soumises à modération avant publication. MarchéFemme se réserve le droit
+                    Toutes les annonces sont soumises à modération avant publication. Notre plateforme se réserve le droit
                     de refuser ou supprimer toute annonce ne respectant pas ces règles.
                 </p>
             </div>
@@ -141,7 +141,7 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    Les contenus et comportements suivants sont strictement interdits sur MarchéFemme :
+                    Les contenus et comportements suivants sont strictement interdits sur notre plateforme :
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
                     <p className="font-semibold text-red-800">Articles interdits :</p>
@@ -176,7 +176,7 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    MarchéFemme facilite la mise en relation entre vendeurs et acheteurs mais n'intervient pas
+                    Notre plateforme facilite la mise en relation entre vendeurs et acheteurs mais n'intervient pas
                     dans les transactions. Les utilisateurs sont seuls responsables de :
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -206,7 +206,7 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    MarchéFemme met tout en œuvre pour assurer le bon fonctionnement de la plateforme, mais ne peut
+                    Notre plateforme met tout en œuvre pour assurer le bon fonctionnement du service, mais ne peut
                     garantir :
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
@@ -216,7 +216,7 @@ const SECTIONS: Section[] = [
                     <li>Le comportement des utilisateurs</li>
                 </ul>
                 <p>
-                    MarchéFemme décline toute responsabilité en cas de :
+                    Notre plateforme décline toute responsabilité en cas de :
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                     <li>Litiges entre utilisateurs</li>
@@ -234,12 +234,12 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    L'ensemble des éléments constituant la plateforme MarchéFemme (design, logo, textes,
+                    L'ensemble des éléments constituant notre plateforme (design, logo, textes,
                     fonctionnalités, code source) sont protégés par le droit de la propriété intellectuelle.
                 </p>
                 <p>
-                    En publiant du contenu sur MarchéFemme (photos, descriptions), vous conservez vos droits
-                    sur ce contenu mais accordez à MarchéFemme une licence non exclusive pour l'afficher et
+                    En publiant du contenu sur notre plateforme (photos, descriptions), vous conservez vos droits
+                    sur ce contenu mais nous accordez une licence non exclusive pour l'afficher et
                     le promouvoir sur la plateforme.
                 </p>
                 <p>
@@ -256,21 +256,17 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    Pour toute question concernant ces Conditions Générales d'Utilisation, vous pouvez nous contacter :
+                    Pour toute question concernant ces Conditions Générales d'Utilisation ou pour signaler un problème,
+                    connectez-vous à votre compte puis rendez-vous sur la page Aide & Support.
                 </p>
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <ul className="space-y-2">
-                        <li className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-primary" />
-                            <span>Email : contact@marchefemme.dz</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-primary" />
-                            <Link href="/dashboard/support" className="text-primary hover:underline">
-                                Formulaire de support
-                            </Link>
-                        </li>
-                    </ul>
+                    <p className="text-gray-700 mb-3">Pour nous contacter :</p>
+                    <ol className="list-decimal list-inside space-y-2 text-gray-600">
+                        <li>Connectez-vous à votre compte</li>
+                        <li>Accédez à votre tableau de bord</li>
+                        <li>Cliquez sur "Aide & Support"</li>
+                        <li>Soumettez votre question ou problème</li>
+                    </ol>
                 </div>
             </div>
         )
@@ -355,10 +351,6 @@ export default function ConditionsPage() {
                         {' • '}
                         <Link href="/faq" className="text-primary hover:underline">
                             FAQ
-                        </Link>
-                        {' • '}
-                        <Link href="/dashboard/support" className="text-primary hover:underline">
-                            Contact
                         </Link>
                     </p>
                 </div>

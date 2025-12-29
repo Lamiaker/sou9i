@@ -33,14 +33,21 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    Chez MarchéFemme, nous prenons très au sérieux la protection de vos données personnelles.
+                    Chez nous, nous prenons très au sérieux la protection de vos données personnelles.
                     Cette politique de confidentialité explique comment nous collectons, utilisons, stockons
                     et protégeons vos informations lorsque vous utilisez notre plateforme.
                 </p>
                 <p>
-                    En utilisant MarchéFemme, vous acceptez les pratiques décrites dans cette politique.
+                    En utilisant notre plateforme, vous acceptez les pratiques décrites dans cette politique.
                     Nous vous encourageons à la lire attentivement et à nous contacter pour toute question.
                 </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                    <p className="text-blue-800 text-sm">
+                        <strong>Cadre légal :</strong> Le traitement de vos données à caractère personnel est réalisé
+                        conformément à la <strong>loi 18-07</strong> relative à la protection des personnes physiques
+                        dans le traitement des données à caractère personnel en Algérie.
+                    </p>
+                </div>
             </div>
         )
     },
@@ -55,7 +62,7 @@ const SECTIONS: Section[] = [
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="font-semibold text-blue-800 mb-2">Données que vous nous fournissez :</p>
                     <ul className="list-disc list-inside space-y-1 ml-4 text-blue-700 text-sm">
-                        <li>Nom et prénom</li>
+                        <li>Nom complet</li>
                         <li>Adresse email</li>
                         <li>Numéro de téléphone</li>
                         <li>Ville / Localisation</li>
@@ -343,7 +350,7 @@ const SECTIONS: Section[] = [
         content: (
             <div className="space-y-4">
                 <p>
-                    MarchéFemme utilise des cookies pour améliorer votre expérience sur notre plateforme.
+                    Notre plateforme utilise des cookies pour améliorer votre expérience.
                     Les cookies sont de petits fichiers stockés sur votre appareil.
                 </p>
 
@@ -385,21 +392,16 @@ const SECTIONS: Section[] = [
             <div className="space-y-4">
                 <p>
                     Pour toute question concernant cette politique de confidentialité ou pour exercer
-                    vos droits, vous pouvez nous contacter :
+                    vos droits, connectez-vous à votre compte puis rendez-vous sur la page Aide & Support.
                 </p>
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <ul className="space-y-2">
-                        <li className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-primary" />
-                            <span>Email : privacy@marchefemme.dz</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-primary" />
-                            <Link href="/dashboard/support" className="text-primary hover:underline">
-                                Formulaire de support (demande RGPD)
-                            </Link>
-                        </li>
-                    </ul>
+                    <p className="text-gray-700 mb-3">Pour nous contacter :</p>
+                    <ol className="list-decimal list-inside space-y-2 text-gray-600">
+                        <li>Connectez-vous à votre compte</li>
+                        <li>Accédez à votre tableau de bord</li>
+                        <li>Cliquez sur "Aide & Support"</li>
+                        <li>Soumettez votre question ou demande</li>
+                    </ol>
                 </div>
                 <p className="text-sm text-gray-500">
                     Nous nous engageons à répondre à toute demande dans un délai maximum de 30 jours.
@@ -421,9 +423,6 @@ export default function ConfidentialitePage() {
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                         Politique de Confidentialité
                     </h1>
-                    <p className="text-gray-600">
-                        Dernière mise à jour : {LAST_UPDATE}
-                    </p>
                 </div>
 
                 {/* Trust Badges */}
@@ -434,7 +433,7 @@ export default function ConfidentialitePage() {
                     </div>
                     <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
                         <Shield className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                        <p className="text-xs font-medium text-gray-700">Conforme RGPD</p>
+                        <p className="text-xs font-medium text-gray-700">Conforme loi 18-07</p>
                     </div>
                     <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
                         <UserCheck className="w-6 h-6 text-purple-600 mx-auto mb-2" />
@@ -503,10 +502,6 @@ export default function ConfidentialitePage() {
                         {' • '}
                         <Link href="/faq" className="text-primary hover:underline">
                             FAQ
-                        </Link>
-                        {' • '}
-                        <Link href="/dashboard/support" className="text-primary hover:underline">
-                            Contact
                         </Link>
                     </p>
                 </div>

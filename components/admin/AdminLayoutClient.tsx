@@ -18,6 +18,7 @@ import {
     X,
     Search,
     HelpCircle,
+    Briefcase,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -29,6 +30,7 @@ const menuItems = [
     { name: "Annonces", href: "/admin/ads", icon: ShoppingBag },
     { name: "Signalements", href: "/admin/reports", icon: AlertTriangle },
     { name: "Catégories", href: "/admin/categories", icon: FolderTree },
+    { name: "Services", href: "/admin/services", icon: Briefcase },
     { name: "Support", href: "/admin/support", icon: HelpCircle },
 ];
 

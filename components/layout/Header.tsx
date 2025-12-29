@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 
 import Image from "next/image";
-import { Plus, Bell, Heart, Mail, Search, Menu, X, MessageCircle, Gift } from "lucide-react";
+import { Plus, Heart, Mail, Search, Menu, X, MessageCircle, Gift } from "lucide-react";
 import logo from "@/public/logo.png";
 import SearchBar from "./SearchBar";
 import ListeCategorices from "./ListeCategorices";
@@ -109,8 +109,9 @@ export default function Header() {
           {/* Section droite : menu utilisateur */}
           <div className="flex items-center space-x-6 text-gray-700">
             <IconButtonWithLabel
-              icon={Bell}
-              label="Mes recherches"
+              icon={Gift}
+              label="Nos Services"
+              href="/services"
             />
 
             <div className="relative">
@@ -216,20 +217,11 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Recherches sauvegardées */}
-              <MenuButton
-                icon={Bell}
-                text="Recherches sauvegardées"
-                href="/recherches"
-                onClick={closeMobileMenu}
-                hasBorder={true}
-              />
-
-              {/* Bons plans */}
+              {/* Nos Services */}
               <MenuButton
                 icon={Gift}
-                text="Bons plans !"
-                href="/bonsplans"
+                text="Nos Services"
+                href="/services"
                 onClick={closeMobileMenu}
                 hasBorder={true}
               />
