@@ -193,9 +193,9 @@ function LoginForm() {
                         {/* Mot de passe oublié */}
                         <div className="flex items-center justify-between">
                             <div className="text-sm">
-                                <a href="#" className="font-medium text-primary hover:text-secondary transition">
+                                <Link href="/forgot-password" className="font-medium text-primary hover:text-secondary transition">
                                     Mot de passe oublié ?
-                                </a>
+                                </Link>
                             </div>
                         </div>
 

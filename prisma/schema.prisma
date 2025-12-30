@@ -101,6 +101,24 @@ model User {
 }
 
 // ============================================
+// MODÈLE RESET PASSWORD
+// ============================================
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String   // Email de l'utilisateur
+  token     String   @unique // Token hashé (SHA-256)
+  expiresAt DateTime // Date d'expiration (1 heure)
+  createdAt DateTime @default(now())
+  
+  // Un seul token actif par email à la fois
+  @@unique([email, token])
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// ============================================
 // MODÈLES ANNONCES
 // ============================================
 model Category {

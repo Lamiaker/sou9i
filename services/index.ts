@@ -6,6 +6,7 @@ export { UserService } from './userService'
 export { MessageService } from './messageService'
 export { AdminService } from './adminService'
 export { SubcategoryFieldService } from './subcategoryFieldService'
+export { PasswordResetService } from './PasswordResetService'
 
 // Usage example:
 // import { AdService, FavoriteService, UserService, MessageService } from '@/services'

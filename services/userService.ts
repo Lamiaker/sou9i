@@ -115,6 +115,13 @@ export class UserService {
     }
 
     /**
+     * Hasher un mot de passe
+     */
+    static async hashPassword(password: string): Promise<string> {
+        return bcrypt.hash(password, 10)
+    }
+
+    /**
      * Mettre à jour le profil utilisateur
      */
     static async updateUser(
