@@ -283,7 +283,7 @@ export default function ConditionsPage() {
                         <Scale className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                        Conditions Générales d&apos;Utilisation
+                        Conditions Générales d'Utilisation
                     </h1>
                     <p className="text-gray-600">
                         Dernière mise à jour : {LAST_UPDATE}

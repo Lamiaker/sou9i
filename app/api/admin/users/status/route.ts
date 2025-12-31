@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
 
 export async function POST(request: NextRequest) {
     try {
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ error: 'Action non reconnue' }, { status: 400 });
     } catch (error) {
-        console.error('Admin user status error:', error);
-        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+        logServerError(error, { route: '/api/admin/users/status', action: 'manage_user_status' });
+        return NextResponse.json({ error: ERROR_MESSAGES.GENERIC }, { status: 500 });
     }
 }

@@ -138,7 +138,7 @@ function ResetPasswordForm() {
                         </h2>
 
                         <p className="text-center text-gray-600 mb-6">
-                            Ce lien de réinitialisation n&apos;est plus valide. Il a peut-être
+                            Ce lien de réinitialisation n'est plus valide. Il a peut-être
                             expiré ou a déjà été utilisé.
                         </p>
 
@@ -319,10 +319,10 @@ function ResetPasswordForm() {
                                         if (error) setError("");
                                     }}
                                     className={`focus:ring-primary focus:border-primary block w-full pl-10 pr-10 sm:text-sm rounded-lg py-3 outline-none border transition ${confirmPassword && !passwordsMatch
-                                            ? "border-red-300 bg-red-50"
-                                            : confirmPassword && passwordsMatch
-                                                ? "border-green-300 bg-green-50"
-                                                : "border-gray-300"
+                                        ? "border-red-300 bg-red-50"
+                                        : confirmPassword && passwordsMatch
+                                            ? "border-green-300 bg-green-50"
+                                            : "border-gray-300"
                                         }`}
                                     placeholder="••••••••"
                                 />
@@ -354,8 +354,8 @@ function ResetPasswordForm() {
                             type="submit"
                             disabled={loading || !isPasswordValid || !passwordsMatch}
                             className={`w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition ${loading || !isPasswordValid || !passwordsMatch
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                                 }`}
                         >
                             {loading ? (

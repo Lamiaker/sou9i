@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { MessageService } from '@/services'
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
 
 /**
  * POST /api/messages
@@ -47,10 +48,9 @@ export async function POST(request: NextRequest) {
             data: message,
         })
     } catch (error) {
-        console.error('Erreur POST message:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Erreur serveur'
+        logServerError(error, { route: '/api/messages', action: 'create_message' })
         return NextResponse.json(
-            { success: false, error: errorMessage },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }
@@ -96,10 +96,9 @@ export async function GET(request: NextRequest) {
             pagination: result.pagination,
         })
     } catch (error) {
-        console.error('Erreur GET messages:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Erreur serveur'
+        logServerError(error, { route: '/api/messages', action: 'get_messages' })
         return NextResponse.json(
-            { success: false, error: errorMessage },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }

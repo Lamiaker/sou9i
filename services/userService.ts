@@ -165,6 +165,11 @@ export class UserService {
             throw new Error('Utilisateur non trouvé')
         }
 
+        // Vérifier que l'utilisateur a un mot de passe (compte credentials)
+        if (!user.password) {
+            throw new Error('Mot de passe non disponible')
+        }
+
         // Vérifier l'ancien mot de passe
         const isValid = await bcrypt.compare(oldPassword, user.password)
         if (!isValid) {

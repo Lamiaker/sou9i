@@ -102,7 +102,7 @@ export default function MesDemandesPage() {
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900">Mes demandes</h1>
                     </div>
-                    <p className="text-gray-500">Suivez l&apos;état de vos demandes de support</p>
+                    <p className="text-gray-500">Suivez l'état de vos demandes de support</p>
                 </div>
                 <Link
                     href="/dashboard/support"
@@ -138,7 +138,7 @@ export default function MesDemandesPage() {
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune demande</h3>
                         <p className="text-gray-500 mb-6">
-                            Vous n&apos;avez pas encore envoyé de demande de support.
+                            Vous n'avez pas encore envoyé de demande de support.
                         </p>
                         <Link
                             href="/dashboard/support"

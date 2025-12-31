@@ -24,7 +24,7 @@ function LoginForm() {
 
     useEffect(() => {
         if (status === 'authenticated' && session?.user) {
-            // Si l&apos;utilisateur est ADMIN, rediriger vers l&apos;espace admin
+            // Si l'utilisateur est ADMIN, rediriger vers l'espace admin
             if (session.user.role === 'ADMIN') {
                 router.replace('/admin');
             } else {
@@ -60,7 +60,7 @@ function LoginForm() {
             });
 
             if (result?.error) {
-                // Si l&apos;erreur contient un message spécifique (ex: ban raison), on l&apos;affiche
+                // Si l'erreur contient un message spécifique (ex: ban raison), on l'affiche
                 if (result.error.includes("suspendu") || result.error.includes("banni")) {
                     setError(result.error);
                 } else {
@@ -110,7 +110,7 @@ function LoginForm() {
                     </div>
                 )}
 
-                {/* Message d&apos;alerte si redirection */}
+                {/* Message d'alerte si redirection */}
                 {redirectPath && (
                     <div className="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md shadow-sm mx-3 sm:mx-0">
                         <div className="flex">
@@ -131,7 +131,7 @@ function LoginForm() {
 
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 mx-3 sm:mx-0">
                     <form className="space-y-6" onSubmit={handleSubmit}>
-                        {/* Message d&apos;erreur */}
+                        {/* Message d'erreur */}
                         {error && (
                             <div className="rounded-md bg-red-50 p-3">
                                 <p className="text-sm text-red-800">{error}</p>

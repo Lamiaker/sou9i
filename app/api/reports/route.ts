@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
 
 // Raisons de signalement prédéfinies
 const VALID_REASONS = [
@@ -133,9 +134,9 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
-        console.error('Report API error:', error);
+        logServerError(error, { route: '/api/reports', action: 'create_report' });
         return NextResponse.json(
-            { error: 'Erreur lors de l\'envoi du signalement' },
+            { error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         );
     }

@@ -239,7 +239,7 @@ export default function EditAnnoncePage() {
                         <AlertCircle className="text-red-500" size={32} />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Annonce introuvable</h3>
-                    <p className="text-gray-500 mb-6">L&apos;annonce que vous tentez de modifier n&apos;existe pas ou ne vous appartient pas.</p>
+                    <p className="text-gray-500 mb-6">L'annonce que vous tentez de modifier n'existe pas ou ne vous appartient pas.</p>
                     <Link href="/dashboard/annonces">
                         <button className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-black transition-all shadow-md hover:shadow-lg">
                             Retour à mes annonces
@@ -266,7 +266,7 @@ export default function EditAnnoncePage() {
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Modifier l&apos;annonce</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Modifier l'annonce</h1>
                         <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 font-medium text-gray-600">
                                 <LayoutDashboard size={14} />
@@ -294,7 +294,7 @@ export default function EditAnnoncePage() {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 overflow-hidden">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-6">
                                 <ImageIcon className="text-primary" size={20} />
-                                Photos de l&apos;annonce
+                                Photos de l'annonce
                             </h2>
 
                             <div className="space-y-4">
@@ -389,7 +389,7 @@ export default function EditAnnoncePage() {
                                 disabled={isLoading}
                             />
                             <p className="text-xs text-gray-500 mt-3 leading-relaxed">
-                                Marquez l&apos;annonce comme &quot;Vendu&quot; si l&apos;article n&apos;est plus disponible. Cela le masquera des résultats de recherche.
+                                Marquez l'annonce comme "Vendu" si l'article n'est plus disponible. Cela le masquera des résultats de recherche.
                             </p>
                         </div>
                     </div>
@@ -423,7 +423,7 @@ export default function EditAnnoncePage() {
                                 <div className="space-y-2">
                                     <label htmlFor="title" className="text-sm font-bold text-gray-900 flex items-center gap-2">
                                         <FileText size={16} className="text-gray-400" />
-                                        Titre de l&apos;annonce
+                                        Titre de l'annonce
                                     </label>
                                     <input
                                         type="text"

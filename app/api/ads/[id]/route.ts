@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AdService } from '@/services'
 import { deleteUnusedImages } from '@/lib/deleteImages'
+import { logServerError, NotFoundError, ForbiddenError, ERROR_MESSAGES } from '@/lib/errors'
 
 // GET /api/ads/[id] - Récupérer une annonce par ID
 export async function GET(
@@ -21,7 +22,7 @@ export async function GET(
             data: ad,
         })
     } catch (error) {
-        console.error('Error fetching ad:', error)
+        logServerError(error, { route: '/api/ads/[id]', action: 'get_ad' })
 
         if (error instanceof Error && error.message === 'Annonce non trouvée') {
             return NextResponse.json(
@@ -31,10 +32,7 @@ export async function GET(
         }
 
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la récupération de l\'annonce'
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }
@@ -94,7 +92,7 @@ export async function PATCH(
             data: ad,
         })
     } catch (error) {
-        console.error('Error updating ad:', error)
+        logServerError(error, { route: '/api/ads/[id]', action: 'update_ad' })
 
         if (error instanceof Error) {
             if (error.message === 'Annonce non trouvée') {
@@ -112,10 +110,7 @@ export async function PATCH(
         }
 
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la mise à jour de l\'annonce'
-            },
+            { success: false, error: ERROR_MESSAGES.UPDATE_ERROR },
             { status: 500 }
         )
     }
@@ -153,7 +148,7 @@ export async function DELETE(
             message: 'Annonce supprimée avec succès',
         })
     } catch (error) {
-        console.error('Error deleting ad:', error)
+        logServerError(error, { route: '/api/ads/[id]', action: 'delete_ad' })
 
         if (error instanceof Error) {
             if (error.message === 'Annonce non trouvée') {
@@ -171,10 +166,7 @@ export async function DELETE(
         }
 
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la suppression de l\'annonce'
-            },
+            { success: false, error: ERROR_MESSAGES.DELETE_ERROR },
             { status: 500 }
         )
     }

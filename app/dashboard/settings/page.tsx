@@ -71,7 +71,7 @@ export default function SettingsPage() {
         }
 
         if (passwordForm.currentPassword === passwordForm.newPassword) {
-            setPasswordError("Le nouveau mot de passe doit être différent de l&apos;ancien");
+            setPasswordError("Le nouveau mot de passe doit être différent de l'ancien");
             return;
         }
 
@@ -102,7 +102,7 @@ export default function SettingsPage() {
                 confirmPassword: "",
             });
 
-            // Déconnecter l&apos;utilisateur après 3 secondes pour qu&apos;il se reconnecte avec le nouveau mot de passe
+            // Déconnecter l'utilisateur après 3 secondes pour qu'il se reconnecte avec le nouveau mot de passe
             setTimeout(() => {
                 signOut({ callbackUrl: '/login?message=password-changed' });
             }, 3000);
@@ -136,7 +136,7 @@ export default function SettingsPage() {
                 </div>
 
                 <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
-                    {/* Messages d&apos;erreur et succès */}
+                    {/* Messages d'erreur et succès */}
                     {passwordError && (
                         <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
                             <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={18} />

@@ -97,13 +97,13 @@ export default function AdsTable({ ads, pagination, basePath = '/admin/ads' }: A
     }, [activeDropdown]);
 
     const handleAction = async (action: string, adId: string, extraData: any = {}) => {
-        // Validation : Empêcher l&apos;approbation si l&apos;utilisateur n&apos;est pas vérifié
+        // Validation : Empêcher l'approbation si l'utilisateur n'est pas vérifié
         if (action === 'approve') {
             const ad = ads.find(a => a.id === adId);
             if (ad) {
                 const userStatus = ad.user.verificationStatus;
                 if (userStatus !== 'VERIFIED' && userStatus !== 'TRUSTED') {
-                    alert("⚠️ Impossible de valider l&apos;annonce.\n\nLe compte de l&apos;utilisateur est en attente ou rejeté.\nVeuillez d&apos;abord valider le compte de l&apos;utilisateur dans la section 'Utilisateurs' avant de pouvoir approuver ses annonces.");
+                    alert("⚠️ Impossible de valider l'annonce.\n\nLe compte de l'utilisateur est en attente ou rejeté.\nVeuillez d'abord valider le compte de l'utilisateur dans la section 'Utilisateurs' avant de pouvoir approuver ses annonces.");
                     return;
                 }
             }
@@ -143,7 +143,7 @@ export default function AdsTable({ ads, pagination, basePath = '/admin/ads' }: A
     };
 
     const handleReject = (adId: string) => {
-        const reason = prompt("Raison du rejet de l&apos;annonce :");
+        const reason = prompt("Raison du rejet de l'annonce :");
         if (reason) {
             handleAction('reject', adId, { reason });
         }
@@ -418,7 +418,7 @@ export default function AdsTable({ ads, pagination, basePath = '/admin/ads' }: A
                                                         className="w-full px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 flex items-center gap-2 transition-colors"
                                                     >
                                                         <ExternalLink className="w-4 h-4" />
-                                                        Voir l&apos;annonce
+                                                        Voir l'annonce
                                                     </Link>
                                                     {ad.status !== 'active' && (
                                                         <button

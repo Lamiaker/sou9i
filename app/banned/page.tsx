@@ -42,13 +42,13 @@ export default function BannedPage() {
 
                         <h1 className="text-2xl font-bold text-white mb-2">Compte Suspendu</h1>
                         <p className="text-white/60 mb-8 leading-relaxed">
-                            Votre accès à SweetLook a été restreint par l&apos;administration.
+                            Votre accès à SweetLook a été restreint par l'administration.
                         </p>
 
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-8 text-left">
                             <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Raison du blocage</p>
                             <p className="text-red-400 font-medium italic">
-                                &quot;{session?.user?.banReason || "Violation des conditions d'utilisation"}&quot;
+                                "{session?.user?.banReason || "Violation des conditions d'utilisation"}"
                             </p>
                         </div>
 
@@ -61,8 +61,8 @@ export default function BannedPage() {
                                 </div>
 
                                 <p className="text-white/60 text-sm mb-4">
-                                    Envoyez un email à l&apos;adresse ci-dessous en expliquant votre situation.
-                                    N&apos;oubliez pas de mentionner votre ID Support.
+                                    Envoyez un email à l'adresse ci-dessous en expliquant votre situation.
+                                    N'oubliez pas de mentionner votre ID Support.
                                 </p>
 
                                 {/* Email avec bouton copier */}

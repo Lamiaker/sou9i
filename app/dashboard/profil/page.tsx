@@ -82,7 +82,7 @@ export default function ProfilePage() {
             email: formData.get('email'),
             phone: formData.get('phone'),
             city: formData.get('city'),
-            // Bio n&apos;est pas encore dans le modèle, on l&apos;ignore pour l&apos;instant
+            // Bio n'est pas encore dans le modèle, on l'ignore pour l'instant
         };
 
         try {
@@ -146,7 +146,7 @@ export default function ProfilePage() {
                                     unoptimized
                                 />
                             </div>
-                            {/* Input file caché pour l&apos;upload */}
+                            {/* Input file caché pour l'upload */}
                             <label className="absolute inset-0 flex items-center justify-center rounded-full cursor-pointer group hover:bg-black/40 transition-colors z-10">
                                 <input
                                     type="file"
@@ -254,10 +254,10 @@ export default function ProfilePage() {
                                         className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     />
                                 </div>
-                                <p className="mt-1 text-xs text-gray-500">Cette ville sera pré-remplie lors de vos dépôts d&apos;annonces.</p>
+                                <p className="mt-1 text-xs text-gray-500">Cette ville sera pré-remplie lors de vos dépôts d'annonces.</p>
                             </div>
 
-                            {/* Bio commentée car pas dans le modèle User pour l&apos;instant */}
+                            {/* Bio commentée car pas dans le modèle User pour l'instant */}
                             {/* <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Bio (Optionnel)</label>
                                 <textarea

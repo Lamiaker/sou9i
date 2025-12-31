@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CategoryService } from '@/services'
+import { logServerError, ERROR_MESSAGES, ConflictError } from '@/lib/errors'
 
 // GET /api/categories - Récupérer toutes les catégories
 export async function GET(request: NextRequest) {
@@ -54,11 +55,11 @@ export async function GET(request: NextRequest) {
             ...(pagination && { pagination }),
         })
     } catch (error) {
-        console.error('Error fetching categories:', error)
+        logServerError(error, { route: '/api/categories', action: 'get_categories' })
         return NextResponse.json(
             {
                 success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la récupération des catégories'
+                error: ERROR_MESSAGES.GENERIC
             },
             { status: 500 }
         )
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
             data: category,
         }, { status: 201 })
     } catch (error) {
-        console.error('Error creating category:', error)
+        logServerError(error, { route: '/api/categories', action: 'create_category' })
 
         if (error instanceof Error && error.message.includes('existe déjà')) {
             return NextResponse.json(
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
             {
                 success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la création de la catégorie'
+                error: ERROR_MESSAGES.SAVE_ERROR
             },
             { status: 500 }
         )

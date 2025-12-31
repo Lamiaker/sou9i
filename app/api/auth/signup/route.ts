@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { UserService } from '@/services'
 import { registerSchema } from '@/lib/validations/auth'
 import { rateLimit } from '@/lib/rate-limit'
+import { logServerError, ConflictError, RateLimitError, ValidationError } from '@/lib/errors'
+import { errorResponse } from '@/lib/api-utils'
 
 // Limiteur : 5 tentatives par heure par IP
 const limiter = rateLimit({
@@ -16,10 +18,7 @@ export async function POST(request: NextRequest) {
         try {
             await limiter.check(5, ip) // 5 requêtes max par heure
         } catch {
-            return NextResponse.json(
-                { success: false, error: 'Trop de tentatives. Veuillez réessayer plus tard.' },
-                { status: 429 }
-            )
+            throw new RateLimitError()
         }
 
         const body = await request.json()
@@ -29,10 +28,7 @@ export async function POST(request: NextRequest) {
 
         if (!parsedBody.success) {
             // Retourner la première erreur trouvée
-            return NextResponse.json(
-                { success: false, error: parsedBody.error.issues[0].message },
-                { status: 400 }
-            )
+            throw new ValidationError(parsedBody.error.issues[0].message)
         }
 
         const { email, name, password, phone, city } = parsedBody.data
@@ -59,20 +55,13 @@ export async function POST(request: NextRequest) {
             { status: 201 }
         )
     } catch (error) {
-        console.error('Error during signup:', error)
-
-        if (error instanceof Error) {
-            if (error.message === 'Cet email est déjà utilisé') {
-                return NextResponse.json(
-                    { success: false, error: error.message },
-                    { status: 409 }
-                )
-            }
+        // Email déjà utilisé - erreur attendue
+        if (error instanceof Error && error.message === 'Cet email est déjà utilisé') {
+            return errorResponse(new ConflictError(error.message), { route: '/api/auth/signup' })
         }
 
-        return NextResponse.json(
-            { success: false, error: 'Une erreur est survenue lors de l\'inscription' },
-            { status: 500 }
-        )
+        // Autres erreurs
+        logServerError(error, { route: '/api/auth/signup', action: 'create_user' })
+        return errorResponse(error, { route: '/api/auth/signup' })
     }
 }

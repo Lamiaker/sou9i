@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
                         </h2>
 
                         <p className="text-center text-gray-600 mb-6">
-                            Si un compte existe avec l&apos;adresse{" "}
+                            Si un compte existe avec l'adresse{" "}
                             <span className="font-medium text-gray-900">{email}</span>, vous
                             recevrez un lien de réinitialisation dans quelques instants.
                         </p>
@@ -164,8 +164,8 @@ export default function ForgotPasswordPage() {
                             type="submit"
                             disabled={loading || !email}
                             className={`w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition ${loading || !email
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                                 }`}
                         >
                             {loading ? (
@@ -197,7 +197,7 @@ export default function ForgotPasswordPage() {
                 {/* Note de sécurité */}
                 <p className="mt-4 text-center text-xs text-gray-500 mx-3 sm:mx-0">
                     Pour votre sécurité, le lien de réinitialisation expire après 1 heure
-                    et ne peut être utilisé qu&apos;une seule fois.
+                    et ne peut être utilisé qu'une seule fois.
                 </p>
             </div>
         </div>

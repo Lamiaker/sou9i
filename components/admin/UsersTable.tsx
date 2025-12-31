@@ -105,7 +105,7 @@ export default function UsersTable({ users, pagination, onMutate, basePath = '/a
         setActiveDropdown(null);
 
         try {
-            // Utiliser l&apos;endpoint dédié pour le ban/unban, sinon l&apos;endpoint classique
+            // Utiliser l'endpoint dédié pour le ban/unban, sinon l'endpoint classique
             const endpoint = (action === 'ban' || action === 'unban')
                 ? '/api/admin/users/status'
                 : '/api/admin/users';
@@ -146,7 +146,7 @@ export default function UsersTable({ users, pagination, onMutate, basePath = '/a
     };
 
     const handleBan = (userId: string) => {
-        const reason = prompt("Raison du blocage de l&apos;utilisateur :");
+        const reason = prompt("Raison du blocage de l'utilisateur :");
         if (reason) {
             handleAction('ban', userId, { reason });
         }

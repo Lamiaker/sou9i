@@ -46,7 +46,7 @@ export default function SignupPage() {
 
         // Email
         if (!formData.email.trim()) {
-            newErrors.email = "l&apos;email est requis";
+            newErrors.email = "l'email est requis";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = "Email invalide";
         }
@@ -300,7 +300,7 @@ export default function SignupPage() {
                                     : "bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                                     }`}
                             >
-                                {loading ? "Inscription en cours..." : "s&apos;inscrire"}
+                                {loading ? "Inscription en cours..." : "S'inscrire"}
                             </button>
                         </div>
                     </form>

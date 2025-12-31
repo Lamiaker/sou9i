@@ -140,7 +140,7 @@ export default function PublicFavorisPage() {
                                     </h3>
                                     <p className="text-sm text-gray-600 mb-4">
                                         Vos favoris sont actuellement stockés sur cet appareil.
-                                        Connectez-vous pour les synchroniser et y accéder depuis n&apos;importe où.
+                                        Connectez-vous pour les synchroniser et y accéder depuis n'importe où.
                                     </p>
                                     <div className="flex gap-3">
                                         <Link
@@ -234,7 +234,7 @@ export default function PublicFavorisPage() {
                                 </h3>
                                 <p className="text-sm text-gray-600 mb-4">
                                     Créez un compte gratuit pour synchroniser vos {ads.length} favoris
-                                    et y accéder depuis n&apos;importe quel appareil.
+                                    et y accéder depuis n'importe quel appareil.
                                 </p>
                                 <div className="flex gap-3">
                                     <Link
@@ -247,7 +247,7 @@ export default function PublicFavorisPage() {
                                         href="/login"
                                         className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
                                     >
-                                        J&apos;ai déjà un compte
+                                        J'ai déjà un compte
                                     </Link>
                                 </div>
                             </div>

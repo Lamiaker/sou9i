@@ -263,7 +263,7 @@ export default function CategoryFormModal({
                             placeholder="https://example.com/image.jpg"
                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                         />
-                        <p className="text-white/40 text-xs mt-1">Optionnel. Si vide, utilise l&apos;image de la première annonce.</p>
+                        <p className="text-white/40 text-xs mt-1">Optionnel. Si vide, utilise l'image de la première annonce.</p>
                     </div>
 
                     <div>
@@ -282,7 +282,7 @@ export default function CategoryFormModal({
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <label className="block text-white text-sm font-medium">Afficher dans Tendances</label>
-                                <p className="text-white/40 text-xs">Cette catégorie apparaîtra sur la page d&apos;accueil</p>
+                                <p className="text-white/40 text-xs">Cette catégorie apparaîtra sur la page d'accueil</p>
                             </div>
                             <button
                                 type="button"
@@ -301,7 +301,7 @@ export default function CategoryFormModal({
 
                         {formData.isTrending && (
                             <div>
-                                <label className="block text-white/60 text-sm mb-2">Ordre d&apos;affichage</label>
+                                <label className="block text-white/60 text-sm mb-2">Ordre d'affichage</label>
                                 <input
                                     type="number"
                                     min="1"

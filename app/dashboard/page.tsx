@@ -73,7 +73,7 @@ export default function DashboardPage() {
                         <p className="text-red-700 mt-1">
                             Votre demande de vérification a été rejetée.
                             {profile.rejectionReason && (
-                                <span className="block mt-1 font-medium">Raison : &quot;{profile.rejectionReason}&quot;</span>
+                                <span className="block mt-1 font-medium">Raison : "{profile.rejectionReason}"</span>
                             )}
                         </p>
                         <Link href="/dashboard/settings" className="text-sm font-medium text-red-600 hover:text-red-500 mt-2 inline-block">

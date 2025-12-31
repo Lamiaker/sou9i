@@ -791,7 +791,7 @@ export default function AdminSearchPage() {
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-2">Recherchez un utilisateur</h3>
                     <p className="text-white/50 max-w-md mx-auto">
-                        Entrez l&apos;ID d&apos;un utilisateur pour voir toutes ses informations : profil, annonces, signalements, avis et favoris.
+                        Entrez l'ID d'un utilisateur pour voir toutes ses informations : profil, annonces, signalements, avis et favoris.
                     </p>
                 </div>
             )}

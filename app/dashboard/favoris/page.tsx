@@ -58,7 +58,7 @@ export default function FavorisPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Aucun favori</h3>
                 <p className="text-gray-500 mt-2 mb-6">
-                    Vous n&apos;avez pas encore ajouté d&apos;annonces à vos favoris.
+                    Vous n'avez pas encore ajouté d'annonces à vos favoris.
                 </p>
                 <Link
                     href="/search"

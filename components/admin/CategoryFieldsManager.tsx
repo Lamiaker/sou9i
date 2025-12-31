@@ -399,8 +399,8 @@ export default function CategoryFieldsManager({ categoryId, categoryName }: Cate
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, type }))}
                                             className={`p-3 rounded-lg border flex flex-col items-center gap-1 transition-colors ${formData.type === type
-                                                    ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
-                                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                                                ? 'bg-purple-500/20 border-purple-500/50 text-purple-400'
+                                                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
                                                 }`}
                                         >
                                             <Icon size={20} />
@@ -618,7 +618,7 @@ export default function CategoryFieldsManager({ categoryId, categoryName }: Cate
 
                         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
                             <p className="text-white/90">
-                                Êtes-vous sûr de vouloir supprimer le champ <strong>&quot;{confirmDelete.name}&quot;</strong> ?
+                                Êtes-vous sûr de vouloir supprimer le champ <strong>"{confirmDelete.name}"</strong> ?
                             </p>
                             <p className="text-white/60 text-sm mt-2">
                                 Les valeurs existantes de ce champ seront également supprimées.

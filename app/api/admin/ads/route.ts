@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { authOptions } from '@/lib/auth';
 import { AdminService } from '@/services';
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
 
 export async function GET(request: NextRequest) {
     try {
@@ -33,8 +34,8 @@ export async function GET(request: NextRequest) {
             pagination: result.pagination
         });
     } catch (error) {
-        console.error('Admin ads fetch error:', error);
-        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+        logServerError(error, { route: '/api/admin/ads', action: 'get_ads' });
+        return NextResponse.json({ error: ERROR_MESSAGES.GENERIC }, { status: 500 });
     }
 }
 
@@ -105,9 +106,9 @@ export async function POST(request: NextRequest) {
                 );
         }
     } catch (error) {
-        console.error('Admin ads API error:', error);
+        logServerError(error, { route: '/api/admin/ads', action: 'manage_ad' });
         return NextResponse.json(
-            { error: 'Erreur serveur' },
+            { error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         );
     }

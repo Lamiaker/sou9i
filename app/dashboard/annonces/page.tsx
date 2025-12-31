@@ -26,7 +26,7 @@ export default function MesAnnoncesPage() {
     const [deleting, setDeleting] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    // Récupérer les annonces de l&apos;utilisateur (EXCLURE les deleted automatiquement)
+    // Récupérer les annonces de l'utilisateur (EXCLURE les deleted automatiquement)
     const { ads, loading, error, refetch } = useAds({
         filters: {
             userId: user?.id,
@@ -305,7 +305,7 @@ export default function MesAnnoncesPage() {
                             ) : (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                        {searchTerm ? "Aucune annonce ne correspond à votre recherche." : "Vous n&apos;avez pas encore d&apos;annonce."}
+                                        {searchTerm ? "Aucune annonce ne correspond à votre recherche." : "Vous n'avez pas encore d'annonce."}
                                     </td>
                                 </tr>
                             )}
@@ -331,7 +331,7 @@ export default function MesAnnoncesPage() {
                                     <Trash2 className="text-red-600" size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-gray-900">Supprimer l&apos;annonce ?</h3>
+                                    <h3 className="text-lg font-bold text-gray-900">Supprimer l'annonce ?</h3>
                                     <p className="text-sm text-gray-500">Action irréversible pour vous</p>
                                 </div>
                             </div>

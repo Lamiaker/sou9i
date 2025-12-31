@@ -174,7 +174,7 @@ export default function CategoryDetailView({ category, allCategories }: Category
                         {confirmDelete.hasAds ? (
                             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
                                 <p className="text-white/90 mb-2">
-                                    La {confirmDelete.isSubcategory ? 'sous-catégorie' : 'catégorie'} <strong>&quot;{confirmDelete.categoryName}&quot;</strong> contient :
+                                    La {confirmDelete.isSubcategory ? 'sous-catégorie' : 'catégorie'} <strong>"{confirmDelete.categoryName}"</strong> contient :
                                 </p>
                                 <p className="text-red-400 font-bold text-lg">
                                     {confirmDelete.adsCount} annonce{confirmDelete.adsCount > 1 ? 's' : ''}
@@ -186,7 +186,7 @@ export default function CategoryDetailView({ category, allCategories }: Category
                         ) : (
                             <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
                                 <p className="text-white/90">
-                                    Êtes-vous sûr de vouloir supprimer la {confirmDelete.isSubcategory ? 'sous-catégorie' : 'catégorie'} <strong>&quot;{confirmDelete.categoryName}&quot;</strong> ?
+                                    Êtes-vous sûr de vouloir supprimer la {confirmDelete.isSubcategory ? 'sous-catégorie' : 'catégorie'} <strong>"{confirmDelete.categoryName}"</strong> ?
                                 </p>
                             </div>
                         )}

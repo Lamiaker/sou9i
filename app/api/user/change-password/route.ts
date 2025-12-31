@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { UserService } from '@/services'
 import { prisma } from '@/lib/prisma'
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
 
 export async function POST(request: NextRequest) {
     try {
@@ -51,6 +52,14 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // Vérifier que l'utilisateur a un mot de passe (compte credentials)
+        if (!user.password) {
+            return NextResponse.json(
+                { error: 'Impossible de changer le mot de passe pour ce type de compte' },
+                { status: 400 }
+            )
+        }
+
         const isValidPassword = await UserService.verifyPassword(
             currentPassword,
             user.password
@@ -71,9 +80,9 @@ export async function POST(request: NextRequest) {
             { status: 200 }
         )
     } catch (error) {
-        console.error('Erreur lors du changement de mot de passe:', error)
+        logServerError(error, { route: '/api/user/change-password', action: 'change_password' })
         return NextResponse.json(
-            { error: 'Une erreur est survenue' },
+            { error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }

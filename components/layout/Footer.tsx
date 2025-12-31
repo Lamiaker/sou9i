@@ -91,7 +91,7 @@ export default function Footer() {
                     <p>&copy; {new Date().getFullYear()} SweetLook. Tous droits réservés.</p>
                     <div className="flex flex-wrap gap-4 md:gap-6">
                         <Link href="/conditions" className="hover:text-white transition-colors">
-                            Conditions d&apos;utilisation
+                            Conditions d'utilisation
                         </Link>
                         <Link href="/confidentialite" className="hover:text-white transition-colors">
                             Confidentialité

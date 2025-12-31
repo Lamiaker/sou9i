@@ -1,8 +1,24 @@
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma'
 
+/**
+ * Route de debug pour les annonces
+ * ⚠️ PROTÉGÉE - Accessible uniquement aux admins
+ */
 export async function GET() {
     try {
+        // Vérifier que l'utilisateur est admin
+        const session = await getServerSession(authOptions);
+
+        if (!session || session.user.role !== 'ADMIN') {
+            return NextResponse.json(
+                { success: false, error: 'Non autorisé' },
+                { status: 403 }
+            );
+        }
+
         // Récupérer toutes les annonces avec leurs relations
         const ads = await prisma.ad.findMany({
             include: {
@@ -61,10 +77,11 @@ export async function GET() {
             }))
         });
     } catch (error) {
-        console.error('Debug error:', error);
+        // Log serveur uniquement, pas de détails au client
+        console.error('[DEBUG/ADS]', error);
         return NextResponse.json({
             success: false,
-            error: error instanceof Error ? error.message : 'Erreur inconnue'
+            error: 'Erreur serveur'
         }, { status: 500 });
     }
 }

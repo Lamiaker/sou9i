@@ -242,7 +242,7 @@ export default function ReportsTable({ reports, pagination, onMutate, basePath =
                                                         target="_blank"
                                                         className="text-cyan-400 text-xs hover:underline inline-flex items-center gap-1"
                                                     >
-                                                        Voir l&apos;annonce
+                                                        Voir l'annonce
                                                         <ExternalLink className="w-3 h-3" />
                                                     </Link>
                                                 </div>
@@ -311,7 +311,7 @@ export default function ReportsTable({ reports, pagination, onMutate, basePath =
                                                         className="px-3 py-2 bg-orange-500/20 border border-orange-500/30 text-orange-400 text-sm font-medium rounded-xl hover:bg-orange-500/30 transition-colors flex items-center gap-1.5 disabled:opacity-50"
                                                     >
                                                         <Eye className="w-4 h-4" />
-                                                        Masquer l&apos;annonce
+                                                        Masquer l'annonce
                                                     </button>
 
                                                     <button
@@ -324,7 +324,7 @@ export default function ReportsTable({ reports, pagination, onMutate, basePath =
                                                         className="px-3 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/30 transition-colors flex items-center gap-1.5 disabled:opacity-50"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
-                                                        Supprimer l&apos;annonce
+                                                        Supprimer l'annonce
                                                     </button>
                                                 </>
                                             )}
@@ -335,7 +335,7 @@ export default function ReportsTable({ reports, pagination, onMutate, basePath =
                                                 className="px-3 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/30 transition-colors flex items-center gap-1.5 disabled:opacity-50"
                                             >
                                                 <Ban className="w-4 h-4" />
-                                                Bannir l&apos;utilisateur
+                                                Bannir l'utilisateur
                                             </button>
 
                                             {reportType === 'ad' && (

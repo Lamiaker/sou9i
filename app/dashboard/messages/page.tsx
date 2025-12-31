@@ -8,7 +8,7 @@ import { useMessages, Conversation, ConversationMessage } from "@/hooks/useMessa
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
-// Composant pour l&apos;avatar avec placeholder
+// Composant pour l'avatar avec placeholder
 const Avatar = ({ src, alt, size = 48, online }: { src?: string | null; alt: string; size?: number; online?: boolean }) => {
     const initials = alt?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
 
@@ -164,7 +164,18 @@ export default function MessagesPage() {
     const lastMessageCountRef = useRef<number>(0);
     const isInitialLoadRef = useRef<boolean>(true);
 
-    // Ouvrir automatiquement la conversation depuis l&apos;URL`n    useEffect(() => {`n        if (conversationIdFromUrl && !isLoading && conversations.length > 0 && !hasAutoSelected) {`n            const exists = conversations.find(c => c.id === conversationIdFromUrl);`n            if (exists) {`n                selectConversation(conversationIdFromUrl);`n                // Auto-selection state - intentional setState`n                // eslint-disable-next-line react-hooks/set-state-in-effect`n                setHasAutoSelected(true);`n            }`n        }`n    }, [conversationIdFromUrl, isLoading, conversations, hasAutoSelected, selectConversation]);
+    // Ouvrir automatiquement la conversation depuis l'URL
+    useEffect(() => {
+        if (conversationIdFromUrl && !isLoading && conversations.length > 0 && !hasAutoSelected) {
+            const exists = conversations.find(c => c.id === conversationIdFromUrl);
+            if (exists) {
+                selectConversation(conversationIdFromUrl);
+                // Auto-selection state - intentional setState
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setHasAutoSelected(true);
+            }
+        }
+    }, [conversationIdFromUrl, isLoading, conversations, hasAutoSelected, selectConversation]);
 
     // Scroll automatique vers le bas seulement quand il y a de nouveaux messages
     const scrollToBottom = (smooth = true) => {
@@ -370,7 +381,7 @@ export default function MessagesPage() {
                                         href={`/annonces/${selectedConversation.adId}`}
                                         className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
                                     >
-                                        Voir l&apos;annonce
+                                        Voir l'annonce
                                     </a>
                                 )}
                             </div>

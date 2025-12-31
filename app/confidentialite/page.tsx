@@ -497,7 +497,7 @@ export default function ConfidentialitePage() {
                     <p className="text-gray-500 text-sm">
                         Voir aussi :{' '}
                         <Link href="/conditions" className="text-primary hover:underline">
-                            Conditions d&apos;utilisation
+                            Conditions d'utilisation
                         </Link>
                         {' • '}
                         <Link href="/faq" className="text-primary hover:underline">

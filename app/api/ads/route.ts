@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { AdService } from '@/services'
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
 
 // GET /api/ads - Récupérer toutes les annonces avec filtres
 export async function GET(request: NextRequest) {
@@ -35,11 +36,11 @@ export async function GET(request: NextRequest) {
             pagination: result.pagination,
         })
     } catch (error) {
-        console.error('Error fetching ads:', error)
+        logServerError(error, { route: '/api/ads', action: 'get_ads' })
         return NextResponse.json(
             {
                 success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la récupération des annonces'
+                error: ERROR_MESSAGES.GENERIC
             },
             { status: 500 }
         )
@@ -114,11 +115,11 @@ export async function POST(request: NextRequest) {
             data: ad,
         }, { status: 201 })
     } catch (error) {
-        console.error('Error creating ad:', error)
+        logServerError(error, { route: '/api/ads', action: 'create_ad' })
         return NextResponse.json(
             {
                 success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la création de l\'annonce'
+                error: ERROR_MESSAGES.SAVE_ERROR
             },
             { status: 500 }
         )

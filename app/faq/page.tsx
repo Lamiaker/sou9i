@@ -271,7 +271,7 @@ export default function FAQPage() {
                     </h1>
                     <p className="text-gray-600 max-w-xl mx-auto">
                         Trouvez rapidement les réponses à vos questions. Si vous ne trouvez pas ce que vous cherchez,
-                        n&apos;hésitez pas à nous contacter.
+                        n'hésitez pas à nous contacter.
                     </p>
                 </div>
 
@@ -350,7 +350,7 @@ export default function FAQPage() {
                                 </div>
                                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun résultat</h3>
                                 <p className="text-gray-500">
-                                    Essayez avec d&apos;autres mots-clés ou{' '}
+                                    Essayez avec d'autres mots-clés ou{' '}
                                     <button
                                         onClick={() => setSearchQuery('')}
                                         className="text-primary hover:underline"
@@ -369,7 +369,7 @@ export default function FAQPage() {
                         <MessageCircle className="w-7 h-7 text-primary" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
-                        Vous n&apos;avez pas trouvé votre réponse ?
+                        Vous n'avez pas trouvé votre réponse ?
                     </h3>
                     <p className="text-gray-600 mb-6 max-w-md mx-auto">
                         Notre équipe de support est là pour vous aider. Envoyez-nous votre question et nous vous répondrons rapidement.
@@ -388,7 +388,7 @@ export default function FAQPage() {
                     <p className="text-gray-500 text-sm">
                         Liens utiles :{' '}
                         <Link href="/conditions" className="text-primary hover:underline">
-                            Conditions d&apos;utilisation
+                            Conditions d'utilisation
                         </Link>
                         {' • '}
                         <Link href="/confidentialite" className="text-primary hover:underline">

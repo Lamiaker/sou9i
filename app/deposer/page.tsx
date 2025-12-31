@@ -378,7 +378,7 @@ export default function DeposerAnnonce() {
                         <div className="space-y-6">
                             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                                 <Tag className="text-primary" size={24} />
-                                Détails de l&apos;annonce
+                                Détails de l'annonce
                             </h2>
 
                             {/* Titre */}
@@ -548,7 +548,7 @@ export default function DeposerAnnonce() {
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-medium text-gray-900">
-                                                    Utiliser mon numéro d&apos;inscription
+                                                    Utiliser mon numéro d'inscription
                                                 </span>
                                                 {formData.useProfilePhone && (
                                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
@@ -615,10 +615,10 @@ export default function DeposerAnnonce() {
                                         <AlertCircle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
                                         <div>
                                             <p className="text-sm text-orange-700 font-medium">
-                                                Vous n&apos;avez pas de numéro enregistré
+                                                Vous n'avez pas de numéro enregistré
                                             </p>
                                             <p className="text-sm text-orange-600 mt-1">
-                                                Veuillez sélectionner &quot;Utiliser un autre numéro&quot; et entrer votre numéro de contact.
+                                                Veuillez sélectionner "Utiliser un autre numéro" et entrer votre numéro de contact.
                                             </p>
                                         </div>
                                     </div>
@@ -647,7 +647,7 @@ export default function DeposerAnnonce() {
                                 ) : (
                                     <>
                                         <Upload size={24} />
-                                        <span>Publier l&apos;annonce</span>
+                                        <span>Publier l'annonce</span>
                                     </>
                                 )}
                             </button>

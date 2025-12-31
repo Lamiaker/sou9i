@@ -10,7 +10,7 @@ export default function BanGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
-        // Rediriger si l&apos;utilisateur est banni
+        // Rediriger si l'utilisateur est banni
         if (status === "authenticated" && session?.user?.isBanned && pathname !== "/banned") {
             router.push("/banned");
         }

@@ -1,9 +1,25 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+/**
+ * Route de debug pour les catégories
+ * ⚠️ PROTÉGÉE - Accessible uniquement aux admins
+ */
 export async function GET() {
     try {
-        // Test simple : récupérer toutes les catégories avec leur slug
+        // Vérifier que l'utilisateur est admin
+        const session = await getServerSession(authOptions);
+
+        if (!session || session.user.role !== 'ADMIN') {
+            return NextResponse.json(
+                { success: false, error: 'Non autorisé' },
+                { status: 403 }
+            );
+        }
+
+        // Récupérer les catégories
         const categories = await prisma.category.findMany({
             select: {
                 id: true,
@@ -19,11 +35,11 @@ export async function GET() {
             data: categories,
         });
     } catch (error) {
-        console.error('Debug error:', error);
-        return NextResponse.json({
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined,
-        }, { status: 500 });
+        // Log serveur uniquement, pas de détails au client
+        console.error('[DEBUG/CATEGORIES]', error);
+        return NextResponse.json(
+            { success: false, error: 'Erreur serveur' },
+            { status: 500 }
+        );
     }
 }
