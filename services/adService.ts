@@ -247,6 +247,23 @@ export class AdService {
         negotiable?: boolean
         dynamicFields?: FieldValueInput[]
     }) {
+        // ✅ IDEMPOTENCE: Vérifier si une annonce identique a été créée il y a moins de 30 secondes
+        const lastDuplicate = await prisma.ad.findFirst({
+            where: {
+                userId: data.userId,
+                title: data.title,
+                price: data.price,
+                createdAt: {
+                    gte: new Date(Date.now() - 30 * 1000) // 30 secondes
+                }
+            }
+        });
+
+        if (lastDuplicate) {
+            console.warn(`Tentative de création d'annonce en double détectée pour userId: ${data.userId}`);
+            return this.getAdById(lastDuplicate.id); // On retourne l'originale au lieu de recréer
+        }
+
         // Vérifier si l'utilisateur est de confiance (Trusted)
         const user = await prisma.user.findUnique({
             where: { id: data.userId },

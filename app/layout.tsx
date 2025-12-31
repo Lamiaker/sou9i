@@ -8,6 +8,7 @@ import SWRProvider from "@/components/providers/SWRProvider";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import BanGuard from "@/components/auth/BanGuard";
 import { ToastProvider } from "@/components/ui/Toast";
+import NetworkStatus from "@/components/ui/NetworkStatus";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <NextTopLoader color="#ec4899" showSpinner={false} />
+        <NetworkStatus />
         <SessionProvider>
           <SWRProvider>
             <ToastProvider>

@@ -59,6 +59,17 @@ export function useMessages(options: UseMessagesOptions = {}) {
     const lastMessageIdRef = useRef<string | null>(null)
     const pollingRef = useRef<NodeJS.Timeout | null>(null)
     const isPollingActiveRef = useRef(false)
+    const consecutiveFailuresRef = useRef(0)
+    const MAX_FAILURES = 3
+
+    // Arrêter le polling
+    const stopPolling = useCallback(() => {
+        isPollingActiveRef.current = false
+        if (pollingRef.current) {
+            clearInterval(pollingRef.current)
+            pollingRef.current = null
+        }
+    }, [])
 
     // Charger les conversations
     const fetchConversations = useCallback(async (silent = false) => {
@@ -67,6 +78,9 @@ export function useMessages(options: UseMessagesOptions = {}) {
         try {
             if (!silent) setIsLoading(true)
             const response = await fetch('/api/messages/conversations')
+
+            if (!response.ok) throw new Error('Erreur réseau')
+
             const data = await response.json()
 
             if (data.success) {
@@ -74,27 +88,39 @@ export function useMessages(options: UseMessagesOptions = {}) {
                 const total = data.data.reduce((acc: number, conv: Conversation) =>
                     acc + (conv.unreadCount || 0), 0)
                 setUnreadTotal(total)
+                consecutiveFailuresRef.current = 0 // Reset au succès
             } else {
-                if (!silent) setError(data.error)
+                throw new Error(data.error)
             }
-        } catch (err) {
-            if (!silent) {
-                setError('Erreur lors du chargement des conversations')
+        } catch (err: any) {
+            consecutiveFailuresRef.current++
+            if (!silent || consecutiveFailuresRef.current >= MAX_FAILURES) {
+                setError(err.message || 'Erreur lors du chargement des conversations')
                 console.error(err)
+            }
+
+            // Circuit Breaker: Arrêter le polling si trop d'échecs
+            if (consecutiveFailuresRef.current >= MAX_FAILURES) {
+                console.warn('Circuit Breaker: Trop d\'échecs de polling, arrêt du service de messages.')
+                stopPolling()
             }
         } finally {
             if (!silent) setIsLoading(false)
         }
-    }, [status])
+    }, [status, stopPolling])
 
     // Charger les messages d'une conversation
     const fetchMessages = useCallback(async (conversationId: string, silent = false) => {
         try {
             const response = await fetch(`/api/messages/conversations/${conversationId}`)
+
+            if (!response.ok) throw new Error('Erreur réseau')
+
             const data = await response.json()
 
             if (data.success) {
                 const newMessages: ConversationMessage[] = data.data.messages || []
+                consecutiveFailuresRef.current = 0 // Reset au succès
 
                 // Vérifier s'il y a de nouveaux messages
                 if (newMessages.length > 0) {
@@ -130,16 +156,21 @@ export function useMessages(options: UseMessagesOptions = {}) {
 
                 return data.data
             } else {
-                if (!silent) setError(data.error)
+                throw new Error(data.error)
             }
-        } catch (err) {
-            if (!silent) {
-                setError('Erreur lors du chargement de la conversation')
+        } catch (err: any) {
+            consecutiveFailuresRef.current++
+            if (!silent || consecutiveFailuresRef.current >= MAX_FAILURES) {
+                setError(err.message || 'Erreur lors du chargement de la conversation')
                 console.error(err)
+            }
+
+            if (consecutiveFailuresRef.current >= MAX_FAILURES) {
+                stopPolling()
             }
         }
         return null
-    }, [onNewMessage])
+    }, [onNewMessage, stopPolling])
 
     // Démarrer le polling pour une conversation
     const startPolling = useCallback((conversationId: string) => {
@@ -149,6 +180,7 @@ export function useMessages(options: UseMessagesOptions = {}) {
         }
 
         isPollingActiveRef.current = true
+        consecutiveFailuresRef.current = 0 // Reset lors d'un nouveau départ manuel
 
         // Démarrer le nouveau polling
         pollingRef.current = setInterval(async () => {
@@ -159,15 +191,6 @@ export function useMessages(options: UseMessagesOptions = {}) {
         }, pollingInterval)
 
     }, [pollingInterval, fetchMessages, fetchConversations])
-
-    // Arrêter le polling
-    const stopPolling = useCallback(() => {
-        isPollingActiveRef.current = false
-        if (pollingRef.current) {
-            clearInterval(pollingRef.current)
-            pollingRef.current = null
-        }
-    }, [])
 
     // Sélectionner une conversation
     const selectConversation = useCallback(async (conversationId: string | null) => {
@@ -304,7 +327,7 @@ export function useMessages(options: UseMessagesOptions = {}) {
         isLoading,
         error,
         unreadTotal,
-        isConnected: true, // Toujours "connecté" avec le polling
+        isConnected: !error, // Connecté si pas d'erreur critique
         isAuthenticated: status === 'authenticated',
 
         // Actions

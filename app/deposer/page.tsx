@@ -15,6 +15,7 @@ import DynamicFieldsInput from "@/components/forms/DynamicFieldsInput";
 import { validateAllFields } from "@/hooks/useDynamicFields";
 import { useDynamicFields } from "@/hooks/useDynamicFields";
 import CategorySelect from "@/components/ui/CategorySelect";
+import { getErrorMessage } from "@/lib/errors";
 
 interface FormData {
     title: string;
@@ -274,7 +275,7 @@ export default function DeposerAnnonce() {
             }
         } catch (err) {
             console.error('Error creating ad:', err);
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+            setError(getErrorMessage(err));
         } finally {
             setSubmitting(false);
         }

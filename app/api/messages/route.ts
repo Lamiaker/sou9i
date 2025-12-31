@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { MessageService } from '@/services'
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
+import { sendMessageSchema, getMessagesSchema, validateRequest, validateSearchParams } from '@/lib/validations'
+import { messageRateLimiter } from '@/lib/rate-limit-enhanced'
 
 /**
  * POST /api/messages
@@ -20,27 +22,36 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const body = await request.json()
-        const { conversationId, content } = body
+        const userId = session.user.id
 
-        if (!conversationId || !content) {
+        // ✅ SÉCURITÉ: Rate Limiting (30 messages / minute)
+        const rateLimit = messageRateLimiter.check(userId)
+        if (!rateLimit.success) {
             return NextResponse.json(
-                { success: false, error: 'conversationId et content requis' },
-                { status: 400 }
+                {
+                    success: false,
+                    error: "Vous envoyez trop de messages. Veuillez patienter.",
+                    retryAfter: rateLimit.retryAfter
+                },
+                {
+                    status: 429,
+                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                }
             )
         }
 
-        if (content.trim().length === 0) {
-            return NextResponse.json(
-                { success: false, error: 'Le message ne peut pas être vide' },
-                { status: 400 }
-            )
+        // ✅ SÉCURITÉ: Validation Zod
+        const validation = await validateRequest(request, sendMessageSchema)
+        if (!validation.success) {
+            return validation.response
         }
+
+        const { conversationId, content } = validation.data
 
         const message = await MessageService.createMessage({
             conversationId,
             content: content.trim(),
-            senderId: session.user.id,
+            senderId: userId,
         })
 
         return NextResponse.json({
@@ -72,16 +83,17 @@ export async function GET(request: NextRequest) {
         }
 
         const { searchParams } = new URL(request.url)
-        const conversationId = searchParams.get('conversationId')
-        const page = parseInt(searchParams.get('page') || '1')
-        const limit = parseInt(searchParams.get('limit') || '50')
 
-        if (!conversationId) {
+        // ✅ SÉCURITÉ: Validation Zod pour les query params
+        const validation = validateSearchParams(searchParams, getMessagesSchema)
+        if (!validation.success) {
             return NextResponse.json(
-                { success: false, error: 'conversationId requis' },
+                { success: false, error: 'Paramètres invalides', details: validation.errors },
                 { status: 400 }
             )
         }
+
+        const { conversationId, page, limit } = validation.data
 
         const result = await MessageService.getMessages(
             conversationId,
@@ -103,3 +115,4 @@ export async function GET(request: NextRequest) {
         )
     }
 }
+

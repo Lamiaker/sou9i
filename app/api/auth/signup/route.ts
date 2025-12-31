@@ -1,24 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UserService } from '@/services'
 import { registerSchema } from '@/lib/validations/auth'
-import { rateLimit } from '@/lib/rate-limit'
+import { authRateLimiter, getClientIP } from '@/lib/rate-limit-enhanced'
 import { logServerError, ConflictError, RateLimitError, ValidationError } from '@/lib/errors'
 import { errorResponse } from '@/lib/api-utils'
 
-// Limiteur : 5 tentatives par heure par IP
-const limiter = rateLimit({
-    interval: 60 * 60 * 1000, // 1 heure
-    uniqueTokenPerInterval: 500, // Max 500 IPs suivies
-})
-
 export async function POST(request: NextRequest) {
     try {
-        // 1. Rate Limiting
-        const ip = request.headers.get('x-forwarded-for') || 'anonymous'
-        try {
-            await limiter.check(5, ip) // 5 requêtes max par heure
-        } catch {
-            throw new RateLimitError()
+        // 1. Rate Limiting amélioré avec blocage progressif
+        const ip = getClientIP(request)
+        const rateLimitResult = authRateLimiter.check(ip)
+
+        if (!rateLimitResult.success) {
+            // Ajouter les headers de rate limit
+            const response = NextResponse.json(
+                {
+                    success: false,
+                    error: rateLimitResult.blocked
+                        ? 'Compte temporairement bloqué. Veuillez réessayer plus tard.'
+                        : 'Trop de tentatives. Veuillez réessayer plus tard.',
+                    retryAfter: rateLimitResult.retryAfter,
+                },
+                { status: 429 }
+            )
+            response.headers.set('Retry-After', String(rateLimitResult.retryAfter || 60))
+            response.headers.set('X-RateLimit-Remaining', '0')
+            response.headers.set('X-RateLimit-Reset', rateLimitResult.resetAt.toISOString())
+            return response
         }
 
         const body = await request.json()
@@ -41,6 +49,9 @@ export async function POST(request: NextRequest) {
             phone: phone.replace(/\s/g, ''), // Enlever les espaces
             city,
         })
+
+        // Succès - réinitialiser le rate limit pour cette IP
+        authRateLimiter.reset(ip)
 
         return NextResponse.json(
             {
@@ -65,3 +76,4 @@ export async function POST(request: NextRequest) {
         return errorResponse(error, { route: '/api/auth/signup' })
     }
 }
+

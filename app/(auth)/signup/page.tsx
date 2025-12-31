@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Phone, MapPin } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function SignupPage() {
     const { status } = useSession();
@@ -112,9 +113,10 @@ export default function SignupPage() {
             // Succès ! Redirection vers login
             // alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
             window.location.href = '/login';
-        } catch (error) {
-            console.error('Erreur d\'inscription:', error);
-            setErrors({ general: 'Une erreur est survenue. Veuillez réessayer.' });
+            window.location.href = '/login';
+        } catch (err) {
+            console.error('Erreur d\'inscription:', err);
+            setErrors({ general: getErrorMessage(err) });
         } finally {
             setLoading(false);
         }

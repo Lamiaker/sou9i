@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAvatarUpload } from "@/hooks/useAvatarUpload";
 import { useRouter } from "next/navigation";
 import { ProfileSkeleton } from "@/components/layout/DashboardInnerSkeletons";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function ProfilePage() {
     const { user: sessionUser, update: updateSession } = useAuth();
@@ -66,7 +67,7 @@ export default function ProfilePage() {
 
         } catch (err) {
             console.error("Upload error:", err);
-            setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Erreur lors du téléchargement de l\'image' });
+            setMessage({ type: 'error', text: getErrorMessage(err) });
         }
     };
 
@@ -104,8 +105,8 @@ export default function ProfilePage() {
             } else {
                 setMessage({ type: 'error', text: result.error || 'Erreur lors de la mise à jour' });
             }
-        } catch {
-            setMessage({ type: 'error', text: 'Une erreur est survenue' });
+        } catch (err) {
+            setMessage({ type: 'error', text: getErrorMessage(err) });
         } finally {
             setIsLoading(false);
         }

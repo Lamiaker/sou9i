@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Check } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
+import { getErrorMessage } from "@/lib/errors";
 
 function LoginForm() {
     const router = useRouter();
@@ -18,15 +19,14 @@ function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const { data: session, status } = useSession();
-    const redirectPath = searchParams?.get("redirect");
+    const redirectPath = searchParams?.get("callbackUrl");
     const message = searchParams?.get("message");
+    const { data: session, status } = useSession();
 
     useEffect(() => {
-        if (status === 'authenticated' && session?.user) {
-            // Si l'utilisateur est ADMIN, rediriger vers l'espace admin
-            if (session.user.role === 'ADMIN') {
-                router.replace('/admin');
+        if (status === 'authenticated') {
+            if (session?.user?.role === 'ADMIN') {
+                router.replace("/admin");
             } else {
                 router.replace(redirectPath || "/");
             }
@@ -69,10 +69,9 @@ function LoginForm() {
                 return;
             }
 
-            // Succès ! La redirection sera gérée par le useEffect après refresh de la session
             router.refresh(); // Refresh pour mettre à jour la session
-        } catch {
-            setError("Une erreur est survenue. Veuillez réessayer.");
+        } catch (err) {
+            setError(getErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -110,12 +109,12 @@ function LoginForm() {
                     </div>
                 )}
 
-                {/* Message d'alerte si redirection */}
-                {redirectPath && (
-                    <div className="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md shadow-sm mx-3 sm:mx-0">
+                {/* Message si redirection car protection route */}
+                {redirectPath && !error && (
+                    <div className="mb-4 bg-orange-50 border-l-4 border-orange-400 p-4 rounded-md shadow-sm mx-3 sm:mx-0">
                         <div className="flex">
                             <div className="flex-shrink-0">
-                                <AlertCircle className="h-5 w-5 text-orange-500" aria-hidden="true" />
+                                <AlertCircle className="h-5 w-5 text-orange-400" aria-hidden="true" />
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-orange-700 font-medium">
@@ -174,13 +173,17 @@ function LoginForm() {
                                     id="password"
                                     name="password"
                                     type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
                                     className="focus:ring-primary focus:border-primary block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-lg py-3 outline-none border transition"
                                     placeholder="••••••••"
                                 />
-                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
+                                <div
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
                                     {showPassword ? (
                                         <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" aria-hidden="true" />
                                     ) : (
@@ -190,10 +193,9 @@ function LoginForm() {
                             </div>
                         </div>
 
-                        {/* Mot de passe oublié */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-end">
                             <div className="text-sm">
-                                <Link href="/forgot-password" className="font-medium text-primary hover:text-secondary transition">
+                                <Link href="/forgot-password" title="Récupérer votre mot de passe" className="font-medium text-primary hover:text-secondary transition text-xs">
                                     Mot de passe oublié ?
                                 </Link>
                             </div>
@@ -221,7 +223,7 @@ function LoginForm() {
                             </div>
                             <div className="relative flex justify-center text-sm">
                                 <span className="px-2 bg-white text-gray-500">
-                                    Pas encore de compte ?
+                                    Nouveau sur SweetLook ?
                                 </span>
                             </div>
                         </div>
@@ -235,14 +237,17 @@ function LoginForm() {
                     </div>
                 </div>
             </div>
-
         </div>
     );
 }
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        }>
             <LoginForm />
         </Suspense>
     );

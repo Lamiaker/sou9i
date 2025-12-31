@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Lock, Bell, Trash2, Smartphone, Mail, Eye, EyeOff, Check, AlertCircle } from "lucide-react";
 import { SettingsSkeleton } from "@/components/layout/DashboardInnerSkeletons";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function SettingsPage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -106,9 +107,9 @@ export default function SettingsPage() {
             setTimeout(() => {
                 signOut({ callbackUrl: '/login?message=password-changed' });
             }, 3000);
-        } catch (error) {
-            console.error('Erreur:', error);
-            setPasswordError('Une erreur est survenue. Veuillez réessayer.');
+        } catch (err) {
+            console.error('Erreur:', err);
+            setPasswordError(getErrorMessage(err));
         } finally {
             setIsLoading(false);
         }

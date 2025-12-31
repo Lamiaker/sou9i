@@ -4,31 +4,33 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { AdService } from '@/services'
 import { logServerError, ERROR_MESSAGES, AuthenticationError } from '@/lib/errors'
-import { errorResponse } from '@/lib/api-utils'
+import { createAdSchema, adFiltersSchema, validateSearchParams } from '@/lib/validations'
+import { adCreationRateLimiter } from '@/lib/rate-limit-enhanced'
 
 // GET /api/ads - Récupérer toutes les annonces avec filtres
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams
 
-        // Construire les filtres
+        // ✅ Validation des paramètres de recherche
+        const validation = validateSearchParams(searchParams, adFiltersSchema)
+
+        // Construire les filtres (avec valeurs par défaut si validation échoue)
         const filters = {
-            // Si une sous-catégorie est sélectionnée, on l'utilise pour le filtrage
-            // Sinon on utilise la catégorie principale
             categoryId: searchParams.get('subcategoryId') || searchParams.get('categoryId') || undefined,
             minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
             maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
             location: searchParams.get('location') || undefined,
             condition: searchParams.get('condition') || undefined,
-            search: searchParams.get('search') || undefined,
+            search: searchParams.get('search')?.slice(0, 200) || undefined, // Limite la recherche
             status: searchParams.get('status') || 'active',
             userId: searchParams.get('userId') || undefined,
             moderationStatus: searchParams.get('moderationStatus') || undefined,
         }
 
-        // Pagination
-        const page = Number(searchParams.get('page')) || 1
-        const limit = Number(searchParams.get('limit')) || 12
+        // Pagination avec limites de sécurité
+        const page = Math.max(1, Number(searchParams.get('page')) || 1)
+        const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 12))
 
         // Appel du service
         const result = await AdService.getAds(filters, page, limit)
@@ -63,59 +65,78 @@ export async function POST(request: NextRequest) {
         // Utiliser l'ID de la session authentifiée (impossible à usurper)
         const userId = session.user.id
 
-        const body = await request.json()
-
-        const {
-            title,
-            description,
-            price,
-            categoryId,
-            images,
-            location,
-            contactPhone,
-            condition,
-            brand,
-            size,
-            deliveryAvailable,
-            negotiable,
-            dynamicFields,
-        } = body
-
-        // Validation basique
-        if (!title || !description || !price || !categoryId || !location) {
+        // ✅ SÉCURITÉ: Rate Limiting (10 annonces / heure)
+        const rateLimit = adCreationRateLimiter.check(userId)
+        if (!rateLimit.success) {
             return NextResponse.json(
-                { success: false, error: 'Champs requis manquants' },
+                {
+                    success: false,
+                    error: "Vous avez atteint la limite de création d'annonces. Veuillez réessayer plus tard.",
+                    retryAfter: rateLimit.retryAfter
+                },
+                {
+                    status: 429,
+                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                }
+            )
+        }
+
+        // ✅ SÉCURITÉ: Validation complète avec Zod
+        let body
+        try {
+            body = await request.json()
+        } catch {
+            return NextResponse.json(
+                { success: false, error: 'Corps de la requête invalide' },
                 { status: 400 }
             )
         }
 
-        // Appel du service
+        const validation = createAdSchema.safeParse(body)
+
+        if (!validation.success) {
+            const errors = validation.error.issues.map((issue) => ({
+                field: issue.path.join('.'),
+                message: issue.message,
+            }))
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Données invalides',
+                    details: errors,
+                },
+                { status: 400 }
+            )
+        }
+
+        const validatedData = validation.data
+
+        // Appel du service avec données validées
         const ad = await AdService.createAd({
-            title,
-            description,
-            price: parseFloat(price),
-            location,
-            contactPhone: contactPhone || null,
-            categoryId,
+            title: validatedData.title,
+            description: validatedData.description,
+            price: typeof validatedData.price === 'number' ? validatedData.price : parseFloat(String(validatedData.price)),
+            location: validatedData.location,
+            contactPhone: validatedData.contactPhone || null,
+            categoryId: validatedData.categoryId,
             userId,
-            condition,
-            brand,
-            size,
-            images,
-            deliveryAvailable,
-            negotiable,
-            dynamicFields,
+            condition: validatedData.condition,
+            brand: validatedData.brand,
+            size: validatedData.size,
+            images: validatedData.images,
+            deliveryAvailable: validatedData.deliveryAvailable,
+            negotiable: validatedData.negotiable,
+            dynamicFields: validatedData.dynamicFields,
         })
 
         // Revalider les chemins pour mettre à jour les caches
-        revalidatePath('/');
-        revalidatePath('/categories');
-        revalidatePath('/dashboard/annonces');
-        // On revalide aussi la page de la catégorie spécifique si possible, mais globalement /categories suffit souvent
-        // pour les compteurs globaux. Pour la page de la catégorie spécifique :
-        revalidatePath('/categories/[slug]', 'page');
-        revalidatePath('/admin/ads');
-        revalidatePath('/admin');
+        revalidatePath('/')
+        revalidatePath('/categories')
+        revalidatePath('/dashboard/annonces')
+        revalidatePath('/categories/[slug]', 'page')
+        revalidatePath('/admin/ads')
+        revalidatePath('/admin')
 
         return NextResponse.json({
             success: true,
