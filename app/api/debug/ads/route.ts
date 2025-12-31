@@ -2,13 +2,23 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma'
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
 
 /**
  * Route de debug pour les annonces
  * ⚠️ PROTÉGÉE - Accessible uniquement aux admins
+ * ⚠️ DÉSACTIVÉE EN PRODUCTION pour des raisons de sécurité
  */
 export async function GET() {
     try {
+        // ✅ SÉCURITÉ: Désactiver complètement en production
+        if (process.env.NODE_ENV === 'production') {
+            return NextResponse.json(
+                { success: false, error: 'Route non disponible' },
+                { status: 404 }
+            );
+        }
+
         // Vérifier que l'utilisateur est admin
         const session = await getServerSession(authOptions);
 
@@ -45,6 +55,7 @@ export async function GET() {
 
         return NextResponse.json({
             success: true,
+            environment: 'development',
             summary: {
                 totalAds: ads.length,
                 totalCategories: categories.length,
@@ -78,10 +89,10 @@ export async function GET() {
         });
     } catch (error) {
         // Log serveur uniquement, pas de détails au client
-        console.error('[DEBUG/ADS]', error);
+        logServerError(error, { route: '/api/debug/ads', action: 'debug_ads' });
         return NextResponse.json({
             success: false,
-            error: 'Erreur serveur'
+            error: ERROR_MESSAGES.GENERIC
         }, { status: 500 });
     }
 }

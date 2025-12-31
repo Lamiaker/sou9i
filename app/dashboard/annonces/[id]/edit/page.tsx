@@ -162,6 +162,7 @@ export default function EditAnnoncePage() {
                 allImageUrls = [...allImageUrls, ...newImageUrls];
             }
 
+            // ✅ SÉCURITÉ: Ne pas envoyer userId - le serveur utilise la session authentifiée
             // Mise à jour de l'annonce (SEULEMENT les champs modifiables)
             const updateData = {
                 title: formData.title.trim(),
@@ -170,7 +171,6 @@ export default function EditAnnoncePage() {
                 location: formData.location.trim(),
                 images: allImageUrls,
                 status: formData.status,
-                userId: user?.id,
             };
 
             const response = await fetch(`/api/ads/${adId}`, {

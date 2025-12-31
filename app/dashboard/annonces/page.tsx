@@ -78,6 +78,7 @@ export default function MesAnnoncesPage() {
         try {
             setDeleting(true);
 
+            // ✅ SÉCURITÉ: Ne pas envoyer userId - le serveur utilise la session authentifiée
             const response = await fetch(`/api/ads/${adId}`, {
                 method: 'PATCH',
                 headers: {
@@ -85,7 +86,6 @@ export default function MesAnnoncesPage() {
                 },
                 body: JSON.stringify({
                     status: 'deleted',
-                    userId: user?.id,
                 }),
             });
 

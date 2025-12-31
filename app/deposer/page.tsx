@@ -223,6 +223,7 @@ export default function DeposerAnnonce() {
                 ? null // Utiliser le numéro du profil (sera géré côté affichage)
                 : formData.contactPhone.trim();
 
+            // ✅ SÉCURITÉ: Ne pas envoyer userId - le serveur utilise la session authentifiée
             const createData = {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
@@ -231,7 +232,6 @@ export default function DeposerAnnonce() {
                 location: formData.location.trim(),
                 contactPhone,
                 images: imageUrls,
-                userId: user?.id,
                 dynamicFields: dynamicFieldsData,
             };
 

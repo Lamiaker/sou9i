@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { AdService } from '@/services'
 import { deleteUnusedImages } from '@/lib/deleteImages'
-import { logServerError, NotFoundError, ForbiddenError, ERROR_MESSAGES } from '@/lib/errors'
+import { logServerError, AuthenticationError, ForbiddenError, ERROR_MESSAGES } from '@/lib/errors'
+import { errorResponse } from '@/lib/api-utils'
 
 // GET /api/ads/[id] - Récupérer une annonce par ID
 export async function GET(
@@ -46,31 +49,25 @@ export async function PATCH(
     try {
         const params = await context.params
         const { id } = params
-        const body = await request.json()
 
-        // TODO: Récupérer l'utilisateur depuis la session
-        // const session = await getServerSession()
-        // if (!session) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-        // const userId = session.user.id
+        // ✅ SÉCURITÉ: Vérification de l'authentification via session
+        const session = await getServerSession(authOptions)
 
-        const userId = body.userId // Temporaire
-
-        if (!userId) {
-            return NextResponse.json(
-                { success: false, error: 'userId requis' },
-                { status: 400 }
-            )
+        if (!session?.user?.id) {
+            throw new AuthenticationError()
         }
+
+        // Utiliser l'ID de la session authentifiée (impossible à usurper)
+        const userId = session.user.id
+
+        const body = await request.json()
 
         // Récupérer l'annonce actuelle pour comparer les images
         const currentAd = await AdService.getAdById(id)
 
-        // Vérifier la propriété
+        // ✅ SÉCURITÉ: Vérifier la propriété avec l'ID de session
         if (currentAd.userId !== userId) {
-            return NextResponse.json(
-                { success: false, error: 'Non autorisé' },
-                { status: 403 }
-            )
+            throw new ForbiddenError('Vous ne pouvez modifier que vos propres annonces')
         }
 
         // Supprimer les images orphelines (en arrière-plan)
@@ -101,18 +98,9 @@ export async function PATCH(
                     { status: 404 }
                 )
             }
-            if (error.message === 'Non autorisé') {
-                return NextResponse.json(
-                    { success: false, error: error.message },
-                    { status: 403 }
-                )
-            }
         }
 
-        return NextResponse.json(
-            { success: false, error: ERROR_MESSAGES.UPDATE_ERROR },
-            { status: 500 }
-        )
+        return errorResponse(error, { route: '/api/ads/[id]' })
     }
 }
 
@@ -125,20 +113,15 @@ export async function DELETE(
         const params = await context.params
         const { id } = params
 
-        // TODO: Récupérer l'utilisateur depuis la session
-        // const session = await getServerSession()
-        // if (!session) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-        // const userId = session.user.id
+        // ✅ SÉCURITÉ: Vérification de l'authentification via session
+        const session = await getServerSession(authOptions)
 
-        const searchParams = request.nextUrl.searchParams
-        const userId = searchParams.get('userId') // Temporaire
-
-        if (!userId) {
-            return NextResponse.json(
-                { success: false, error: 'userId requis' },
-                { status: 400 }
-            )
+        if (!session?.user?.id) {
+            throw new AuthenticationError()
         }
+
+        // Utiliser l'ID de la session authentifiée (impossible à usurper)
+        const userId = session.user.id
 
         // Appel du service (qui vérifie la propriété)
         await AdService.deleteAd(id, userId)
@@ -157,17 +140,8 @@ export async function DELETE(
                     { status: 404 }
                 )
             }
-            if (error.message === 'Non autorisé') {
-                return NextResponse.json(
-                    { success: false, error: error.message },
-                    { status: 403 }
-                )
-            }
         }
 
-        return NextResponse.json(
-            { success: false, error: ERROR_MESSAGES.DELETE_ERROR },
-            { status: 500 }
-        )
+        return errorResponse(error, { route: '/api/ads/[id]' })
     }
 }

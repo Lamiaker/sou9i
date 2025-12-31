@@ -30,8 +30,16 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-# .env*
+# ✅ SÉCURITÉ: Fichiers d'environnement - NE JAMAIS COMMITER
+.env
+.env.*
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
 
 # vercel
 .vercel
@@ -41,3 +49,11 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+# ✅ SÉCURITÉ: Fichiers sensibles supplémentaires
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/

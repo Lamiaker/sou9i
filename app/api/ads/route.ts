@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { AdService } from '@/services'
-import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
+import { logServerError, ERROR_MESSAGES, AuthenticationError } from '@/lib/errors'
+import { errorResponse } from '@/lib/api-utils'
 
 // GET /api/ads - Récupérer toutes les annonces avec filtres
 export async function GET(request: NextRequest) {
@@ -50,19 +53,23 @@ export async function GET(request: NextRequest) {
 // POST /api/ads - Créer une nouvelle annonce
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json()
+        // ✅ SÉCURITÉ: Vérification de l'authentification via session
+        const session = await getServerSession(authOptions)
 
-        // TODO: Récupérer l'utilisateur depuis la session
-        // const session = await getServerSession()
-        // if (!session) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-        // const userId = session.user.id
+        if (!session?.user?.id) {
+            throw new AuthenticationError()
+        }
+
+        // Utiliser l'ID de la session authentifiée (impossible à usurper)
+        const userId = session.user.id
+
+        const body = await request.json()
 
         const {
             title,
             description,
             price,
             categoryId,
-            userId, // Temporaire - à remplacer par session
             images,
             location,
             contactPhone,
@@ -75,7 +82,7 @@ export async function POST(request: NextRequest) {
         } = body
 
         // Validation basique
-        if (!title || !description || !price || !categoryId || !userId || !location) {
+        if (!title || !description || !price || !categoryId || !location) {
             return NextResponse.json(
                 { success: false, error: 'Champs requis manquants' },
                 { status: 400 }

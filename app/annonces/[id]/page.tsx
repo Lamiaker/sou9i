@@ -76,15 +76,44 @@ interface PageProps {
     params: Promise<{ id: string }>;
 }
 
+/**
+ * ✅ SÉCURITÉ: Sanitise les chaînes pour éviter les injections dans JSON-LD
+ * Échappe les caractères potentiellement dangereux dans les balises script
+ */
+function sanitizeForJsonLd(value: unknown): unknown {
+    if (typeof value === 'string') {
+        return value
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e')
+            .replace(/&/g, '\\u0026')
+            .replace(/'/g, '\\u0027')
+            .replace(/"/g, '\\u0022');
+    }
+    if (Array.isArray(value)) {
+        return value.map(sanitizeForJsonLd);
+    }
+    if (value && typeof value === 'object') {
+        const sanitized: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(value)) {
+            sanitized[key] = sanitizeForJsonLd(val);
+        }
+        return sanitized;
+    }
+    return value;
+}
+
 // Composant JSON-LD pour les données structurées
 function JsonLd({ data }: { data: object }) {
+    // ✅ SÉCURITÉ: Sanitiser les données avant de les injecter
+    const sanitizedData = sanitizeForJsonLd(data);
     return (
         <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(sanitizedData) }}
         />
     );
 }
+
 
 export default async function AdDetailPage({ params }: PageProps) {
     const { id } = await params;

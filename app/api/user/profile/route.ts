@@ -5,6 +5,17 @@ import { prisma } from '@/lib/prisma';
 import { UserService } from '@/services';
 import { unlink } from 'fs/promises';
 import path from 'path';
+import { z } from 'zod';
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
+
+// ✅ SÉCURITÉ: Schéma de validation robuste avec Zod
+const profileUpdateSchema = z.object({
+    name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').max(100).optional(),
+    email: z.string().email('Email invalide').optional(),
+    phone: z.string().regex(/^(05|06|07)(?:[ ]?[0-9]){8}$/, 'Numéro de téléphone invalide').optional().or(z.literal('')),
+    city: z.string().min(2, 'La ville doit contenir au moins 2 caractères').max(100).optional(),
+    avatar: z.string().optional(),
+});
 
 export async function GET() {
     try {
@@ -25,9 +36,9 @@ export async function GET() {
 
         return NextResponse.json({ success: true, data: user });
     } catch (error) {
-        console.error('Error fetching profile:', error);
+        logServerError(error, { route: '/api/user/profile', action: 'get_profile' });
         return NextResponse.json(
-            { success: false, error: 'Erreur serveur' },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         );
     }
@@ -46,24 +57,27 @@ export async function PATCH(request: NextRequest) {
 
         const body = await request.json();
 
+        // ✅ SÉCURITÉ: Validation avec Zod
+        const validation = profileUpdateSchema.safeParse(body);
+        if (!validation.success) {
+            const firstError = validation.error.issues[0]?.message || 'Données invalides';
+            return NextResponse.json(
+                { success: false, error: firstError },
+                { status: 400 }
+            );
+        }
+
+        const validatedData = validation.data;
+
         // Préparer les données de mise à jour
         const dataToUpdate: any = {};
 
-        if (body.name !== undefined) dataToUpdate.name = body.name;
+        if (validatedData.name !== undefined) dataToUpdate.name = validatedData.name;
 
-        if (body.email !== undefined) {
-            // Validation format
-            if (!String(body.email).includes('@')) {
-                return NextResponse.json(
-                    { success: false, error: 'Email invalide' },
-                    { status: 400 }
-                );
-            }
-
-            // Vérifier unicité (pas géré par UserService.updateUser par défaut)
-            // On le fait manuellement ici ou on pourrait ajouter une méthode au service
+        if (validatedData.email !== undefined) {
+            // Vérifier unicité de l'email
             const existingUser = await prisma.user.findUnique({
-                where: { email: body.email },
+                where: { email: validatedData.email },
             });
 
             if (existingUser && existingUser.id !== session.user.id) {
@@ -72,17 +86,17 @@ export async function PATCH(request: NextRequest) {
                     { status: 409 }
                 );
             }
-            dataToUpdate.email = body.email;
+            dataToUpdate.email = validatedData.email;
         }
 
-        if (body.phone !== undefined) dataToUpdate.phone = body.phone;
-        if (body.city !== undefined) dataToUpdate.city = body.city;
+        if (validatedData.phone !== undefined) dataToUpdate.phone = validatedData.phone;
+        if (validatedData.city !== undefined) dataToUpdate.city = validatedData.city;
 
         // Gestion de l'avatar et suppression de l'ancien si nécessaire
-        if (body.avatar !== undefined) {
+        if (validatedData.avatar !== undefined) {
             const currentUser = await UserService.getUserById(session.user.id);
 
-            if (currentUser && currentUser.avatar && currentUser.avatar !== body.avatar) {
+            if (currentUser && currentUser.avatar && currentUser.avatar !== validatedData.avatar) {
                 // Ne supprimer que les images uploadées (pas l'image par défaut /user.png)
                 // Supporte les deux dossiers : /uploads/avatars/ et /uploads/ads/
                 if (currentUser.avatar.startsWith('/uploads/')) {
@@ -91,16 +105,15 @@ export async function PATCH(request: NextRequest) {
                         const filePath = path.join(process.cwd(), 'public', relativePath);
 
                         await unlink(filePath);
-                        console.log(`Ancien avatar supprimé: ${filePath}`);
                     } catch (err: any) {
                         // On ignore l'erreur si le fichier n'existe pas (ENOENT)
                         if (err.code !== 'ENOENT') {
-                            console.error("Erreur suppression ancienne image:", err);
+                            logServerError(err, { route: '/api/user/profile', action: 'delete_old_avatar' });
                         }
                     }
                 }
             }
-            dataToUpdate.avatar = body.avatar;
+            dataToUpdate.avatar = validatedData.avatar;
         }
 
         // Mise à jour via le Service
@@ -112,10 +125,11 @@ export async function PATCH(request: NextRequest) {
         });
 
     } catch (error) {
-        console.error('Error updating profile:', error);
+        logServerError(error, { route: '/api/user/profile', action: 'update_profile' });
         return NextResponse.json(
-            { success: false, error: error instanceof Error ? error.message : 'Erreur serveur' },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         );
     }
 }
+
