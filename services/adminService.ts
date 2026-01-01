@@ -1144,4 +1144,455 @@ export class AdminService {
 
         return { success: true, message: 'Catégorie supprimée' };
     }
+
+    // ============================================
+    // STATISTIQUES AVANCÉES DU DASHBOARD
+    // ============================================
+
+    /**
+     * Statistiques enrichies avec tendances et comparaisons
+     */
+    static async getEnhancedDashboardStats() {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+        const [
+            // Utilisateurs
+            totalUsers,
+            newUsersThisMonth,
+            newUsersLastMonth,
+            newUsersLast7Days,
+            newUsersPrev7Days,
+            verifiedUsers,
+            trustedUsers,
+            pendingUsers,
+            bannedUsers,
+
+            // Annonces
+            totalAds,
+            activeAds,
+            pendingAds,
+            approvedAds,
+            rejectedAds,
+            newAdsThisMonth,
+            newAdsLastMonth,
+            totalViews,
+
+            // Signalements & Support
+            pendingReports,
+            resolvedReportsThisMonth,
+            openTickets,
+            inProgressTickets,
+
+            // Catégories
+            totalCategories,
+            trendingCategories,
+
+            // Engagement
+            totalFavorites,
+            totalMessages,
+            totalReviews,
+            avgRating,
+        ] = await Promise.all([
+            // Utilisateurs
+            prisma.user.count(),
+            prisma.user.count({ where: { createdAt: { gte: startOfMonth } } }),
+            prisma.user.count({ where: { createdAt: { gte: startOfLastMonth, lt: startOfMonth } } }),
+            prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+            prisma.user.count({ where: { createdAt: { gte: fourteenDaysAgo, lt: sevenDaysAgo } } }),
+            prisma.user.count({ where: { verificationStatus: 'VERIFIED' } }),
+            prisma.user.count({ where: { verificationStatus: 'TRUSTED' } }),
+            prisma.user.count({ where: { verificationStatus: 'PENDING', role: 'USER' } }),
+            prisma.user.count({ where: { isBanned: true } }),
+
+            // Annonces
+            prisma.ad.count(),
+            prisma.ad.count({ where: { status: 'active', moderationStatus: 'APPROVED' } }),
+            prisma.ad.count({ where: { moderationStatus: 'PENDING' } }),
+            prisma.ad.count({ where: { moderationStatus: 'APPROVED' } }),
+            prisma.ad.count({ where: { moderationStatus: 'REJECTED' } }),
+            prisma.ad.count({ where: { createdAt: { gte: startOfMonth } } }),
+            prisma.ad.count({ where: { createdAt: { gte: startOfLastMonth, lt: startOfMonth } } }),
+            prisma.ad.aggregate({ _sum: { views: true } }),
+
+            // Signalements & Support
+            prisma.report.count({ where: { status: 'PENDING' } }),
+            prisma.report.count({ where: { status: 'RESOLVED', updatedAt: { gte: startOfMonth } } }),
+            prisma.supportTicket.count({ where: { status: 'OPEN' } }),
+            prisma.supportTicket.count({ where: { status: 'IN_PROGRESS' } }),
+
+            // Catégories
+            prisma.category.count({ where: { parentId: null } }),
+            prisma.category.count({ where: { isTrending: true } }),
+
+            // Engagement
+            prisma.favorite.count(),
+            prisma.message.count(),
+            prisma.review.count(),
+            prisma.review.aggregate({ _avg: { rating: true } }),
+        ]);
+
+        // Calcul des tendances (% évolution)
+        const calcTrend = (current: number, previous: number): number => {
+            if (previous === 0) return current > 0 ? 100 : 0;
+            return Math.round(((current - previous) / previous) * 100);
+        };
+
+        return {
+            users: {
+                total: totalUsers,
+                newThisMonth: newUsersThisMonth,
+                newLast7Days: newUsersLast7Days,
+                trend7Days: calcTrend(newUsersLast7Days, newUsersPrev7Days),
+                trendMonth: calcTrend(newUsersThisMonth, newUsersLastMonth),
+                byStatus: {
+                    verified: verifiedUsers,
+                    trusted: trustedUsers,
+                    pending: pendingUsers,
+                    banned: bannedUsers,
+                },
+                verificationRate: totalUsers > 0 ? Math.round(((verifiedUsers + trustedUsers) / totalUsers) * 100) : 0,
+            },
+            ads: {
+                total: totalAds,
+                active: activeAds,
+                pending: pendingAds,
+                approved: approvedAds,
+                rejected: rejectedAds,
+                newThisMonth: newAdsThisMonth,
+                trendMonth: calcTrend(newAdsThisMonth, newAdsLastMonth),
+                totalViews: totalViews._sum.views || 0,
+                approvalRate: totalAds > 0 ? Math.round((approvedAds / totalAds) * 100) : 0,
+            },
+            moderation: {
+                pendingReports: pendingReports,
+                resolvedThisMonth: resolvedReportsThisMonth,
+                openTickets: openTickets,
+                inProgressTickets: inProgressTickets,
+                totalTicketsPending: openTickets + inProgressTickets,
+            },
+            categories: {
+                total: totalCategories,
+                trending: trendingCategories,
+            },
+            engagement: {
+                totalFavorites: totalFavorites,
+                totalMessages: totalMessages,
+                totalReviews: totalReviews,
+                avgRating: avgRating._avg.rating ? Math.round(avgRating._avg.rating * 10) / 10 : 0,
+            },
+        };
+    }
+
+    /**
+     * Données temporelles pour les graphiques (évolution sur période)
+     * @param metric - Type de métrique (users, ads, reports, messages)
+     * @param days - Nombre de jours à récupérer (7, 30, 90)
+     */
+    static async getStatsTimeline(metric: 'users' | 'ads' | 'reports' | 'messages' | 'favorites', days: number = 30) {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        startDate.setHours(0, 0, 0, 0);
+
+        let data: any[] = [];
+
+        switch (metric) {
+            case 'users':
+                data = await prisma.user.findMany({
+                    where: { createdAt: { gte: startDate } },
+                    select: { createdAt: true },
+                    orderBy: { createdAt: 'asc' },
+                });
+                break;
+            case 'ads':
+                data = await prisma.ad.findMany({
+                    where: { createdAt: { gte: startDate } },
+                    select: { createdAt: true },
+                    orderBy: { createdAt: 'asc' },
+                });
+                break;
+            case 'reports':
+                data = await prisma.report.findMany({
+                    where: { createdAt: { gte: startDate } },
+                    select: { createdAt: true },
+                    orderBy: { createdAt: 'asc' },
+                });
+                break;
+            case 'messages':
+                data = await prisma.message.findMany({
+                    where: { createdAt: { gte: startDate } },
+                    select: { createdAt: true },
+                    orderBy: { createdAt: 'asc' },
+                });
+                break;
+            case 'favorites':
+                data = await prisma.favorite.findMany({
+                    where: { createdAt: { gte: startDate } },
+                    select: { createdAt: true },
+                    orderBy: { createdAt: 'asc' },
+                });
+                break;
+        }
+
+        // Agréger par jour
+        const dailyCounts: { [key: string]: number } = {};
+
+        // Initialiser tous les jours à 0
+        for (let i = 0; i < days; i++) {
+            const date = new Date(startDate);
+            date.setDate(date.getDate() + i);
+            const dateKey = date.toISOString().split('T')[0];
+            dailyCounts[dateKey] = 0;
+        }
+
+        // Compter les entrées par jour
+        data.forEach((item) => {
+            const dateKey = new Date(item.createdAt).toISOString().split('T')[0];
+            if (dailyCounts[dateKey] !== undefined) {
+                dailyCounts[dateKey]++;
+            }
+        });
+
+        // Convertir en tableau ordonné
+        return Object.entries(dailyCounts).map(([date, count]) => ({
+            date,
+            count,
+            label: new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+        }));
+    }
+
+    /**
+     * Distribution des utilisateurs par statut et ville
+     */
+    static async getUsersDistribution() {
+        const [byStatus, byCity, topCreators] = await Promise.all([
+            // Par statut de vérification
+            prisma.user.groupBy({
+                by: ['verificationStatus'],
+                _count: { id: true },
+                where: { role: 'USER' },
+            }),
+
+            // Par ville (top 10)
+            prisma.user.groupBy({
+                by: ['city'],
+                _count: { id: true },
+                where: { city: { not: null } },
+                orderBy: { _count: { id: 'desc' } },
+                take: 10,
+            }),
+
+            // Top créateurs d'annonces
+            prisma.user.findMany({
+                where: { role: 'USER' },
+                select: {
+                    id: true,
+                    name: true,
+                    avatar: true,
+                    verificationStatus: true,
+                    _count: { select: { ads: true } },
+                },
+                orderBy: { ads: { _count: 'desc' } },
+                take: 10,
+            }),
+        ]);
+
+        // Compter les bannis séparément
+        const bannedCount = await prisma.user.count({ where: { isBanned: true } });
+
+        return {
+            byStatus: byStatus.map((s) => ({
+                status: s.verificationStatus,
+                count: s._count.id,
+            })),
+            bannedCount,
+            byCity: byCity.map((c) => ({
+                city: c.city || 'Non renseigné',
+                count: c._count.id,
+            })),
+            topCreators: topCreators.map((u) => ({
+                id: u.id,
+                name: u.name,
+                avatar: u.avatar,
+                verificationStatus: u.verificationStatus,
+                adsCount: u._count.ads,
+            })),
+        };
+    }
+
+    /**
+     * Distribution des annonces par catégorie et statut
+     */
+    static async getAdsDistribution() {
+        const [byCategory, byStatus, byModeration, byLocation, topViewed, topFavorited] = await Promise.all([
+            // Par catégorie parente (top 10)
+            prisma.ad.groupBy({
+                by: ['categoryId'],
+                _count: { id: true },
+                orderBy: { _count: { id: 'desc' } },
+                take: 15,
+            }),
+
+            // Par statut (active, sold, archived)
+            prisma.ad.groupBy({
+                by: ['status'],
+                _count: { id: true },
+            }),
+
+            // Par statut de modération
+            prisma.ad.groupBy({
+                by: ['moderationStatus'],
+                _count: { id: true },
+            }),
+
+            // Par localisation (top 10)
+            prisma.ad.groupBy({
+                by: ['location'],
+                _count: { id: true },
+                orderBy: { _count: { id: 'desc' } },
+                take: 10,
+            }),
+
+            // Top annonces par vues
+            prisma.ad.findMany({
+                where: { moderationStatus: 'APPROVED' },
+                select: {
+                    id: true,
+                    title: true,
+                    views: true,
+                    images: true,
+                    category: { select: { name: true } },
+                },
+                orderBy: { views: 'desc' },
+                take: 5,
+            }),
+
+            // Top annonces par favoris
+            prisma.ad.findMany({
+                where: { moderationStatus: 'APPROVED' },
+                select: {
+                    id: true,
+                    title: true,
+                    images: true,
+                    _count: { select: { favorites: true } },
+                    category: { select: { name: true } },
+                },
+                orderBy: { favorites: { _count: 'desc' } },
+                take: 5,
+            }),
+        ]);
+
+        // Récupérer les noms des catégories
+        const categoryIds = byCategory.map((c) => c.categoryId);
+        const categories = await prisma.category.findMany({
+            where: { id: { in: categoryIds } },
+            select: { id: true, name: true, parentId: true, parent: { select: { name: true } } },
+        });
+
+        const categoryMap = new Map(categories.map((c) => [c.id, c]));
+
+        return {
+            byCategory: byCategory.map((c) => {
+                const cat = categoryMap.get(c.categoryId);
+                return {
+                    categoryId: c.categoryId,
+                    categoryName: cat?.parent?.name || cat?.name || 'Inconnue',
+                    subcategoryName: cat?.parent ? cat.name : null,
+                    count: c._count.id,
+                };
+            }),
+            byStatus: byStatus.map((s) => ({
+                status: s.status,
+                count: s._count.id,
+            })),
+            byModeration: byModeration.map((m) => ({
+                status: m.moderationStatus,
+                count: m._count.id,
+            })),
+            byLocation: byLocation.map((l) => ({
+                location: l.location,
+                count: l._count.id,
+            })),
+            topViewed: serializeDates(topViewed.map((a) => ({
+                id: a.id,
+                title: a.title,
+                views: a.views,
+                image: a.images[0] || null,
+                category: a.category.name,
+            }))),
+            topFavorited: serializeDates(topFavorited.map((a) => ({
+                id: a.id,
+                title: a.title,
+                favoritesCount: a._count.favorites,
+                image: a.images[0] || null,
+                category: a.category.name,
+            }))),
+        };
+    }
+
+    /**
+     * Distribution des signalements par raison et statut
+     */
+    static async getReportsDistribution() {
+        const [byReason, byStatus] = await Promise.all([
+            // Par raison de signalement
+            prisma.report.groupBy({
+                by: ['reason'],
+                _count: { id: true },
+                orderBy: { _count: { id: 'desc' } },
+            }),
+
+            // Par statut
+            prisma.report.groupBy({
+                by: ['status'],
+                _count: { id: true },
+            }),
+        ]);
+
+        return {
+            byReason: byReason.map((r) => ({
+                reason: r.reason,
+                count: r._count.id,
+            })),
+            byStatus: byStatus.map((s) => ({
+                status: s.status,
+                count: s._count.id,
+            })),
+        };
+    }
+
+    /**
+     * Distribution des tickets support par catégorie et statut
+     */
+    static async getSupportDistribution() {
+        const [byCategory, byStatus] = await Promise.all([
+            // Par catégorie de ticket
+            prisma.supportTicket.groupBy({
+                by: ['category'],
+                _count: { id: true },
+                orderBy: { _count: { id: 'desc' } },
+            }),
+
+            // Par statut
+            prisma.supportTicket.groupBy({
+                by: ['status'],
+                _count: { id: true },
+            }),
+        ]);
+
+        return {
+            byCategory: byCategory.map((c) => ({
+                category: c.category,
+                count: c._count.id,
+            })),
+            byStatus: byStatus.map((s) => ({
+                status: s.status,
+                count: s._count.id,
+            })),
+        };
+    }
 }

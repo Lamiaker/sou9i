@@ -246,6 +246,13 @@ export default function DeposerAnnonce() {
 
             if (!response.ok) {
                 const data = await response.json();
+                // Afficher les erreurs de validation détaillées si disponibles
+                if (data.details && Array.isArray(data.details)) {
+                    const errorMessages = data.details.map((d: { field: string; message: string }) =>
+                        `${d.field}: ${d.message}`
+                    ).join('\n');
+                    throw new Error(errorMessages || data.error || 'Erreur lors de la création de l\'annonce');
+                }
                 throw new Error(data.error || 'Erreur lors de la création de l\'annonce');
             }
 
@@ -275,7 +282,12 @@ export default function DeposerAnnonce() {
             }
         } catch (err) {
             console.error('Error creating ad:', err);
-            setError(getErrorMessage(err));
+            // Afficher le message d'erreur original pour voir les détails de validation
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError(getErrorMessage(err));
+            }
         } finally {
             setSubmitting(false);
         }
@@ -299,8 +311,18 @@ export default function DeposerAnnonce() {
                     {/* Messages */}
                     {error && (
                         <div className="mx-6 mt-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                            <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
-                            <p className="text-red-700 text-sm">{error}</p>
+                            <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+                            <div className="text-red-700 text-sm">
+                                {error.includes('\n') ? (
+                                    <ul className="list-disc list-inside space-y-1">
+                                        {error.split('\n').map((line, i) => (
+                                            <li key={i}>{line}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p>{error}</p>
+                                )}
+                            </div>
                         </div>
                     )}
 

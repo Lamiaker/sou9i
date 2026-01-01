@@ -14,7 +14,7 @@ export const MESSAGE_VALIDATION = {
 export const sendMessageSchema = z.object({
     conversationId: z.string()
         .min(1, { message: "ID de conversation requis" })
-        .uuid({ message: "ID de conversation invalide" }),
+        .regex(/^c[a-z0-9]{24,}$/i, { message: "ID de conversation invalide" }),
 
     content: z.string()
         .min(MESSAGE_VALIDATION.CONTENT_MIN, { message: "Le message ne peut pas être vide" })
@@ -29,14 +29,14 @@ export const sendMessageSchema = z.object({
 export const createConversationSchema = z.object({
     recipientId: z.string()
         .min(1, { message: "ID du destinataire requis" })
-        .uuid({ message: "ID du destinataire invalide" }),
+        .regex(/^c[a-z0-9]{24,}$/i, { message: "ID du destinataire invalide" }),
 
     adTitle: z.string()
         .max(100)
         .optional(),
 
     adId: z.string()
-        .uuid({ message: "ID d'annonce invalide" })
+        .regex(/^c[a-z0-9]{24,}$/i, { message: "ID d'annonce invalide" })
         .optional(),
 })
 
@@ -44,7 +44,7 @@ export const createConversationSchema = z.object({
  * Schéma pour les paramètres de pagination des messages
  */
 export const getMessagesSchema = z.object({
-    conversationId: z.string().uuid({ message: "ID de conversation invalide" }),
+    conversationId: z.string().regex(/^c[a-z0-9]{24,}$/i, { message: "ID de conversation invalide" }),
     page: z.number().int().min(1).optional().default(1),
     limit: z.number().int().min(1).max(100).optional().default(50),
 })

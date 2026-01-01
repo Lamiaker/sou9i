@@ -19,12 +19,14 @@ import {
     Search,
     HelpCircle,
     Briefcase,
+    BarChart3,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { ToastProvider } from "@/components/ui/Toast";
 
 const menuItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
     { name: "Utilisateurs", href: "/admin/users", icon: Users },
     { name: "Recherche", href: "/admin/search", icon: Search },
     { name: "Annonces", href: "/admin/ads", icon: ShoppingBag },

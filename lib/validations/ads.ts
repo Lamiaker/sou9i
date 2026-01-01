@@ -4,9 +4,9 @@ import { z } from "zod"
  * Constantes de validation pour les annonces
  */
 export const AD_VALIDATION = {
-    TITLE_MIN: 5,
+    TITLE_MIN: 3,
     TITLE_MAX: 100,
-    DESCRIPTION_MIN: 20,
+    DESCRIPTION_MIN: 10,
     DESCRIPTION_MAX: 5000,
     PRICE_MIN: 0,
     PRICE_MAX: 999_999_999, // ~1 milliard DZD max
@@ -39,9 +39,11 @@ export const createAdSchema = z.object({
             return num
         })),
 
+    // Note: Prisma génère des CUID par défaut, pas des UUID
+    // Regex pour valider les CUID (format: c + 24 caractères alphanumériques)
     categoryId: z.string()
         .min(1, { message: "La catégorie est requise" })
-        .uuid({ message: "ID de catégorie invalide" }),
+        .regex(/^c[a-z0-9]{24,}$/i, { message: "catégorie invalide" }),
 
     location: z.string()
         .min(AD_VALIDATION.LOCATION_MIN, { message: "La localisation est requise" })
@@ -53,7 +55,7 @@ export const createAdSchema = z.object({
         .nullable()
         .optional(),
 
-    images: z.array(z.string().url({ message: "URL d'image invalide" }))
+    images: z.array(z.string())
         .max(AD_VALIDATION.IMAGES_MAX, { message: `Maximum ${AD_VALIDATION.IMAGES_MAX} images autorisées` })
         .optional()
         .default([]),
@@ -65,9 +67,9 @@ export const createAdSchema = z.object({
     deliveryAvailable: z.boolean().optional().default(false),
     negotiable: z.boolean().optional().default(false),
 
-    // Champs dynamiques
+    // Champs dynamiques (CUID format)
     dynamicFields: z.array(z.object({
-        fieldId: z.string().uuid({ message: "ID de champ invalide" }),
+        fieldId: z.string().regex(/^c[a-z0-9]{24,}$/i, { message: "ID de champ invalide" }),
         value: z.string().max(500, { message: "Valeur trop longue" }),
     })).optional().default([]),
 })
@@ -101,7 +103,7 @@ export const updateAdSchema = z.object({
 
     status: z.enum(['active', 'sold', 'archived']).optional(),
 
-    images: z.array(z.string().url())
+    images: z.array(z.string())
         .max(AD_VALIDATION.IMAGES_MAX)
         .optional(),
 
@@ -116,15 +118,15 @@ export const updateAdSchema = z.object({
  * Schéma pour les filtres de recherche d'annonces
  */
 export const adFiltersSchema = z.object({
-    categoryId: z.string().uuid().optional(),
-    subcategoryId: z.string().uuid().optional(),
+    categoryId: z.string().regex(/^c[a-z0-9]{24,}$/i).optional(),
+    subcategoryId: z.string().regex(/^c[a-z0-9]{24,}$/i).optional(),
     minPrice: z.number().min(0).optional(),
     maxPrice: z.number().max(AD_VALIDATION.PRICE_MAX).optional(),
     location: z.string().max(100).optional(),
     condition: z.string().optional(),
     search: z.string().max(200).optional(),
     status: z.enum(['active', 'sold', 'archived', 'pending']).optional(),
-    userId: z.string().uuid().optional(),
+    userId: z.string().regex(/^c[a-z0-9]{24,}$/i).optional(),
     moderationStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
     page: z.number().int().min(1).optional().default(1),
     limit: z.number().int().min(1).max(100).optional().default(12),
