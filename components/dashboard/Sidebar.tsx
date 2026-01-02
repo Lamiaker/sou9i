@@ -26,7 +26,7 @@ const menuItems = [
 
 const otherMenuItems = [
     { name: "Aide & Support", href: "/dashboard/support", icon: HelpCircle },
-    { name: "Publicité", href: "/publicite", icon: Megaphone },
+    { name: "Publicité", href: "/dashboard/publicite", icon: Megaphone },
 ];
 
 export default function Sidebar() {

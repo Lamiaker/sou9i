@@ -15,13 +15,14 @@ import {
     HelpCircle,
     Megaphone,
     LogOut,
-    ChevronRight
+    ChevronRight,
+    Bell
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "next-auth/react";
 
 const mainMenuItems = [
-    { name: "Accueil", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Annonces", href: "/dashboard/annonces", icon: ShoppingBag },
     { name: "Favoris", href: "/favoris", icon: Heart },
     { name: "Messages", href: "/dashboard/messages", icon: MessageCircle },
@@ -29,9 +30,10 @@ const mainMenuItems = [
 
 const moreMenuItems = [
     { name: "Mon profil", href: "/dashboard/profil", icon: User },
+    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
     { name: "Aide & Support", href: "/dashboard/support", icon: HelpCircle },
-    { name: "Publicité", href: "/publicite", icon: Megaphone },
+    { name: "Publicité", href: "/dashboard/publicite", icon: Megaphone },
 ];
 
 export default function MobileNav() {

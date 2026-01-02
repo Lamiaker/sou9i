@@ -18,6 +18,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SweetLook - Marketplace de Services et Articles en Algérie",
   description: "Votre plateforme en ligne pour acheter, vendre et proposer des services en Algérie. Mode, beauté, maison, artisanat et bien plus.",
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  }
 };
 
 export default function RootLayout({
