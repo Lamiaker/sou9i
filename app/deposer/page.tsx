@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 import Image from "next/image";
@@ -16,6 +16,7 @@ import { validateAllFields } from "@/hooks/useDynamicFields";
 import { useDynamicFields } from "@/hooks/useDynamicFields";
 import CategorySelect from "@/components/ui/CategorySelect";
 import { getErrorMessage } from "@/lib/errors";
+import { isValidPhoneNumber } from "@/lib/utils/helpers";
 
 interface FormData {
     title: string;
@@ -58,6 +59,16 @@ export default function DeposerAnnonce() {
     // État pour les champs dynamiques
     const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, string>>({});
     const [dynamicFieldErrors, setDynamicFieldErrors] = useState<Record<string, string>>({});
+
+    // Ref pour le message d'erreur (scroll automatique)
+    const errorRef = useRef<HTMLDivElement>(null);
+
+    // Scroll automatique vers l'erreur quand elle apparaît
+    useEffect(() => {
+        if (error && errorRef.current) {
+            errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [error]);
 
     // Récupérer les champs dynamiques de la catégorie sélectionnée
     const effectiveCategoryId = formData.subcategoryId || formData.categoryId;
@@ -185,10 +196,9 @@ export default function DeposerAnnonce() {
                 setError('Veuillez entrer un numéro de contact');
                 return;
             }
-            // Validation basique du format de téléphone (chiffres uniquement, min 8 caractères)
-            const phoneRegex = /^[0-9+\s-]{8,}$/;
-            if (!phoneRegex.test(formData.contactPhone.trim())) {
-                setError('Le numéro de téléphone n\'est pas valide');
+            // Validation stricte du format de téléphone algérien (05, 06, 07 + 8 chiffres)
+            if (!isValidPhoneNumber(formData.contactPhone)) {
+                setError('Le numéro est incorrect');
                 return;
             }
         }
@@ -275,7 +285,7 @@ export default function DeposerAnnonce() {
 
                 // Afficher le message de succès pendant 2 secondes
                 setTimeout(() => {
-                    router.push(`/annonces/${result.data.id}`);
+                    router.push('/dashboard');
                 }, 2000);
             } else {
                 throw new Error(result.error || 'Erreur inconnue');
@@ -310,7 +320,7 @@ export default function DeposerAnnonce() {
 
                     {/* Messages */}
                     {error && (
-                        <div className="mx-6 mt-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                        <div ref={errorRef} className="mx-6 mt-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
                             <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
                             <div className="text-red-700 text-sm">
                                 {error.includes('\n') ? (
@@ -331,7 +341,7 @@ export default function DeposerAnnonce() {
                             <CheckCircle className="text-green-500 flex-shrink-0" size={20} />
                             <div className="text-green-700 text-sm">
                                 <p className="font-semibold">Annonce créée avec succès !</p>
-                                <p>Redirection en cours...</p>
+                                <p>Redirection vers votre tableau de bord...</p>
                             </div>
                         </div>
                     )}
@@ -616,16 +626,43 @@ export default function DeposerAnnonce() {
                                             </span>
 
                                             {!formData.useProfilePhone && (
-                                                <div className="relative animate-fadeIn">
-                                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                                    <input
-                                                        type="tel"
-                                                        value={formData.contactPhone}
-                                                        onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
-                                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                                        placeholder="Ex: 0555 12 34 56"
-                                                        disabled={isLoading}
-                                                    />
+                                                <div className="space-y-2 animate-fadeIn">
+                                                    <div className="relative">
+                                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                                        <input
+                                                            type="tel"
+                                                            value={formData.contactPhone}
+                                                            onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
+                                                            className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent outline-none transition ${formData.contactPhone.trim()
+                                                                ? isValidPhoneNumber(formData.contactPhone)
+                                                                    ? 'border-green-500 focus:ring-green-500'
+                                                                    : 'border-red-400 focus:ring-red-400'
+                                                                : 'border-gray-300 focus:ring-primary'
+                                                                }`}
+                                                            placeholder="Ex: 0555 12 34 56"
+                                                            disabled={isLoading}
+                                                        />
+                                                        {formData.contactPhone.trim() && (
+                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                                {isValidPhoneNumber(formData.contactPhone) ? (
+                                                                    <CheckCircle className="text-green-500" size={20} />
+                                                                ) : (
+                                                                    <AlertCircle className="text-red-400" size={20} />
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {formData.contactPhone.trim() && !isValidPhoneNumber(formData.contactPhone) && (
+                                                        <p className="text-xs text-red-500 flex items-center gap-1">
+                                                            <AlertCircle size={12} />
+                                                            Format requis: 05, 06 ou 07 suivi de 8 chiffres
+                                                        </p>
+                                                    )}
+                                                    {!formData.contactPhone.trim() && (
+                                                        <p className="text-xs text-gray-500">
+                                                            Format algérien: 05XX XX XX XX, 06XX XX XX XX ou 07XX XX XX XX
+                                                        </p>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

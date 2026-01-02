@@ -1,28 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
+import type { CategoryWithDetails, PaginationInfo } from '@/types';
 
-export interface Category {
-    id: string;
-    name: string;
-    slug: string;
-    icon?: string | null;
-    description?: string | null;
-    order: number;
-    parentId?: string | null;
-    createdAt: string;
-    parent?: Category | null;
-    children?: Category[];
-    _count?: {
-        ads: number;
-        children: number;
-    };
-}
-
-interface Pagination {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-}
+// Réexporter pour compatibilité
+export type Category = CategoryWithDetails;
 
 interface UseCategoriesOptions {
     type?: 'all' | 'hierarchy' | 'parents';
@@ -36,7 +16,7 @@ interface UseCategoriesReturn {
     categories: Category[];
     loading: boolean;
     error: string | null;
-    pagination: Pagination | null;
+    pagination: PaginationInfo | null;
     refetch: () => void;
 }
 
@@ -46,7 +26,7 @@ export function useCategories(options: UseCategoriesOptions = {}): UseCategories
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [pagination, setPagination] = useState<Pagination | null>(null);
+    const [pagination, setPagination] = useState<PaginationInfo | null>(null);
 
     const fetchCategories = async () => {
         try {

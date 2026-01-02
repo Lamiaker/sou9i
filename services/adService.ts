@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import type { AdFilters } from '@/lib/prisma-types'
-import { AdStatus } from '@prisma/client'
+import { AdStatus, type AdFilters } from '@/types'
 import { SubcategoryFieldService, type FieldValueInput } from './subcategoryFieldService'
 import fs from 'fs'
 import path from 'path'

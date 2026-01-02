@@ -13,6 +13,7 @@ import MenuButton from "../ui/MenuButton";
 import IconButtonWithLabel from "../ui/IconButtonWithLabel";
 import { useFavorites } from "@/context/FavoritesContext";
 import UserMenu from "./UserMenu";
+import NotificationBell from "./NotificationBell";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -57,8 +58,11 @@ export default function Header() {
             />
           </Link>
 
-          {/* Bouton Connexion/Déconnexion Mobile */}
-          <UserMenu />
+          {/* Boutons Actions Mobile (Notifications + User) */}
+          <div className="flex items-center gap-1">
+            {session && <NotificationBell />}
+            <UserMenu />
+          </div>
         </div>
 
         {/* Barre de recherche mobile */}
@@ -126,6 +130,8 @@ export default function Header() {
                 </span>
               )}
             </div>
+
+            {session && <NotificationBell />}
 
             <IconButtonWithLabel
               icon={Mail}

@@ -1,40 +1,15 @@
 import { prisma } from '@/lib/prisma'
-import { FieldType } from '@prisma/client'
+import {
+    FieldType,
+    type CreateFieldDTO,
+    type UpdateFieldDTO,
+    type FieldValueInput
+} from '@/types'
 
-// Types pour les entrées
-export interface CreateFieldInput {
-    categoryId: string
-    name: string
-    label: string
-    type: FieldType
-    placeholder?: string
-    required?: boolean
-    order?: number
-    options?: string[]
-    minValue?: number
-    maxValue?: number
-    minLength?: number
-    maxLength?: number
-}
-
-export interface UpdateFieldInput {
-    name?: string
-    label?: string
-    type?: FieldType
-    placeholder?: string
-    required?: boolean
-    order?: number
-    options?: string[]
-    minValue?: number
-    maxValue?: number
-    minLength?: number
-    maxLength?: number
-}
-
-export interface FieldValueInput {
-    fieldId: string
-    value: string
-}
+// Ré-exporter les types pour compatibilité avec le code existant
+export type CreateFieldInput = CreateFieldDTO
+export type UpdateFieldInput = UpdateFieldDTO
+export type { FieldValueInput }
 
 export class SubcategoryFieldService {
     /**

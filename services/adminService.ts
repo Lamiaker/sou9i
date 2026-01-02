@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import fs from 'fs'
 import path from 'path'
+import { NotificationService } from './notificationService'
+import { NotificationType } from '@prisma/client'
 
 // Helper function to serialize dates to strings for API responses
 function serializeDates<T>(obj: T): T {
@@ -225,21 +227,34 @@ export class AdminService {
      * Si 'trusted' est vrai, l'utilisateur est considéré comme de confiance (annonces auto-validées)
      */
     static async verifyUser(userId: string, trusted: boolean = false) {
-        return prisma.user.update({
+        const result = await prisma.user.update({
             where: { id: userId },
             data: {
                 isVerified: true, // Legacy support
                 verificationStatus: trusted ? 'TRUSTED' : 'VERIFIED',
                 isTrusted: trusted
             } as any,
-        })
+        });
+
+        // Notification
+        await NotificationService.create({
+            userId,
+            type: NotificationType.ACCOUNT_VERIFIED,
+            title: "Compte vérifié ! ✅",
+            message: trusted
+                ? "Félicitations ! Votre compte est maintenant considéré comme 'De confiance'. Vos prochaines annonces seront publiées automatiquement."
+                : "Votre compte a été vérifié avec succès. Vous bénéficiez maintenant du badge de vérification.",
+            link: "/dashboard"
+        });
+
+        return result;
     }
 
     /**
      * Rejeter un utilisateur avec une raison
      */
     static async rejectUser(userId: string, reason: string) {
-        return prisma.user.update({
+        const result = await prisma.user.update({
             where: { id: userId },
             data: {
                 isVerified: false,
@@ -247,7 +262,18 @@ export class AdminService {
                 isTrusted: false,
                 rejectionReason: reason
             } as any,
-        })
+        });
+
+        // Notification
+        await NotificationService.create({
+            userId,
+            type: NotificationType.SYSTEM,
+            title: "Demande de vérification refusée ❌",
+            message: `Votre demande de vérification de compte a été rejetée. Raison : ${reason}`,
+            link: "/dashboard"
+        });
+
+        return result;
     }
 
     /**
@@ -420,26 +446,55 @@ export class AdminService {
             throw new Error("Le compte de l'utilisateur n'est pas vérifié. Veuillez d'abord valider l'utilisateur.");
         }
 
-        return prisma.ad.update({
+        const result = await prisma.ad.update({
             where: { id: adId },
             data: {
                 moderationStatus: 'APPROVED',
                 rejectionReason: null
             } as any,
         })
+
+        // Envoyer une notification à l'utilisateur
+        await NotificationService.create({
+            userId: ad.userId,
+            type: NotificationType.AD_APPROVED,
+            title: "Annonce approuvée ! 🎉",
+            message: `Votre annonce "${ad.title}" a été validée et est maintenant visible sur le site.`,
+            link: `/annonces/${ad.id}`
+        });
+
+        return result;
     }
 
     /**
      * Rejeter une annonce (Modération)
      */
     static async rejectAd(adId: string, reason: string) {
-        return prisma.ad.update({
+        const ad = await prisma.ad.findUnique({
+            where: { id: adId },
+            select: { userId: true, title: true, id: true }
+        });
+
+        const result = await prisma.ad.update({
             where: { id: adId },
             data: {
                 moderationStatus: 'REJECTED',
                 rejectionReason: reason
             } as any,
         })
+
+        if (ad) {
+            // Envoyer une notification à l'utilisateur
+            await NotificationService.create({
+                userId: ad.userId,
+                type: NotificationType.AD_REJECTED,
+                title: "Annonce refusée ❌",
+                message: `Votre annonce "${ad.title}" a été rejetée. Raison : ${reason}`,
+                link: `/annonces/${ad.id}`
+            });
+        }
+
+        return result;
     }
 
     /**

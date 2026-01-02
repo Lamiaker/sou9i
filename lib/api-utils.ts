@@ -11,17 +11,10 @@ import {
     AuthenticationError,
     ForbiddenError,
 } from '@/lib/errors';
+import type { ApiResponse as BaseApiResponse, AuthOptions as BaseAuthOptions } from '@/types/api';
 
-/**
- * Type pour une réponse API standardisée
- */
-export interface ApiResponse<T = unknown> {
-    success: boolean;
-    data?: T;
-    error?: string;
-    code?: string;
-    message?: string;
-}
+// Réexporter les types depuis @/types pour compatibilité
+export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 
 /**
  * Crée une réponse de succès standardisée

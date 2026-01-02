@@ -6,8 +6,12 @@ import AdCard from "@/components/ui/AdCard";
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import Pagination from "@/components/ui/Pagination";
 import { usePathname } from "next/navigation";
+import type { PaginationInfo } from "@/types";
 
-interface Category {
+/**
+ * Catégorie avec enfants pour l'affichage dans le composant
+ */
+interface CategoryForDisplay {
     id: string;
     name: string;
     slug: string;
@@ -25,7 +29,10 @@ interface Category {
     }[];
 }
 
-interface Ad {
+/**
+ * Annonce simplifiée pour l'affichage dans la grille
+ */
+interface AdForGrid {
     id: string;
     title: string;
     description?: string;
@@ -37,23 +44,16 @@ interface Ad {
     createdAt: string;
 }
 
-interface PaginationType {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-}
-
 interface CategoryAdsClientProps {
-    category: Category;
-    initialAds: Ad[];
-    pagination?: PaginationType;
+    category: CategoryForDisplay;
+    initialAds: AdForGrid[];
+    pagination?: PaginationInfo;
 }
 
 export default function CategoryAdsClient({ category, initialAds, pagination }: CategoryAdsClientProps) {
     const pathname = usePathname();
     // States pour les filtres
-    const [ads, setAds] = useState<Ad[]>(initialAds);
+    const [ads, setAds] = useState<AdForGrid[]>(initialAds);
     const [loading, setLoading] = useState(false);
     const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);

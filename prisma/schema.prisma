@@ -84,6 +84,7 @@ model User {
   favorites     Favorite[]
   conversations Conversation[]
   messages      Message[]
+  notifications Notification[]
   sentReviews   Review[]       @relation("ReviewAuthor")
   receivedReviews Review[]     @relation("ReviewReceiver")
   
@@ -451,5 +452,37 @@ model ServiceRequest {
 
   @@index([status])
   @@index([serviceType])
+  @@index([createdAt])
+}
+
+// ============================================
+// MODÈLES NOTIFICATIONS
+// ============================================
+
+enum NotificationType {
+  AD_APPROVED     // Annonce validée
+  AD_REJECTED     // Annonce rejetée
+  NEW_MESSAGE     // Nouveau message reçu
+  NEW_REVIEW      // Nouvel avis reçu
+  ACCOUNT_VERIFIED // Compte vérifié par l'admin
+  SYSTEM          // Notification système générale
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String           @db.Text
+  link        String?          // Lien optionnel (ex: l'annonce concernée)
+  read        Boolean          @default(false)
+  
+  createdAt   DateTime         @default(now())
+
+  // Relation utilisateur
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
   @@index([createdAt])
 }

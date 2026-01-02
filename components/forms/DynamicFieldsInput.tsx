@@ -248,10 +248,15 @@ export function DynamicFieldsDisplay({ fields }: DynamicFieldsDisplayProps) {
                 return (
                     <div
                         key={fieldValue.id}
-                        className="flex justify-between border-b border-gray-100 pb-2"
+                        className="flex justify-between items-center gap-4 border-b border-gray-100 pb-2 overflow-hidden"
                     >
-                        <span className="text-gray-500">{field.label}</span>
-                        <span className="font-medium text-gray-900">{displayValue}</span>
+                        <span className="text-gray-500 flex-shrink-0">{field.label}</span>
+                        <span
+                            className="font-medium text-gray-900 truncate max-w-[200px] text-right"
+                            title={displayValue}
+                        >
+                            {displayValue}
+                        </span>
                     </div>
                 );
             })}

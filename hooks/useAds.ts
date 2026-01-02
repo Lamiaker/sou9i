@@ -1,74 +1,20 @@
 import useSWR from 'swr';
 import { useEffect, useState } from 'react';
+import type {
+    AdWithDetails,
+    AdFiltersUI,
+    PaginationInfo,
+    UseDataOptions
+} from '@/types';
 
-export interface Ad {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    location: string;
-    images: string[];
-    condition?: string | null;
-    brand?: string | null;
-    size?: string | null;
-    contactPhone?: string | null; // Numéro de contact spécifique (si différent du profil)
-    status: string;
-    moderationStatus?: string;
-    rejectionReason?: string;
-    views: number;
-    deliveryAvailable: boolean;
-    negotiable: boolean;
-    createdAt: string;
-    updatedAt: string;
-    categoryId: string;
-    userId: string;
-    category?: {
-        id: string;
-        name: string;
-        slug: string;
-    };
-    user?: {
-        id: string;
-        name: string | null;
-        avatar: string | null;
-        city: string | null;
-        phone: string | null;
-        isVerified: boolean;
-        createdAt: string;
-    };
-    _count?: {
-        favorites: number;
-    };
-    dynamicFields?: Array<{
-        id: string;
-        value: string;
-        field: {
-            id: string;
-            name: string;
-            label: string;
-            type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'SELECT' | 'BOOLEAN' | 'IMAGE';
-        };
-    }>;
-}
+// Réexporter les types pour compatibilité avec le code existant
+export type Ad = AdWithDetails;
+export type AdFilters = AdFiltersUI;
 
-export interface AdFilters {
-    categoryId?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    location?: string;
-    condition?: string;
-    search?: string;
-    status?: string;
-    userId?: string;
-    moderationStatus?: string;
-}
-
-interface UseAdsOptions {
+interface UseAdsOptions extends UseDataOptions {
     filters?: AdFilters;
     page?: number;
     limit?: number;
-    enabled?: boolean;
-    refreshInterval?: number;
     isAdmin?: boolean;
 }
 

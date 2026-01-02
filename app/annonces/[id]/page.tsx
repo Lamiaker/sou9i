@@ -2,6 +2,9 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AdService } from "@/services";
 import AdDetailClient from "@/components/ads/AdDetailClient";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import AdminAdActions from "@/components/admin/AdminAdActions";
 
 // ISR - Revalidation toutes les 60 secondes
 export const revalidate = 60;
@@ -118,6 +121,10 @@ function JsonLd({ data }: { data: object }) {
 export default async function AdDetailPage({ params }: PageProps) {
     const { id } = await params;
 
+    // ✅ Récupérer la session pour vérifier si l'utilisateur est admin
+    const session = await getServerSession(authOptions);
+    const isAdmin = session?.user?.role === 'ADMIN';
+
     // Récupérer l'annonce depuis la base de données
     let ad;
     try {
@@ -129,8 +136,17 @@ export default async function AdDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    // Vérifier que l'annonce est active et approuvée
-    if (!ad || ad.status !== 'active' || ad.moderationStatus !== 'APPROVED') {
+    // ✅ Vérifier les conditions d'accès
+    // - L'annonce doit exister
+    // - Pour les visiteurs normaux: doit être active ET approuvée
+    // - Pour les admins: peuvent voir toutes les annonces (même PENDING)
+    if (!ad) {
+        notFound();
+    }
+
+    const isPubliclyVisible = ad.status === 'active' && ad.moderationStatus === 'APPROVED';
+
+    if (!isPubliclyVisible && !isAdmin) {
         notFound();
     }
 
@@ -257,11 +273,21 @@ export default async function AdDetailPage({ params }: PageProps) {
             images: similarAd.images || [],
         }));
 
+
     return (
         <>
             {/* Données structurées JSON-LD */}
             <JsonLd data={structuredData} />
             <JsonLd data={breadcrumbData} />
+
+            {/* ✅ Panneau de Modération Admin Interactif */}
+            {isAdmin && (
+                <AdminAdActions
+                    adId={ad.id}
+                    moderationStatus={ad.moderationStatus}
+                    rejectionReason={ad.rejectionReason}
+                />
+            )}
 
             {/* Composant client */}
             <AdDetailClient ad={formattedAd} similarAds={formattedSimilarAds} />

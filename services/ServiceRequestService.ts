@@ -1,26 +1,18 @@
 import { prisma } from "@/lib/prisma";
-import { ServiceRequestStatus, ServiceType } from "@prisma/client";
+import {
+    ServiceRequestStatus,
+    ServiceType,
+    type CreateServiceRequestDTO,
+    type UpdateServiceRequestDTO,
+    type ServiceRequestFiltersDTO,
+} from "@/types";
 
-// Types
-export interface CreateServiceRequestData {
-    name: string;
-    email: string;
-    phone?: string;
-    company?: string;
-    serviceType: ServiceType;
-    budget?: string;
-    deadline?: string;
-    description: string;
-}
+// Ré-exporter les types pour compatibilité avec le code existant
+export type CreateServiceRequestData = CreateServiceRequestDTO;
+export type UpdateServiceRequestData = UpdateServiceRequestDTO;
 
-export interface UpdateServiceRequestData {
-    status?: ServiceRequestStatus;
-    adminNotes?: string;
-}
-
-export interface ServiceRequestFilters {
-    status?: ServiceRequestStatus;
-    serviceType?: ServiceType;
+// Extension locale avec le champ search
+export interface ServiceRequestFilters extends ServiceRequestFiltersDTO {
     search?: string;
 }
 

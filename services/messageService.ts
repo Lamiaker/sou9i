@@ -1,46 +1,24 @@
 import { prisma } from '@/lib/prisma'
+import { NotificationService } from './notificationService'
+import { NotificationType } from '@prisma/client'
+import type {
+    CreateMessageDTO,
+    CreateConversationDTO,
+    ConversationWithDetailsDTO,
+} from '@/types'
 
-// Types pour le service
-export interface CreateMessageData {
-    content: string
-    senderId: string
-    conversationId: string
-}
+// Ré-exporter les types pour compatibilité avec le code existant
+export type CreateMessageData = CreateMessageDTO
+export type CreateConversationData = CreateConversationDTO
 
-export interface CreateConversationData {
-    participantIds: string[] // Au moins 2 participants
-    adTitle?: string
-    adId?: string
-    initialMessage?: string
-}
-
-export interface ConversationWithDetails {
-    id: string
-    adTitle: string | null
-    adId: string | null
-    createdAt: Date
-    updatedAt: Date
+// Extension locale avec les champs optionnels supplémentaires
+export interface ConversationWithDetails extends Omit<ConversationWithDetailsDTO, 'participants'> {
     participants: {
         id: string
         name: string | null
         avatar: string | null
         email: string
     }[]
-    messages: {
-        id: string
-        content: string
-        read: boolean
-        createdAt: Date
-        senderId: string
-        sender: {
-            id: string
-            name: string | null
-            avatar: string | null
-        }
-    }[]
-    _count: {
-        messages: number
-    }
     lastMessage?: {
         content: string
         createdAt: Date
@@ -316,10 +294,29 @@ export const MessageService = {
         })
 
         // Mettre à jour le timestamp de la conversation
-        await prisma.conversation.update({
+        const updatedConv = await prisma.conversation.update({
             where: { id: data.conversationId },
             data: { updatedAt: new Date() },
+            include: {
+                participants: {
+                    where: {
+                        id: { not: data.senderId }
+                    },
+                    select: { id: true }
+                }
+            }
         })
+
+        // Envoyer une notification aux autres participants
+        for (const participant of updatedConv.participants) {
+            await NotificationService.create({
+                userId: participant.id,
+                type: NotificationType.NEW_MESSAGE,
+                title: `Nouveau message de ${message.sender.name || 'un utilisateur'}`,
+                message: message.content.length > 50 ? `${message.content.substring(0, 47)}...` : message.content,
+                link: `/dashboard/messages/${data.conversationId}`
+            });
+        }
 
         return message
     },

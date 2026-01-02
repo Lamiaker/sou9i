@@ -10,13 +10,15 @@ import {
     User,
     Settings,
     HelpCircle,
-    Megaphone
+    Megaphone,
+    Bell
 } from "lucide-react";
 
 const menuItems = [
     { name: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard },
     { name: "Mes annonces", href: "/dashboard/annonces", icon: ShoppingBag },
     { name: "Mes favoris", href: "/dashboard/favoris", icon: Heart },
+    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { name: "Messagerie", href: "/dashboard/messages", icon: MessageCircle },
     { name: "Mon profil", href: "/dashboard/profil", icon: User },
     { name: "Paramètres", href: "/dashboard/settings", icon: Settings },

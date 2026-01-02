@@ -4,29 +4,18 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { TicketStatus, TicketCategory } from '@prisma/client';
+import {
+    TicketStatus,
+    TicketCategory,
+    type CreateTicketDTO,
+    type UpdateTicketDTO,
+    type TicketFiltersDTO,
+} from '@/types';
 
-// Types
-export interface CreateTicketData {
-    subject: string;
-    message: string;
-    category: TicketCategory;
-    userId?: string;
-    guestEmail?: string;
-    guestName?: string;
-}
-
-export interface UpdateTicketData {
-    status?: TicketStatus;
-    adminResponse?: string;
-    respondedById?: string;
-}
-
-export interface TicketFilters {
-    status?: TicketStatus;
-    category?: TicketCategory;
-    userId?: string;
-}
+// Ré-exporter les types pour compatibilité avec le code existant
+export type CreateTicketData = CreateTicketDTO;
+export type UpdateTicketData = UpdateTicketDTO;
+export type TicketFilters = TicketFiltersDTO;
 
 // Catégories avec labels français
 export const TICKET_CATEGORIES = {

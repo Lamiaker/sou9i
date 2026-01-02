@@ -4,15 +4,21 @@ import Link from "next/link";
 import { ChevronRight, Grid3x3, List } from "lucide-react";
 import { useState } from "react";
 import Pagination from "@/components/ui/Pagination";
+import type { PaginationInfo } from "@/types";
 
-// Types pour les catégories
+/**
+ * Sous-catégorie pour l'affichage
+ */
 interface CategoryChild {
     id: string;
     name: string;
     slug: string;
 }
 
-interface Category {
+/**
+ * Catégorie pour la liste des catégories
+ */
+interface CategoryForList {
     id: string;
     name: string;
     slug: string;
@@ -25,16 +31,9 @@ interface Category {
     children?: CategoryChild[];
 }
 
-interface Pagination {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-}
-
 interface CategoriesListClientProps {
-    categories: Category[];
-    pagination: Pagination;
+    categories: CategoryForList[];
+    pagination: PaginationInfo;
 }
 
 export default function CategoriesListClient({ categories, pagination }: CategoriesListClientProps) {

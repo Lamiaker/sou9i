@@ -4,15 +4,19 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-    MapPin, Phone, Share2, Clock,
+    MapPin, Phone, Clock,
     ShieldCheck, ChevronRight, ChevronLeft, Eye
 } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import ReportButton from "@/components/ui/ReportButton";
+import ShareButton from "@/components/ui/ShareButton";
 import ContactSellerButton from "@/components/messages/ContactSellerButton";
 import { DynamicFieldsDisplay } from "@/components/forms/DynamicFieldsInput";
+import type { DynamicFieldValue } from "@/types";
 
-// Types pour les données de l'annonce
+/**
+ * Informations du vendeur pour l'affichage
+ */
 interface AdUser {
     id: string;
     name: string | null;
@@ -23,23 +27,18 @@ interface AdUser {
     createdAt: string;
 }
 
+/**
+ * Catégorie associée à l'annonce
+ */
 interface AdCategory {
     id: string;
     name: string;
     slug: string;
 }
 
-interface DynamicField {
-    id: string;
-    value: string;
-    field: {
-        id: string;
-        name: string;
-        label: string;
-        type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'SELECT' | 'BOOLEAN' | 'IMAGE';
-    };
-}
-
+/**
+ * Données complètes de l'annonce pour le détail
+ */
 interface AdData {
     id: string;
     title: string;
@@ -52,9 +51,12 @@ interface AdData {
     contactPhone: string | null;
     user: AdUser;
     category: AdCategory | null;
-    dynamicFields: DynamicField[];
+    dynamicFields: DynamicFieldValue[];
 }
 
+/**
+ * Annonce similaire simplifiée
+ */
 interface SimilarAd {
     id: string;
     title: string;
@@ -200,9 +202,13 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
                                 </div>
                                 <div className="flex gap-2">
                                     <FavoriteButton adId={ad.id} size={24} className="hover:bg-red-50" />
-                                    <button className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition">
-                                        <Share2 size={24} />
-                                    </button>
+                                    <ShareButton
+                                        url={typeof window !== 'undefined' ? window.location.href : ""}
+                                        title={ad.title}
+                                        description={ad.description}
+                                        size={24}
+                                        className="text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full"
+                                    />
                                 </div>
                             </div>
 
@@ -236,7 +242,7 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
 
                             <div className="mt-6">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Description</h2>
-                                <div className="prose prose-sm text-gray-700 whitespace-pre-line">
+                                <div className="prose prose-sm text-gray-700 whitespace-pre-line break-words overflow-hidden">
                                     {ad.description}
                                 </div>
                             </div>
