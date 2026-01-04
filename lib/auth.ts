@@ -151,13 +151,12 @@ export const authOptions: NextAuthOptions = {
                 }
             }
 
-            // Permettre la mise à jour forcée via le hook useSession().update()
+            // Permettre la mise à jour via useSession().update() 
+            // ⚠️ SÉCURITÉ: Ne JAMAIS mettre à jour le role ou isBanned depuis le client ici
             if (trigger === "update" && session) {
-                if (session.isBanned !== undefined) token.isBanned = session.isBanned;
-                if (session.role !== undefined) token.role = session.role;
-                if (session.banReason !== undefined) token.banReason = session.banReason;
                 if (session.name !== undefined) token.name = session.name;
                 if (session.image !== undefined) token.picture = session.image;
+                if (session.phone !== undefined) token.phone = session.phone;
             }
 
             return token

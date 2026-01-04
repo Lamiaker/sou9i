@@ -19,10 +19,22 @@ export async function deleteUnusedImages(oldImages: string[], newImages: string[
 
     for (const imageUrl of imagesToDelete) {
         try {
-            // Convertir URL en chemin fichier
-            // Ex: "/uploads/ads/123-abc.jpg" → "c:/Users/.../public/uploads/ads/123-abc.jpg"
+            // 1. SÉCURITÉ: Valider le format de l'URL pour éviter toute injection
+            if (!/^\/uploads\/[a-z0-9\/\-.]+\.(jpg|jpeg|png|webp|gif)$/i.test(imageUrl)) {
+                console.error(`❌ Tentative de suppression invalide (format URL): ${imageUrl}`);
+                continue;
+            }
+
+            // 2. SÉCURITÉ: Convertir URL en chemin fichier absolu et normalisé
             const relativePath = imageUrl.replace(/^\//, ''); // Retirer le / du début
-            const filePath = path.join(process.cwd(), 'public', relativePath);
+            const publicDir = path.join(process.cwd(), 'public');
+            const filePath = path.resolve(publicDir, relativePath);
+
+            // 3. SÉCURITÉ: Vérifier que le chemin final est bien à L'INTÉRIEUR du dossier public
+            if (!filePath.startsWith(publicDir)) {
+                console.error(`❌ Tentative de Path Traversal détectée: ${imageUrl}`);
+                continue;
+            }
 
             // Supprimer le fichier
             await unlink(filePath);

@@ -101,16 +101,18 @@ export async function PATCH(request: NextRequest) {
             const currentUser = await UserService.getUserById(session.user.id);
 
             if (currentUser && currentUser.avatar && currentUser.avatar !== validatedData.avatar) {
-                // Ne supprimer que les images uploadées (pas l'image par défaut /user.png)
-                // Supporte les deux dossiers : /uploads/avatars/ et /uploads/ads/
-                if (currentUser.avatar.startsWith('/uploads/')) {
+                // ✅ SÉCURITÉ: Validation format URL et prévention Path Traversal
+                if (currentUser.avatar.startsWith('/uploads/') && /^\/uploads\/[a-z0-9\/\-.]+\.(jpg|jpeg|png|webp|gif)$/i.test(currentUser.avatar)) {
                     try {
-                        const relativePath = currentUser.avatar.substring(1);
-                        const filePath = path.join(process.cwd(), 'public', relativePath);
+                        const relativePath = currentUser.avatar.replace(/^\//, '');
+                        const publicDir = path.join(process.cwd(), 'public');
+                        const filePath = path.resolve(publicDir, relativePath);
 
-                        await unlink(filePath);
+                        // Vérifier que c'est bien dans public
+                        if (filePath.startsWith(publicDir)) {
+                            await unlink(filePath);
+                        }
                     } catch (err: any) {
-                        // On ignore l'erreur si le fichier n'existe pas (ENOENT)
                         if (err.code !== 'ENOENT') {
                             logServerError(err, { route: '/api/user/profile', action: 'delete_old_avatar' });
                         }

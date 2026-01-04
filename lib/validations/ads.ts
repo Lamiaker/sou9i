@@ -55,7 +55,7 @@ export const createAdSchema = z.object({
         .nullable()
         .optional(),
 
-    images: z.array(z.string())
+    images: z.array(z.string().regex(/^\/uploads\/[a-z0-9\/\-.]+\.(jpg|jpeg|png|webp|gif)$/i, { message: "URL d'image invalide" }))
         .max(AD_VALIDATION.IMAGES_MAX, { message: `Maximum ${AD_VALIDATION.IMAGES_MAX} images autorisées` })
         .optional()
         .default([]),
@@ -101,9 +101,9 @@ export const updateAdSchema = z.object({
         .trim()
         .optional(),
 
-    status: z.enum(['active', 'sold', 'archived']).optional(),
+    status: z.enum(['active', 'sold', 'archived', 'deleted']).optional(),
 
-    images: z.array(z.string())
+    images: z.array(z.string().regex(/^\/uploads\/[a-z0-9\/\-.]+\.(jpg|jpeg|png|webp|gif)$/i, { message: "URL d'image invalide" }))
         .max(AD_VALIDATION.IMAGES_MAX)
         .optional(),
 

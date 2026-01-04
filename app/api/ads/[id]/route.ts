@@ -3,8 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { AdService } from '@/services'
 import { deleteUnusedImages } from '@/lib/deleteImages'
-import { logServerError, AuthenticationError, ForbiddenError, ERROR_MESSAGES } from '@/lib/errors'
+import { logServerError, AuthenticationError, ForbiddenError, ERROR_MESSAGES, ValidationError } from '@/lib/errors'
 import { errorResponse } from '@/lib/api-utils'
+import { updateAdSchema } from '@/lib/validations/ads'
 
 // GET /api/ads/[id] - Récupérer une annonce par ID
 export async function GET(
@@ -62,6 +63,14 @@ export async function PATCH(
 
         const body = await request.json()
 
+        // ✅ SÉCURITÉ: Validation stricte des champs modifiables
+        const validation = updateAdSchema.safeParse(body)
+        if (!validation.success) {
+            throw new ValidationError(validation.error.issues[0].message)
+        }
+
+        const validatedData = validation.data
+
         // Récupérer l'annonce actuelle pour comparer les images
         const currentAd = await AdService.getAdById(id)
 
@@ -71,17 +80,26 @@ export async function PATCH(
         }
 
         // Supprimer les images orphelines (en arrière-plan)
-        if (body.images && currentAd.images) {
-            deleteUnusedImages(currentAd.images, body.images).catch(err => {
+        if (validatedData.images && currentAd.images) {
+            deleteUnusedImages(currentAd.images, validatedData.images).catch(err => {
                 console.error('Erreur suppression images orphelines:', err)
-                // Ne pas bloquer la mise à jour si la suppression échoue
             })
         }
 
         // Appel du service (qui vérifie la propriété)
+        // ✅ SÉCURITÉ: On ne passe que les données validées (pas de ...body direct)
         const ad = await AdService.updateAd(id, userId, {
-            ...body,
-            price: body.price ? parseFloat(body.price) : undefined,
+            title: validatedData.title,
+            description: validatedData.description,
+            price: validatedData.price,
+            status: validatedData.status,
+            location: validatedData.location,
+            condition: validatedData.condition,
+            brand: validatedData.brand,
+            size: validatedData.size,
+            images: validatedData.images,
+            deliveryAvailable: validatedData.deliveryAvailable,
+            negotiable: validatedData.negotiable,
         })
 
         return NextResponse.json({
@@ -112,7 +130,6 @@ export async function DELETE(
     try {
         const params = await context.params
         const { id } = params
-
         // ✅ SÉCURITÉ: Vérification de l'authentification via session
         const session = await getServerSession(authOptions)
 

@@ -387,13 +387,15 @@ export class AdService {
     }
 
     /**
-     * Supprimer une annonce et ses images associées
+     * Supprimer une annonce (Soft Delete)
+     * L'annonce est marquée comme 'deleted' mais reste en base de données.
+     * On ne supprime pas les fichiers images pour permettre la restauration.
      */
     static async deleteAd(id: string, userId: string) {
-        // Vérifier que l'utilisateur est le propriétaire et récupérer les images
+        // Vérifier que l'utilisateur est le propriétaire
         const ad = await prisma.ad.findUnique({
             where: { id },
-            select: { userId: true, images: true },
+            select: { userId: true },
         })
 
         if (!ad) {
@@ -404,13 +406,9 @@ export class AdService {
             throw new Error('Non autorisé')
         }
 
-        // Supprimer les fichiers images du système de fichiers
-        if (ad.images) {
-            await deleteAdImages(ad.images);
-        }
-
-        return prisma.ad.delete({
+        return prisma.ad.update({
             where: { id },
+            data: { status: 'deleted' },
         })
     }
 
@@ -421,6 +419,9 @@ export class AdService {
         const where: any = { userId }
         if (status) {
             where.status = status
+        } else {
+            // Par défaut, ne pas afficher les annonces supprimées (Soft Delete)
+            where.status = { not: 'deleted' }
         }
 
         // Pour ses propres annonces, l'utilisateur veut tout voir, quel que soit le moderationStatus
