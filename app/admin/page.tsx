@@ -139,33 +139,33 @@ export default function AdminDashboardPage() {
 
     // Stats enrichies
     const { data: statsData, error: statsError } = useSWR('/api/admin/stats', {
-        refreshInterval: 60000
+        refreshInterval: 180000 // 3 minutes au lieu de 1 minute
     });
 
     // Timeline data
     const { data: usersTimelineData } = useSWR(
         `/api/admin/stats/timeline?metric=users&days=${timelineDays}`,
-        { refreshInterval: 120000 }
+        { refreshInterval: 600000 } // 10 minutes au lieu de 2 minutes
     );
     const { data: adsTimelineData } = useSWR(
         `/api/admin/stats/timeline?metric=ads&days=${timelineDays}`,
-        { refreshInterval: 120000 }
+        { refreshInterval: 600000 } // 10 minutes au lieu de 2 minutes
     );
 
-    // Distribution data
+    // Distribution data (déjà 5min, parfait)
     const { data: distributionData } = useSWR(
         '/api/admin/stats/distribution?type=ads',
         { refreshInterval: 300000 }
     );
 
-    // Alertes
+    // Alertes (signalements) - On garde une réactivité correcte
     const { data: alertsData } = useSWR('/api/admin/alerts', {
-        refreshInterval: 30000
+        refreshInterval: 45000 // 45s au lieu de 30s
     });
 
     // Activité récente
     const { data: dashboardData, error: dashboardError } = useSWR('/api/admin/dashboard', {
-        refreshInterval: 30000
+        refreshInterval: 45000 // 45s au lieu de 30s
     });
 
     const isLoading = (!statsData && !statsError) || (!dashboardData && !dashboardError);

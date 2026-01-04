@@ -5,6 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+export const dynamic = 'force-dynamic';
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { SupportService } from '@/services/supportService';
@@ -88,6 +91,10 @@ export async function POST(request: NextRequest) {
             guestEmail: !userId ? guestEmail : undefined,
             guestName: !userId ? guestName : undefined,
         });
+
+        // Revalider les pages dashboard pour l'utilisateur
+        revalidatePath('/dashboard/support');
+        revalidatePath('/admin/support');
 
         return NextResponse.json({
             success: true,

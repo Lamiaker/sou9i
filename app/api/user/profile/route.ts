@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+
+export const dynamic = 'force-dynamic';
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -118,6 +122,11 @@ export async function PATCH(request: NextRequest) {
 
         // Mise à jour via le Service
         const updatedUser = await UserService.updateUser(session.user.id, dataToUpdate);
+
+        // Revalider les pages où le profil peut apparaître
+        revalidatePath('/dashboard/profil');
+        revalidatePath('/dashboard');
+        revalidatePath('/'); // Au cas où le nom apparaît en header
 
         return NextResponse.json({
             success: true,

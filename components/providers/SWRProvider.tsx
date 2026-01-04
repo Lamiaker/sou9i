@@ -9,9 +9,11 @@ export default function SWRProvider({ children }: { children: React.ReactNode })
         <SWRConfig
             value={{
                 fetcher,
-                refreshInterval: 0, // Désactivé par défaut, on l'active par hook
+                refreshInterval: 0, // Désactivé par défaut
                 revalidateOnFocus: true,
-                revalidateOnReconnect: true,
+                revalidateOnReconnect: false, // Évite les pics de requêtes lors de micro-coupures wifi
+                dedupingInterval: 5000, // Ne refait pas la même requête avant 5 secondes
+                focusThrottleInterval: 30000, // Revalide au focus maximum toutes les 30 secondes
             }}
         >
             {children}

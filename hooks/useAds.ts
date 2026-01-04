@@ -91,12 +91,12 @@ export function useAds(options: UseAdsOptions = {}) {
         {
             refreshInterval,
             revalidateOnFocus: true,
-            dedupingInterval: 2000,
+            dedupingInterval: 10000, // Une annonce n'a pas besoin de rafraîchir plus de toutes les 10s
             // Garder les données précédentes pendant le chargement des nouvelles
             keepPreviousData: true,
             // En cas d'erreur de réseau, réessayer
-            errorRetryCount: 2,
-            errorRetryInterval: 1000,
+            errorRetryCount: 3,
+            errorRetryInterval: 2000,
         }
     );
 
@@ -122,6 +122,7 @@ export function useAd(id: string | null, options: { refreshInterval?: number } =
         {
             refreshInterval,
             revalidateOnFocus: true,
+            dedupingInterval: 60000, // Détail d'une annonce: ne pas refetch avant 1min si on revient dessus
             onSuccess: (data) => {
                 if (data.success && id) {
                     // Incrémenter les vues (fire and forget)

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { unstable_cache } from 'next/cache'
 import { AdStatus, type AdFilters } from '@/types'
 import { SubcategoryFieldService, type FieldValueInput } from './subcategoryFieldService'
 import fs from 'fs'
@@ -34,12 +35,36 @@ export class AdService {
         page: number = 1,
         limit: number = 12
     ) {
+        // Ne cacher QUE les requêtes publiques (APPROVED + active)
+        const isPublicQuery = (!filters.moderationStatus || filters.moderationStatus === 'APPROVED') &&
+            (!filters.status || filters.status === 'active') &&
+            !filters.userId;
+
+        if (!isPublicQuery) {
+            return this._getAdsInternal(filters, page, limit);
+        }
+
+        // Créer une clé de cache basée sur les filtres et la pagination
+        const cacheKey = `ads-list-${JSON.stringify(filters)}-${page}-${limit}`;
+
+        return unstable_cache(
+            async () => this._getAdsInternal(filters, page, limit),
+            [cacheKey],
+            { revalidate: 60, tags: ['ads'] }
+        )();
+    }
+
+    /**
+     * Logique interne de récupération des annonces (non cachée directement)
+     */
+    private static async _getAdsInternal(
+        filters: AdFilters & { moderationStatus?: string } = {},
+        page: number = 1,
+        limit: number = 12
+    ) {
         const where: any = {};
 
         // Gestion de la modération
-        // Si moderationStatus est fourni et vaut 'ALL', on filtre pas (affiche tout)
-        // Si fourni et != 'ALL', on filtre sur la valeur
-        // Si pas fourni, on filtre sur 'APPROVED' par défaut (comportement public standard)
         if (filters.moderationStatus) {
             if (filters.moderationStatus !== 'ALL') {
                 where.moderationStatus = filters.moderationStatus;
@@ -48,7 +73,7 @@ export class AdService {
             where.moderationStatus = 'APPROVED';
         }
 
-        // Gestion du status (supporte "active,pending" etc.)
+        // Gestion du status
         if (filters.status) {
             if (filters.status.includes(',')) {
                 where.status = { in: filters.status.split(',') };
@@ -61,7 +86,6 @@ export class AdService {
 
         // Filtres
         if (filters.categoryId) {
-            // Récupérer la catégorie et ses enfants
             const category = await prisma.category.findUnique({
                 where: { id: filters.categoryId },
                 include: {
@@ -72,18 +96,13 @@ export class AdService {
             });
 
             if (category) {
-                // Si la catégorie a des enfants, chercher dans la catégorie ET ses sous-catégories
                 if (category.children && category.children.length > 0) {
                     const categoryIds = [category.id, ...category.children.map(c => c.id)];
-                    where.categoryId = {
-                        in: categoryIds
-                    };
+                    where.categoryId = { in: categoryIds };
                 } else {
-                    // Sinon, juste la catégorie
                     where.categoryId = filters.categoryId;
                 }
             } else {
-                // Catégorie non trouvée, utiliser l'ID fourni
                 where.categoryId = filters.categoryId;
             }
         }
@@ -116,10 +135,8 @@ export class AdService {
             where.userId = filters.userId
         }
 
-        // Pagination
         const skip = (page - 1) * limit
 
-        // Exécution parallèle des requêtes
         const [ads, total] = await Promise.all([
             prisma.ad.findMany({
                 where,

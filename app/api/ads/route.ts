@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { AdService } from '@/services'
@@ -131,6 +131,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Revalider les chemins pour mettre à jour les caches
+        revalidateTag('ads', 'page')
         revalidatePath('/')
         revalidatePath('/categories')
         revalidatePath('/dashboard/annonces')

@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
+
+export const dynamic = 'force-dynamic';
+
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { FavoriteService } from '@/services'
@@ -66,6 +70,10 @@ export async function POST(request: NextRequest) {
 
         const favorite = await FavoriteService.addFavorite(session.user.id, adId)
 
+        // Revalider les pages dashboard et l'annonce
+        revalidatePath('/dashboard/favoris');
+        revalidatePath(`/annonces/${adId}`);
+
         return NextResponse.json({
             success: true,
             data: favorite,
@@ -109,6 +117,10 @@ export async function DELETE(request: NextRequest) {
         }
 
         await FavoriteService.removeFavorite(session.user.id, adId)
+
+        // Revalider les pages dashboard et l'annonce
+        revalidatePath('/dashboard/favoris');
+        revalidatePath(`/annonces/${adId}`);
 
         return NextResponse.json({
             success: true,

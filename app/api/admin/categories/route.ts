@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { AdminService } from '@/services';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 // Helper function to revalidate all category-related pages
 function revalidateCategoryPages(slug?: string) {
+    revalidateTag('categories', 'page');            // Global tag invalidation
     revalidatePath('/');                    // Homepage
     revalidatePath('/categories');          // Categories list page
     revalidatePath('/categories/[slug]', 'page'); // All category pages
