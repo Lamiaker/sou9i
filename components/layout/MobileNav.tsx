@@ -19,6 +19,7 @@ import {
     Bell
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useGlobalMessages } from "@/context/MessagesContext";
 import { signOut } from "next-auth/react";
 
 const mainMenuItems = [
@@ -39,6 +40,7 @@ const moreMenuItems = [
 export default function MobileNav() {
     const pathname = usePathname();
     const { isAuthenticated } = useAuth();
+    const { unreadTotal } = useGlobalMessages();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Ne pas afficher si l'utilisateur n'est pas connecté
@@ -128,14 +130,23 @@ export default function MobileNav() {
                 <nav className="flex justify-around items-center h-16 px-2">
                     {mainMenuItems.map((item) => {
                         const isActive = pathname === item.href;
+                        const isMessages = item.name === "Messages";
+
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive ? "text-primary" : "text-gray-500"
+                                className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${isActive ? "text-primary" : "text-gray-500"
                                     }`}
                             >
-                                <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                                <div className="relative">
+                                    <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                                    {isMessages && unreadTotal > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center border-2 border-white">
+                                            {unreadTotal > 9 ? '9+' : unreadTotal}
+                                        </span>
+                                    )}
+                                </div>
                                 <span className="text-[10px] font-medium">{item.name}</span>
                             </Link>
                         );

@@ -91,3 +91,28 @@ export async function DELETE(
         )
     }
 }
+
+/**
+ * PATCH /api/messages/conversations/[id]/read
+ * Marquer explicitement comme lu
+ */
+export async function PATCH(
+    request: NextRequest,
+    context: RouteContext
+) {
+    try {
+        const session = await getServerSession(authOptions)
+
+        if (!session?.user?.id) {
+            return NextResponse.json({ success: false, error: 'Non authentifié' }, { status: 401 })
+        }
+
+        const params = await context.params
+        await MessageService.markMessagesAsRead(params.id, session.user.id)
+
+        return NextResponse.json({ success: true })
+    } catch (error) {
+        console.error('Erreur PATCH conversation:', error)
+        return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 })
+    }
+}

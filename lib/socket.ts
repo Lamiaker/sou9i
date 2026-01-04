@@ -14,7 +14,7 @@ export interface NewMessageEvent {
     content: string
     senderId: string
     conversationId: string
-    createdAt: Date
+    createdAt: Date | string
     read: boolean
     sender: {
         id: string
@@ -26,28 +26,23 @@ export interface NewMessageEvent {
 export interface UserTypingEvent {
     conversationId: string
     userId: string
-    userName: string
     isTyping: boolean
 }
 
-export interface MessageReadEvent {
-    conversationId: string
-    userId: string
-    messageIds: string[]
-}
-
-// Map pour garder trace des utilisateurs connectés et leurs sockets
+// Map pour garder trace des utilisateurs connectés
 const userSockets = new Map<string, Set<string>>()
 
 let io: SocketIOServer | null = null
 
-export function initSocketServer(httpServer: HttpServer): SocketIOServer {
-    if (io) {
-        return io
-    }
+/**
+ * Initialise le serveur Socket.io (utilisé par la route API)
+ */
+export function initSocketServer(httpServer: any): SocketIOServer {
+    if (io) return io
 
     io = new SocketIOServer(httpServer, {
         path: '/api/socket',
+        addTrailingSlash: false,
         cors: {
             origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
             methods: ['GET', 'POST'],
@@ -59,127 +54,57 @@ export function initSocketServer(httpServer: HttpServer): SocketIOServer {
     io.on('connection', (socket: Socket) => {
         console.log('🔌 Client connecté:', socket.id)
 
-        // Authentifier l'utilisateur
+        // Authentification
         socket.on('authenticate', async (userId: string) => {
-            if (!userId) {
-                socket.emit('error', { message: 'User ID requis' })
-                return
-            }
+            if (!userId) return
 
-            // Stocker la relation userId -> socket
             socket.data.userId = userId
-
-            // Ajouter ce socket à l'ensemble des sockets de l'utilisateur
             if (!userSockets.has(userId)) {
                 userSockets.set(userId, new Set())
             }
             userSockets.get(userId)?.add(socket.id)
 
-            // Récupérer les conversations et rejoindre les rooms
+            // Rejoindre automatiquement les rooms de ses conversations
             try {
                 const conversations = await MessageService.getUserConversations(userId)
                 conversations.forEach((conv) => {
                     socket.join(`conversation:${conv.id}`)
                 })
-
-                console.log(`✅ Utilisateur ${userId} authentifié, ${conversations.length} conversations`)
-                socket.emit('authenticated', { userId, conversationsJoined: conversations.length })
+                socket.emit('authenticated', { userId })
             } catch (error) {
-                console.error('Erreur authentification socket:', error)
-                socket.emit('error', { message: 'Erreur authentification' })
+                console.error('Socket Auth Error:', error)
             }
         })
 
-        // Rejoindre une conversation spécifique
+        // Gestion des Rooms
         socket.on('join_conversation', (conversationId: string) => {
             socket.join(`conversation:${conversationId}`)
-            console.log(`📥 Socket ${socket.id} a rejoint conversation:${conversationId}`)
         })
 
-        // Quitter une conversation
         socket.on('leave_conversation', (conversationId: string) => {
             socket.leave(`conversation:${conversationId}`)
-            console.log(`📤 Socket ${socket.id} a quitté conversation:${conversationId}`)
         })
 
-        // Envoyer un message
-        socket.on('send_message', async (payload: MessagePayload) => {
-            const { conversationId, content, senderId } = payload
-
-            if (!conversationId || !content || !senderId) {
-                socket.emit('error', { message: 'Données manquantes' })
-                return
-            }
-
-            try {
-                // Créer le message en base
-                const message = await MessageService.createMessage({
-                    conversationId,
-                    content: content.trim(),
-                    senderId,
-                })
-
-                // Diffuser le message à tous dans la conversation
-                io?.to(`conversation:${conversationId}`).emit('new_message', {
-                    ...message,
-                    conversationId,
-                } as NewMessageEvent)
-
-                // Notifier tous les participants de la conversation
-                const participants = await MessageService.getConversationParticipants(conversationId)
-                participants.forEach((participantId) => {
-                    if (participantId !== senderId) {
-                        // Envoyer une notification aux autres sockets de ce participant
-                        const participantSockets = userSockets.get(participantId)
-                        if (participantSockets) {
-                            participantSockets.forEach((socketId) => {
-                                io?.to(socketId).emit('notification', {
-                                    type: 'new_message',
-                                    conversationId,
-                                    message: {
-                                        content: content.substring(0, 50),
-                                        senderName: message.sender.name,
-                                    },
-                                })
-                            })
-                        }
-                    }
-                })
-
-                console.log(`📨 Message envoyé dans conversation:${conversationId}`)
-            } catch (error) {
-                console.error('Erreur envoi message:', error)
-                socket.emit('error', { message: 'Erreur envoi message' })
-            }
-        })
-
-        // Indicateur de frappe
+        // Indicateur de frappe (pur temps réel, pas de DB)
         socket.on('typing', (data: { conversationId: string; isTyping: boolean }) => {
             const userId = socket.data.userId
             if (!userId) return
-
             socket.to(`conversation:${data.conversationId}`).emit('user_typing', {
                 conversationId: data.conversationId,
                 userId,
                 isTyping: data.isTyping,
-            })
+            } as UserTypingEvent)
         })
 
-        // Marquer les messages comme lus
+        // Marquage comme lu (synchrone avec la DB)
         socket.on('mark_read', async (data: { conversationId: string }) => {
             const userId = socket.data.userId
             if (!userId) return
 
             try {
                 await MessageService.markMessagesAsRead(data.conversationId, userId)
-
-                // Notifier les autres participants
-                socket.to(`conversation:${data.conversationId}`).emit('messages_read', {
-                    conversationId: data.conversationId,
-                    userId,
-                })
             } catch (error) {
-                console.error('Erreur mark_read:', error)
+                console.error('Error mark_read socket:', error)
             }
         })
 
@@ -189,15 +114,11 @@ export function initSocketServer(httpServer: HttpServer): SocketIOServer {
             if (userId) {
                 const sockets = userSockets.get(userId)
                 sockets?.delete(socket.id)
-                if (sockets?.size === 0) {
-                    userSockets.delete(userId)
-                }
+                if (sockets?.size === 0) userSockets.delete(userId)
             }
-            console.log('🔌 Client déconnecté:', socket.id)
         })
     })
 
-    console.log('🚀 Socket.IO server initialized')
     return io
 }
 
@@ -205,9 +126,27 @@ export function getIO(): SocketIOServer | null {
     return io
 }
 
-// Helper pour envoyer un message depuis l'API (sans WebSocket)
-export async function emitNewMessage(message: NewMessageEvent) {
+/**
+ * Helper pour diffuser un nouveau message depuis n'importe où (ex: API REST)
+ */
+export function broadcastNewMessage(message: NewMessageEvent) {
     if (io) {
         io.to(`conversation:${message.conversationId}`).emit('new_message', message)
+
+        // Optionnel : Notifier spécifiquement les sockets de l'utilisateur (pour les badges hors conversation active)
+        // Note: socket.io rooms s'occupent déjà de ça si l'utilisateur est dans la room
     }
 }
+
+/**
+ * Helper pour notifier d'une lecture de message
+ */
+export function broadcastMessagesRead(conversationId: string, userId: string) {
+    if (io) {
+        io.to(`conversation:${conversationId}`).emit('messages_read', {
+            conversationId,
+            userId,
+        })
+    }
+}
+

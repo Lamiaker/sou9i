@@ -73,7 +73,7 @@ export default function NotificationBell() {
                 <div className="relative">
                     <Bell size={22} className="group-hover:text-primary transition-colors" />
                     {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center border-2 border-white">
+                        <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center border-2 border-white">
                             {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                     )}

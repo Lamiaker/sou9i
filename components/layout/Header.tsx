@@ -12,6 +12,7 @@ import ListeCategorices from "./ListeCategorices";
 import MenuButton from "../ui/MenuButton";
 import IconButtonWithLabel from "../ui/IconButtonWithLabel";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useGlobalMessages } from "@/context/MessagesContext";
 import UserMenu from "./UserMenu";
 import NotificationBell from "./NotificationBell";
 
@@ -20,6 +21,7 @@ export default function Header() {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
   const { favorites } = useFavorites();
+  const { unreadTotal } = useGlobalMessages();
   const { data: session } = useSession();
 
   const closeMobileMenu = () => {
@@ -38,13 +40,20 @@ export default function Header() {
         {/* Première ligne : Menu + Logo + Bouton User */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
           {/* Bouton Menu */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-1 hover:bg-gray-100 rounded transition"
-            aria-label="Menu"
-          >
-            <Menu size={24} className="text-gray-800" strokeWidth={2} />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-1 hover:bg-gray-100 rounded transition"
+              aria-label="Menu"
+            >
+              <Menu size={24} className="text-gray-800" strokeWidth={2} />
+            </button>
+            {!isMobileMenuOpen && unreadTotal > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center border-2 border-white">
+                {unreadTotal > 9 ? '9+' : unreadTotal}
+              </span>
+            )}
+          </div>
 
           {/* Logo centré */}
           <Link href="/">
@@ -133,11 +142,18 @@ export default function Header() {
 
             {session && <NotificationBell />}
 
-            <IconButtonWithLabel
-              icon={Mail}
-              label="Messages"
-              href="/dashboard/messages"
-            />
+            <div className="relative">
+              <IconButtonWithLabel
+                icon={Mail}
+                label="Messages"
+                href="/dashboard/messages"
+              />
+              {unreadTotal > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center border-2 border-white shadow-sm">
+                  {unreadTotal > 9 ? '9+' : unreadTotal}
+                </span>
+              )}
+            </div>
 
             {/* UserMenu component */}
             <UserMenu />
@@ -201,12 +217,19 @@ export default function Header() {
               />
 
               {/* Messages */}
-              <MenuButton
-                icon={MessageCircle}
-                text="Messages"
-                href="/dashboard/messages"
-                onClick={closeMobileMenu}
-              />
+              <div className="relative">
+                <MenuButton
+                  icon={MessageCircle}
+                  text="Messages"
+                  href="/dashboard/messages"
+                  onClick={closeMobileMenu}
+                />
+                {unreadTotal > 0 && (
+                  <span className="absolute top-1/2 -translate-y-1/2 right-4 bg-primary text-white text-xs font-bold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+                    {unreadTotal}
+                  </span>
+                )}
+              </div>
 
               {/* Favoris avec badge */}
               <div className="relative">

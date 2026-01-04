@@ -307,14 +307,25 @@ export const MessageService = {
             }
         })
 
-        // Envoyer une notification aux autres participants
+        // --- TEMPS RÉEL (Socket.io) ---
+        try {
+            const { broadcastNewMessage } = await import('@/lib/socket')
+            broadcastNewMessage({
+                ...message,
+                conversationId: data.conversationId,
+            })
+        } catch (error) {
+            console.error('Erreur broadcast socket:', error)
+        }
+
+        // Envoyer une notification (DB) aux autres participants
         for (const participant of updatedConv.participants) {
             await NotificationService.create({
                 userId: participant.id,
                 type: NotificationType.NEW_MESSAGE,
                 title: `Nouveau message de ${message.sender.name || 'un utilisateur'}`,
                 message: message.content.length > 50 ? `${message.content.substring(0, 47)}...` : message.content,
-                link: `/dashboard/messages/${data.conversationId}`
+                link: `/dashboard/messages?conversation=${data.conversationId}`
             });
         }
 
@@ -337,6 +348,16 @@ export const MessageService = {
                 read: true,
             },
         })
+
+        if (result.count > 0) {
+            // --- TEMPS RÉEL (Socket.io) ---
+            try {
+                const { broadcastMessagesRead } = await import('@/lib/socket')
+                broadcastMessagesRead(conversationId, userId)
+            } catch (error) {
+                console.error('Erreur broadcast read socket:', error)
+            }
+        }
 
         return result.count
     },
