@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { MapPin, Filter, SlidersHorizontal } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { MapPin, Filter, SlidersHorizontal, Loader2 } from "lucide-react";
 import AdCard from "@/components/ui/AdCard";
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import Pagination from "@/components/ui/Pagination";
+import InfiniteScroll from "@/components/ui/InfiniteScroll";
 import { usePathname } from "next/navigation";
 import type { PaginationInfo } from "@/types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 /**
  * Catégorie avec enfants pour l'affichage dans le composant
@@ -63,19 +65,50 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
     const [locationFilter, setLocationFilter] = useState<string>('');
     const [showAllSubcategories, setShowAllSubcategories] = useState(false);
 
+    // ===== Infinite Scroll pour mobile =====
+    const [isMobile, setIsMobile] = useState(false);
+    const [infiniteAds, setInfiniteAds] = useState<AdForGrid[]>(initialAds);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [totalPages, setTotalPages] = useState(pagination?.totalPages || 1);
+    const [totalAds, setTotalAds] = useState(pagination?.total || 0);
+
+    // Debounce des filtres de prix et localisation
+    const debouncedPriceMin = useDebounce(priceMin, 400);
+    const debouncedPriceMax = useDebounce(priceMax, 400);
+    const debouncedLocation = useDebounce(locationFilter, 400);
+
     // Constante pour le nombre max de sous-catégories affichées par défaut
     const MAX_VISIBLE_SUBCATEGORIES = 6;
+
+    // Détecter si on est sur mobile
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Mettre à jour les annonces quand initialAds change
     useEffect(() => {
         setAds(initialAds);
-    }, [initialAds]);
+        setInfiniteAds(initialAds);
+        setCurrentPage(1);
+        setTotalPages(pagination?.totalPages || 1);
+        setTotalAds(pagination?.total || 0);
+    }, [initialAds, pagination]);
 
-    // Récupérer les annonces quand les filtres changent
+    // Récupérer les annonces quand les filtres changent (avec debounce)
     useEffect(() => {
         // Si aucun filtre n'est appliqué, utiliser les données initiales
-        if (!selectedSubcategory && !priceMin && !priceMax && !locationFilter) {
+        if (!selectedSubcategory && !debouncedPriceMin && !debouncedPriceMax && !debouncedLocation) {
             setAds(initialAds);
+            setInfiniteAds(initialAds);
+            setCurrentPage(1);
+            setTotalPages(pagination?.totalPages || 1);
             return;
         }
 
@@ -85,16 +118,24 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
                 const params = new URLSearchParams();
                 params.append('categoryId', category.id);
                 if (selectedSubcategory) params.append('subcategoryId', selectedSubcategory);
-                if (priceMin) params.append('minPrice', priceMin);
-                if (priceMax) params.append('maxPrice', priceMax);
-                if (locationFilter) params.append('location', locationFilter);
+                if (debouncedPriceMin) params.append('minPrice', debouncedPriceMin);
+                if (debouncedPriceMax) params.append('maxPrice', debouncedPriceMax);
+                if (debouncedLocation) params.append('location', debouncedLocation);
                 params.append('status', 'active');
 
                 const response = await fetch(`/api/ads?${params.toString()}`);
                 const data = await response.json();
 
                 if (data.success) {
-                    setAds(Array.isArray(data.data) ? data.data : []);
+                    const newAds = Array.isArray(data.data) ? data.data : [];
+                    setAds(newAds);
+                    setInfiniteAds(newAds);
+                    setCurrentPage(1);
+                    // Mettre à jour la pagination si disponible
+                    if (data.pagination) {
+                        setTotalPages(data.pagination.totalPages || 1);
+                        setTotalAds(data.pagination.total || newAds.length);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching ads:', error);
@@ -104,7 +145,44 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
         };
 
         fetchFilteredAds();
-    }, [category.id, selectedSubcategory, priceMin, priceMax, locationFilter, initialAds]);
+    }, [category.id, selectedSubcategory, debouncedPriceMin, debouncedPriceMax, debouncedLocation, initialAds, pagination?.totalPages]);
+
+    // ===== Fonction pour charger plus d'annonces (Infinite Scroll) =====
+    const loadMoreAds = useCallback(async () => {
+        if (loadingMore || currentPage >= totalPages) return;
+
+        setLoadingMore(true);
+        const nextPage = currentPage + 1;
+
+        try {
+            const params = new URLSearchParams();
+            params.append('categoryId', category.id);
+            if (selectedSubcategory) params.append('subcategoryId', selectedSubcategory);
+            if (debouncedPriceMin) params.append('minPrice', debouncedPriceMin);
+            if (debouncedPriceMax) params.append('maxPrice', debouncedPriceMax);
+            if (debouncedLocation) params.append('location', debouncedLocation);
+            params.append('status', 'active');
+            params.append('page', nextPage.toString());
+            params.append('limit', '12');
+
+            const response = await fetch(`/api/ads?${params.toString()}`);
+            const data = await response.json();
+
+            if (data.success && Array.isArray(data.data)) {
+                // Ajouter les nouvelles annonces sans doublons
+                setInfiniteAds(prev => {
+                    const existingIds = new Set(prev.map(ad => ad.id));
+                    const newAds = data.data.filter((ad: AdForGrid) => !existingIds.has(ad.id));
+                    return [...prev, ...newAds];
+                });
+                setCurrentPage(nextPage);
+            }
+        } catch (error) {
+            console.error('Error loading more ads:', error);
+        } finally {
+            setLoadingMore(false);
+        }
+    }, [currentPage, totalPages, loadingMore, category.id, selectedSubcategory, debouncedPriceMin, debouncedPriceMax, debouncedLocation]);
 
     // Trier les annonces côté client
     const sortedAds = useMemo(() => {
@@ -122,6 +200,23 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
         }
         return result;
     }, [ads, sortBy]);
+
+    // Trier les annonces infinies (pour mobile)
+    const sortedInfiniteAds = useMemo(() => {
+        const result = [...infiniteAds];
+        switch (sortBy) {
+            case 'price-asc':
+                result.sort((a, b) => a.price - b.price);
+                break;
+            case 'price-desc':
+                result.sort((a, b) => b.price - a.price);
+                break;
+            case 'recent':
+            default:
+                result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+        return result;
+    }, [infiniteAds, sortBy]);
 
     const hasFilters = selectedSubcategory || priceMin || priceMax || locationFilter;
 
@@ -268,7 +363,10 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
                             'Chargement...'
                         ) : (
                             <>
-                                <strong>{sortedAds.length}</strong> annonce{sortedAds.length > 1 ? 's' : ''} trouvée{sortedAds.length > 1 ? 's' : ''}
+                                <strong>{isMobile ? infiniteAds.length : sortedAds.length}</strong>
+                                {isMobile && totalAds > infiniteAds.length && ` sur ${totalAds}`}
+                                {' '}annonce{(isMobile ? infiniteAds.length : sortedAds.length) > 1 ? 's' : ''}
+                                {' '}trouvée{(isMobile ? infiniteAds.length : sortedAds.length) > 1 ? 's' : ''}
                             </>
                         )}
                     </span>
@@ -286,7 +384,7 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
                     </div>
                 </div>
 
-                {/* Ads Grid */}
+                {/* Ads Grid - Infinite Scroll sur mobile, Grid + Pagination sur desktop */}
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[...Array(6)].map((_, i) => (
@@ -299,7 +397,50 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
                             </div>
                         ))}
                     </div>
+                ) : isMobile ? (
+                    /* ===== MOBILE: Infinite Scroll ===== */
+                    <InfiniteScroll<AdForGrid>
+                        items={sortedInfiniteAds}
+                        renderItem={(ad: AdForGrid) => (
+                            <AdCard
+                                id={ad.id}
+                                title={ad.title}
+                                price={ad.price}
+                                images={ad.images}
+                                location={ad.location}
+                                createdAt={ad.createdAt}
+                            />
+                        )}
+                        onLoadMore={loadMoreAds}
+                        hasMore={currentPage < totalPages}
+                        isLoading={loadingMore}
+                        keyExtractor={(ad: AdForGrid) => ad.id}
+                        gridClassName="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                        threshold={300}
+                        endMessage={
+                            <div className="text-center py-4">
+                                <span className="text-xl">🎉</span>
+                                <p className="text-gray-400 text-sm mt-1">
+                                    Vous avez tout vu !
+                                </p>
+                            </div>
+                        }
+                        emptyMessage={
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Filter size={32} className="text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900">Aucune annonce trouvée</h3>
+                                <p className="text-gray-500 mt-2">
+                                    {hasFilters
+                                        ? "Essayez de changer les filtres."
+                                        : "Aucune annonce disponible pour le moment."}
+                                </p>
+                            </div>
+                        }
+                    />
                 ) : sortedAds.length > 0 ? (
+                    /* ===== DESKTOP: Grid classique ===== */
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedAds.map((ad) => (
                             <AdCard
@@ -322,13 +463,13 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
                         <p className="text-gray-500 mt-2">
                             {hasFilters
                                 ? 'Essayez de changer les filtres ou revenez plus tard.'
-                                : 'Aucune annonce n\'est disponible dans cette catégorie pour le moment.'}
+                                : "Aucune annonce n'est disponible dans cette catégorie pour le moment."}
                         </p>
                     </div>
                 )}
 
-                {/* Pagination */}
-                {pagination && pagination.totalPages > 1 && !hasFilters && (
+                {/* Pagination - Uniquement sur desktop */}
+                {!isMobile && pagination && pagination.totalPages > 1 && !hasFilters && (
                     <Pagination
                         pagination={pagination}
                         basePath={pathname || `/categories/${category.slug}`}
@@ -339,3 +480,4 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
         </div>
     );
 }
+

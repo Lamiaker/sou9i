@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
 import SectionFeatured from "./SectionFeatured";
 import SectionFeaturedSkeleton from "./SectionFeaturedSkeleton";
@@ -23,17 +23,24 @@ interface CategoryWithProducts extends CategoryWithAds {
 interface LoadMoreCategoriesProps {
     initialSkip: number;
     totalRemaining: number;
+    /** Activer le chargement automatique au scroll (défaut: true sur mobile) */
+    autoLoad?: boolean;
 }
 
 export default function LoadMoreCategories({
     initialSkip,
-    totalRemaining: initialRemaining
+    totalRemaining: initialRemaining,
+    autoLoad = true
 }: LoadMoreCategoriesProps) {
     const [categories, setCategories] = useState<CategoryWithProducts[]>([]);
     const [skip, setSkip] = useState(initialSkip);
     const [isLoading, setIsLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [totalRemaining, setTotalRemaining] = useState(initialRemaining);
+
+    // Ref pour l'IntersectionObserver
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+    const observerRef = useRef<IntersectionObserver | null>(null);
 
     const loadMore = useCallback(async () => {
         if (isLoading || !hasMore) return;
@@ -84,6 +91,36 @@ export default function LoadMoreCategories({
         }
     }, [skip, isLoading, hasMore]);
 
+    // Configurer l'IntersectionObserver pour le chargement automatique
+    useEffect(() => {
+        if (!autoLoad || !hasMore) return;
+
+        const options: IntersectionObserverInit = {
+            root: null,
+            rootMargin: '400px', // Précharger avant d'atteindre le bas
+            threshold: 0,
+        };
+
+        const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+            const [entry] = entries;
+            if (entry.isIntersecting && hasMore && !isLoading) {
+                loadMore();
+            }
+        };
+
+        observerRef.current = new IntersectionObserver(handleIntersection, options);
+
+        if (loadMoreRef.current) {
+            observerRef.current.observe(loadMoreRef.current);
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+            }
+        };
+    }, [autoLoad, hasMore, isLoading, loadMore]);
+
     return (
         <div className="space-y-8">
             {/* Catégories chargées dynamiquement */}
@@ -108,17 +145,32 @@ export default function LoadMoreCategories({
                 </div>
             )}
 
-            {/* Bouton "Voir plus" */}
+            {/* Sentinel pour IntersectionObserver + Bouton fallback */}
             {hasMore && !isLoading && (
-                <div className="flex justify-center pt-4">
+                <div
+                    ref={loadMoreRef}
+                    className="flex justify-center pt-4"
+                >
+                    {/* Bouton visible comme fallback si autoLoad échoue */}
                     <button
                         onClick={loadMore}
                         className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                        aria-label={`Charger ${totalRemaining} catégories supplémentaires`}
                     >
                         <span>Afficher plus de catégories</span>
                         <span className="text-sm opacity-80">({totalRemaining})</span>
-                        <ChevronDown className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
+                        <ChevronDown className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" aria-hidden="true" />
                     </button>
+                </div>
+            )}
+
+            {/* Indicateur de chargement auto */}
+            {hasMore && isLoading && autoLoad && (
+                <div className="flex justify-center py-8">
+                    <div className="flex items-center gap-3 text-gray-500">
+                        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                        <span className="text-sm">Chargement des catégories...</span>
+                    </div>
                 </div>
             )}
 
@@ -133,3 +185,4 @@ export default function LoadMoreCategories({
         </div>
     );
 }
+

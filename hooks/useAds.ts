@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import type {
     AdWithDetails,
     AdFiltersUI,
@@ -18,6 +18,43 @@ interface UseAdsOptions extends UseDataOptions {
     isAdmin?: boolean;
 }
 
+/**
+ * Fetcher avec AbortController pour annuler les requêtes obsolètes
+ * Permet d'éviter les race conditions lors de la navigation rapide
+ */
+const createAbortableFetcher = () => {
+    let abortController: AbortController | null = null;
+
+    return async (url: string) => {
+        // Annuler la requête précédente si elle existe
+        if (abortController) {
+            abortController.abort();
+        }
+
+        // Créer un nouveau controller
+        abortController = new AbortController();
+
+        try {
+            const response = await fetch(url, {
+                signal: abortController.signal,
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return response.json();
+        } catch (error) {
+            // Ne pas propager les erreurs d'annulation
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                // Retourner une promesse qui ne se résout jamais pour éviter les mises à jour d'état
+                return new Promise(() => { });
+            }
+            throw error;
+        }
+    };
+};
+
 export function useAds(options: UseAdsOptions = {}) {
     const {
         filters = {},
@@ -27,6 +64,9 @@ export function useAds(options: UseAdsOptions = {}) {
         refreshInterval = 0,
         isAdmin = false
     } = options;
+
+    // Créer un fetcher stable avec AbortController
+    const fetcherRef = useRef(createAbortableFetcher());
 
     const params = new URLSearchParams();
     if (filters.categoryId) params.append('categoryId', filters.categoryId);
@@ -47,10 +87,16 @@ export function useAds(options: UseAdsOptions = {}) {
 
     const { data, error, mutate, isValidating } = useSWR(
         url,
+        fetcherRef.current,
         {
             refreshInterval,
             revalidateOnFocus: true,
             dedupingInterval: 2000,
+            // Garder les données précédentes pendant le chargement des nouvelles
+            keepPreviousData: true,
+            // En cas d'erreur de réseau, réessayer
+            errorRetryCount: 2,
+            errorRetryInterval: 1000,
         }
     );
 
@@ -60,9 +106,12 @@ export function useAds(options: UseAdsOptions = {}) {
         error: error ? (error instanceof Error ? error.message : 'Une erreur est survenue') : (data?.success === false ? data.error : null),
         pagination: data?.pagination || null,
         refetch: mutate,
-        isValidating
+        isValidating,
+        // Indicateur si les données affichées sont des données précédentes
+        isStale: isValidating && !!data,
     };
 }
+
 
 export function useAd(id: string | null, options: { refreshInterval?: number } = {}) {
     const { refreshInterval = 0 } = options;

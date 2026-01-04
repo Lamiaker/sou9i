@@ -111,21 +111,30 @@ export default function Pagination({
     }
 
     return (
-        <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 py-6 ${className}`}>
+        <nav
+            className={`flex flex-col sm:flex-row items-center justify-between gap-4 py-6 ${className}`}
+            role="navigation"
+            aria-label="Pagination"
+        >
             {/* Info sur les éléments affichés */}
             <div className="flex items-center gap-4">
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-500 text-sm" aria-live="polite">
                     Affichage <span className="text-gray-700 font-medium">{startItem}-{endItem}</span> sur <span className="text-gray-700 font-medium">{total}</span>
                 </p>
 
                 {/* Sélecteur d'éléments par page */}
                 {showItemsPerPage && (
                     <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">|</span>
+                        <span className="text-gray-400 text-sm" aria-hidden="true">|</span>
+                        <label htmlFor="pagination-limit" className="sr-only">
+                            Éléments par page
+                        </label>
                         <select
+                            id="pagination-limit"
                             value={limit}
                             onChange={(e) => handleLimitChange(Number(e.target.value))}
                             className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
+                            aria-label="Nombre d'éléments par page"
                         >
                             <option value="12">12 / page</option>
                             <option value="24">24 / page</option>
@@ -136,69 +145,87 @@ export default function Pagination({
             </div>
 
             {/* Contrôles de pagination */}
-            <div className="flex items-center gap-1">
+            <ul className="flex items-center gap-1 list-none" role="list">
                 {/* Première page */}
-                <button
-                    onClick={() => goToPage(1)}
-                    disabled={page === 1}
-                    className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Première page"
-                >
-                    <ChevronsLeft className="w-4 h-4 text-gray-600" />
-                </button>
+                <li>
+                    <button
+                        onClick={() => goToPage(1)}
+                        disabled={page === 1}
+                        className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Aller à la première page"
+                        aria-disabled={page === 1}
+                    >
+                        <ChevronsLeft className="w-4 h-4 text-gray-600" aria-hidden="true" />
+                    </button>
+                </li>
 
                 {/* Page précédente */}
-                <button
-                    onClick={() => goToPage(page - 1)}
-                    disabled={page === 1}
-                    className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Page précédente"
-                >
-                    <ChevronLeft className="w-4 h-4 text-gray-600" />
-                </button>
+                <li>
+                    <button
+                        onClick={() => goToPage(page - 1)}
+                        disabled={page === 1}
+                        className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        aria-label={`Aller à la page ${page - 1}`}
+                        aria-disabled={page === 1}
+                    >
+                        <ChevronLeft className="w-4 h-4 text-gray-600" aria-hidden="true" />
+                    </button>
+                </li>
 
                 {/* Numéros de pages */}
                 {showPageNumbers && (
-                    <div className="flex items-center gap-1 mx-1">
+                    <>
                         {getPageNumbers().map((pageNum, index) => (
                             pageNum === 'ellipsis' ? (
-                                <span key={`ellipsis-${index}`} className="px-2 text-gray-400">...</span>
+                                <li key={`ellipsis-${index}`} aria-hidden="true">
+                                    <span className="px-2 text-gray-400">...</span>
+                                </li>
                             ) : (
-                                <button
-                                    key={pageNum}
-                                    onClick={() => goToPage(pageNum)}
-                                    className={`min-w-[36px] h-9 px-2 rounded-lg text-sm font-medium transition-all ${page === pageNum
-                                        ? 'bg-primary text-white shadow-sm'
-                                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    {pageNum}
-                                </button>
+                                <li key={pageNum}>
+                                    <button
+                                        onClick={() => goToPage(pageNum)}
+                                        className={`min-w-[36px] h-9 px-2 rounded-lg text-sm font-medium transition-all ${page === pageNum
+                                            ? 'bg-primary text-white shadow-sm'
+                                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                        aria-label={`Page ${pageNum}`}
+                                        aria-current={page === pageNum ? 'page' : undefined}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                </li>
                             )
                         ))}
-                    </div>
+                    </>
                 )}
 
                 {/* Page suivante */}
-                <button
-                    onClick={() => goToPage(page + 1)}
-                    disabled={page === totalPages}
-                    className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Page suivante"
-                >
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
-                </button>
+                <li>
+                    <button
+                        onClick={() => goToPage(page + 1)}
+                        disabled={page === totalPages}
+                        className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        aria-label={`Aller à la page ${page + 1}`}
+                        aria-disabled={page === totalPages}
+                    >
+                        <ChevronRight className="w-4 h-4 text-gray-600" aria-hidden="true" />
+                    </button>
+                </li>
 
                 {/* Dernière page */}
-                <button
-                    onClick={() => goToPage(totalPages)}
-                    disabled={page === totalPages}
-                    className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Dernière page"
-                >
-                    <ChevronsRight className="w-4 h-4 text-gray-600" />
-                </button>
-            </div>
-        </div>
+                <li>
+                    <button
+                        onClick={() => goToPage(totalPages)}
+                        disabled={page === totalPages}
+                        className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        aria-label={`Aller à la dernière page (page ${totalPages})`}
+                        aria-disabled={page === totalPages}
+                    >
+                        <ChevronsRight className="w-4 h-4 text-gray-600" aria-hidden="true" />
+                    </button>
+                </li>
+            </ul>
+        </nav>
     );
 }
+
