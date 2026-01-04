@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
@@ -14,6 +15,8 @@ interface PaginationProps {
     showPageNumbers?: boolean;
     showItemsPerPage?: boolean;
     onPageChange?: (page: number) => void; // Callback optionnel pour changement de page
+    /** Active le prefetch des pages adjacentes (par défaut: true) */
+    enablePrefetch?: boolean;
 }
 
 export default function AdminPagination({
@@ -21,7 +24,8 @@ export default function AdminPagination({
     basePath,
     showPageNumbers = true,
     showItemsPerPage = true,
-    onPageChange
+    onPageChange,
+    enablePrefetch = true
 }: PaginationProps) {
     const router = useRouter();
     const { page, limit, total, totalPages } = pagination;
@@ -29,6 +33,31 @@ export default function AdminPagination({
     // Calcul des éléments affichés
     const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
     const endItem = Math.min(page * limit, total);
+
+    // Prefetch des pages adjacentes pour une navigation plus fluide
+    useEffect(() => {
+        // Ne pas prefetch si onPageChange est utilisé (gestion manuelle)
+        if (!enablePrefetch || totalPages <= 1 || onPageChange) return;
+
+        const pagesToPrefetch: number[] = [];
+
+        // Page suivante
+        if (page < totalPages) {
+            pagesToPrefetch.push(page + 1);
+        }
+
+        // Page précédente
+        if (page > 1) {
+            pagesToPrefetch.push(page - 1);
+        }
+
+        // Utiliser window.location.search pour rester cohérent avec le composant
+        pagesToPrefetch.forEach((pageNum) => {
+            const params = new URLSearchParams(window.location.search);
+            params.set('page', pageNum.toString());
+            router.prefetch(`${basePath}?${params.toString()}`);
+        });
+    }, [page, totalPages, basePath, router, enablePrefetch, onPageChange]);
 
     const goToPage = (newPage: number) => {
         if (newPage < 1 || newPage > totalPages) return;

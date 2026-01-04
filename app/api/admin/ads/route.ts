@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { authOptions } from '@/lib/auth';
 import { AdminService } from '@/services';
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
+import { sanitizePaginationParams } from '@/lib/utils/pagination';
+import { PAGINATION } from '@/lib/constants/pagination';
 
 export async function GET(request: NextRequest) {
     try {
@@ -14,8 +16,12 @@ export async function GET(request: NextRequest) {
         }
 
         const searchParams = request.nextUrl.searchParams;
-        const page = parseInt(searchParams.get('page') || '1');
-        const limit = parseInt(searchParams.get('limit') || '20');
+        // ✅ Validation sécurisée des paramètres de pagination
+        const { page, limit } = sanitizePaginationParams(
+            searchParams.get('page'),
+            searchParams.get('limit'),
+            { defaultLimit: PAGINATION.DEFAULT_LIMIT_ADMIN }
+        );
         const search = searchParams.get('search') || '';
         const status = searchParams.get('status') || '';
         const moderationStatus = searchParams.get('moderationStatus') || '';

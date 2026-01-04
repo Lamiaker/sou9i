@@ -193,6 +193,11 @@ model Ad {
   @@index([status])
   @@index([moderationStatus])
   @@index([createdAt])
+  // Indices composites pour optimiser la pagination
+  @@index([status, moderationStatus, createdAt])  // Pagination publique filtrée + tri
+  @@index([status, categoryId, createdAt])        // Pagination par catégorie
+  @@index([userId, status])                       // "Mes annonces" filtrées par statut
+  @@index([moderationStatus, createdAt])          // Dashboard admin modération
 }
 
 // ============================================

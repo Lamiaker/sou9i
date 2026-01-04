@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
@@ -14,6 +15,8 @@ interface PaginationProps {
     showPageNumbers?: boolean;
     showItemsPerPage?: boolean;
     className?: string;
+    /** Active le prefetch des pages adjacentes (par défaut: true) */
+    enablePrefetch?: boolean;
 }
 
 export default function Pagination({
@@ -21,7 +24,8 @@ export default function Pagination({
     basePath,
     showPageNumbers = true,
     showItemsPerPage = false,
-    className = ''
+    className = '',
+    enablePrefetch = true
 }: PaginationProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -30,6 +34,29 @@ export default function Pagination({
     // Calcul des éléments affichés
     const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
     const endItem = Math.min(page * limit, total);
+
+    // Prefetch des pages adjacentes pour une navigation plus fluide
+    useEffect(() => {
+        if (!enablePrefetch || totalPages <= 1) return;
+
+        const pagesToPrefetch: number[] = [];
+
+        // Page suivante
+        if (page < totalPages) {
+            pagesToPrefetch.push(page + 1);
+        }
+
+        // Page précédente
+        if (page > 1) {
+            pagesToPrefetch.push(page - 1);
+        }
+
+        pagesToPrefetch.forEach((pageNum) => {
+            const params = new URLSearchParams(searchParams?.toString() || '');
+            params.set('page', pageNum.toString());
+            router.prefetch(`${basePath}?${params.toString()}`);
+        });
+    }, [page, totalPages, basePath, searchParams, router, enablePrefetch]);
 
     const goToPage = (newPage: number) => {
         if (newPage < 1 || newPage > totalPages) return;
