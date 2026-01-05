@@ -711,14 +711,6 @@ export default function DeposerAnnonce() {
                                     </>
                                 )}
                             </button>
-
-                            {/* Message de patience pendant le traitement */}
-                            {isLoading && (
-                                <p className="text-center text-sm text-gray-500 mt-3 flex items-center justify-center gap-2">
-                                    <Loader2 className="animate-spin" size={16} />
-                                    Veuillez patienter, ne fermez pas cette page...
-                                </p>
-                            )}
                         </div>
                     </form>
                 </div>

@@ -241,7 +241,7 @@ export default function EditAnnoncePage() {
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Annonce introuvable</h3>
                     <p className="text-gray-500 mb-6">L'annonce que vous tentez de modifier n'existe pas ou ne vous appartient pas.</p>
                     <Link href="/dashboard/annonces">
-                        <button className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-black transition-all shadow-md hover:shadow-lg">
+                        <button className="px-6 py-3 bg-primary text-white rounded-xl font-medium hover:bg-secondary transition-all shadow-md hover:shadow-lg">
                             Retour à mes annonces
                         </button>
                     </Link>
@@ -518,7 +518,7 @@ export default function EditAnnoncePage() {
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="flex-1 bg-gray-900 text-white font-bold py-4 px-6 rounded-xl hover:bg-black transition-all shadow-xl shadow-gray-200 active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+                                    className="flex-1 bg-primary text-white font-bold py-4 px-6 rounded-xl hover:bg-secondary transition-all shadow-xl shadow-primary/20 active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
                                 >
                                     {isLoading ? (
                                         <>
