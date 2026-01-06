@@ -77,14 +77,14 @@ export async function POST(request: NextRequest) {
                     );
                 }
                 await AdminService.updateAdStatus(adId, status);
-                revalidateTag('ads', 'page');
+                revalidateTag('ads', 'default');
                 revalidatePath('/dashboard/annonces');
                 revalidatePath('/annonces/' + adId);
                 return NextResponse.json({ success: true, message: 'Statut mis à jour' });
 
             case 'approve': // Modération: Approuver
                 await AdminService.approveAd(adId);
-                revalidateTag('ads', 'page');
+                revalidateTag('ads', 'default');
                 revalidatePath('/');
                 revalidatePath('/dashboard/annonces');
                 revalidatePath('/annonces/' + adId);
@@ -99,14 +99,14 @@ export async function POST(request: NextRequest) {
                     );
                 }
                 await AdminService.rejectAd(adId, reason);
-                revalidateTag('ads', 'page');
+                revalidateTag('ads', 'default');
                 revalidatePath('/dashboard/annonces');
                 revalidatePath('/annonces/' + adId);
                 return NextResponse.json({ success: true, message: 'Annonce rejetée' });
 
             case 'delete':
                 await AdminService.deleteAd(adId);
-                revalidateTag('ads', 'page');
+                revalidateTag('ads', 'default');
                 revalidatePath('/');
                 revalidatePath('/dashboard/annonces');
                 return NextResponse.json({ success: true, message: 'Annonce supprimée' });

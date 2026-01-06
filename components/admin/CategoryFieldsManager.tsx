@@ -46,8 +46,9 @@ const FIELD_TYPES = [
     { type: 'TEXT', label: 'Texte', icon: Type, description: 'Champ texte court' },
     { type: 'TEXTAREA', label: 'Texte long', icon: FileText, description: 'Zone de texte multiligne' },
     { type: 'NUMBER', label: 'Nombre', icon: Hash, description: 'Valeur numérique' },
-    { type: 'SELECT', label: 'Liste', icon: ListOrdered, description: 'Liste déroulante' },
-    { type: 'BOOLEAN', label: 'Case à cocher', icon: ToggleRight, description: 'Oui/Non' },
+    { type: 'SELECT', label: 'Liste', icon: ListOrdered, description: 'Liste déroulante (choix unique)' },
+    { type: 'MULTISELECT', label: 'Checkboxes', icon: ListOrdered, description: 'Choix multiples (cases à cocher)' },
+    { type: 'BOOLEAN', label: 'Oui/Non', icon: ToggleRight, description: 'Case à cocher simple' },
     { type: 'IMAGE', label: 'Image', icon: ImageIcon, description: 'URL d\'image' },
 ] as const;
 
@@ -177,7 +178,7 @@ export default function CategoryFieldsManager({ categoryId, categoryName }: Cate
             return;
         }
 
-        if (formData.type === 'SELECT' && formData.options.length === 0) {
+        if ((formData.type === 'SELECT' || formData.type === 'MULTISELECT') && formData.options.length === 0) {
             toast.error('Au moins une option est requise pour un champ de type liste');
             return;
         }
@@ -190,7 +191,7 @@ export default function CategoryFieldsManager({ categoryId, categoryName }: Cate
                 type: formData.type,
                 placeholder: formData.placeholder || null,
                 required: formData.required,
-                options: formData.type === 'SELECT' ? formData.options : null,
+                options: (formData.type === 'SELECT' || formData.type === 'MULTISELECT') ? formData.options : null,
                 minValue: formData.minValue ? parseFloat(formData.minValue) : null,
                 maxValue: formData.maxValue ? parseFloat(formData.maxValue) : null,
                 minLength: formData.minLength ? parseInt(formData.minLength) : null,
@@ -466,8 +467,8 @@ export default function CategoryFieldsManager({ categoryId, categoryName }: Cate
                                 <span className="text-white/80">Champ obligatoire</span>
                             </label>
 
-                            {/* Options for SELECT type */}
-                            {formData.type === 'SELECT' && (
+                            {/* Options for SELECT and MULTISELECT types */}
+                            {(formData.type === 'SELECT' || formData.type === 'MULTISELECT') && (
                                 <div>
                                     <label className="block text-sm font-medium text-white/80 mb-2">
                                         Options <span className="text-red-400">*</span>

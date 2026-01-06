@@ -173,6 +173,48 @@ function FieldInput({ field, value, onChange, error, disabled }: FieldInputProps
                 />
             );
 
+        case 'MULTISELECT': {
+            // Parse les valeurs sélectionnées (stockées en JSON)
+            const selectedValues: string[] = value ? JSON.parse(value) : [];
+
+            const handleCheckboxChange = (option: string, checked: boolean) => {
+                let newValues: string[];
+                if (checked) {
+                    newValues = [...selectedValues, option];
+                } else {
+                    newValues = selectedValues.filter(v => v !== option);
+                }
+                onChange(JSON.stringify(newValues));
+            };
+
+            return (
+                <div className="sm:col-span-2">
+                    {label}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                        {(field.options || []).map((option) => (
+                            <label
+                                key={option}
+                                className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${selectedValues.includes(option)
+                                    ? 'border-primary bg-primary/5 text-primary'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={selectedValues.includes(option)}
+                                    onChange={(e) => handleCheckboxChange(option, e.target.checked)}
+                                    disabled={disabled}
+                                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <span className="text-sm">{option}</span>
+                            </label>
+                        ))}
+                    </div>
+                    {errorMessage}
+                </div>
+            );
+        }
+
         case 'BOOLEAN':
             return (
                 <div className="sm:col-span-2">
@@ -223,7 +265,26 @@ interface DynamicFieldsDisplayProps {
             id: string;
             name: string;
             label: string;
-            type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'SELECT' | 'BOOLEAN' | 'IMAGE';
+            type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'SELECT' | 'MULTISELECT' | 'BOOLEAN' | 'IMAGE';
+        };
+    }>;
+}
+
+import { CheckCircle2, XCircle, Info } from 'lucide-react';
+
+/**
+ * Composant pour afficher les valeurs des champs dynamiques (lecture seule)
+ * Version Premium avec gestion des tags et icônes
+ */
+interface DynamicFieldsDisplayProps {
+    fields: Array<{
+        id: string;
+        value: string;
+        field: {
+            id: string;
+            name: string;
+            label: string;
+            type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'SELECT' | 'MULTISELECT' | 'BOOLEAN' | 'IMAGE';
         };
     }>;
 }
@@ -238,24 +299,73 @@ export function DynamicFieldsDisplay({ fields }: DynamicFieldsDisplayProps) {
             {fields.map((fieldValue) => {
                 const { field, value } = fieldValue;
 
-                // Formater la valeur selon le type
-                let displayValue = value;
-
-                if (field.type === 'BOOLEAN') {
-                    displayValue = value === 'true' ? 'Oui' : 'Non';
+                // 1. Cas Spécial: MULTISELECT (Affichage sous forme de tags)
+                if (field.type === 'MULTISELECT') {
+                    try {
+                        const options = JSON.parse(value);
+                        if (Array.isArray(options) && options.length > 0) {
+                            return (
+                                <div key={field.id} className="col-span-1 sm:col-span-2 space-y-3 p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                        <Info size={14} className="text-primary/40" />
+                                        {field.label}
+                                    </span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {options.map((opt, i) => (
+                                            <span
+                                                key={i}
+                                                className="px-3 py-1.5 bg-white text-primary text-xs font-bold rounded-xl border border-primary/10 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-default"
+                                            >
+                                                {opt}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        }
+                    } catch (e) {
+                        console.error("Error parsing multiselect value:", e);
+                    }
                 }
 
+                // 2. Cas Spécial: BOOLEAN (Affichage avec icône)
+                if (field.type === 'BOOLEAN') {
+                    const isTrue = value === 'true';
+                    return (
+                        <div
+                            key={field.id}
+                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${isTrue
+                                    ? 'bg-green-50/30 border-green-100 text-green-900'
+                                    : 'bg-gray-50/50 border-gray-100 text-gray-500'
+                                }`}
+                        >
+                            <span className="text-sm font-semibold">{field.label}</span>
+                            {isTrue ? (
+                                <div className="flex items-center gap-1.5 text-green-600 bg-white px-2 py-1 rounded-lg shadow-sm border border-green-100">
+                                    <CheckCircle2 size={16} />
+                                    <span className="text-[10px] font-bold uppercase">Oui</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5 text-gray-400 bg-white px-2 py-1 rounded-lg shadow-sm border border-gray-100">
+                                    <XCircle size={16} />
+                                    <span className="text-[10px] font-bold uppercase">Non</span>
+                                </div>
+                            )}
+                        </div>
+                    );
+                }
+
+                // 3. Cas par défaut: TEXT, NUMBER, SELECT
                 return (
                     <div
-                        key={fieldValue.id}
-                        className="flex justify-between items-center gap-4 border-b border-gray-100 pb-2 overflow-hidden"
+                        key={field.id}
+                        className="group p-4 bg-white hover:bg-gray-50/50 hover:shadow-sm transition-all rounded-2xl border border-gray-100 flex flex-col gap-1"
                     >
-                        <span className="text-gray-500 flex-shrink-0">{field.label}</span>
-                        <span
-                            className="font-medium text-gray-900 truncate max-w-[200px] text-right"
-                            title={displayValue}
-                        >
-                            {displayValue}
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-primary/50 transition-colors">
+                            {field.label}
+                        </span>
+                        <span className="text-gray-900 font-bold truncate" title={value}>
+                            {value}
                         </span>
                     </div>
                 );

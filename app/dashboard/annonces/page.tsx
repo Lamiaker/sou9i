@@ -233,6 +233,7 @@ export default function MesAnnoncesPage() {
                                                                 src={ad.images[0]}
                                                                 alt={ad.title}
                                                                 fill
+                                                                sizes="48px"
                                                                 className="object-cover"
                                                             />
                                                         ) : (

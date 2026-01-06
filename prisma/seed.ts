@@ -1,195 +1,207 @@
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
-
-const prisma = new PrismaClient()
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 async function main() {
-    console.log('🌱 Début du seeding...')
 
-    // Créer des catégories
-    console.log('📦 Création des catégories...')
-    const categories = await Promise.all([
-        prisma.category.upsert({
-            where: { slug: 'gateaux-patisserie' },
-            update: {},
-            create: {
-                name: 'Gâteaux & Pâtisserie',
-                slug: 'gateaux-patisserie',
-                icon: '🍰',
-                order: 1,
-            },
-        }),
-        prisma.category.upsert({
-            where: { slug: 'decoration-evenements' },
-            update: {},
-            create: {
-                name: 'Décoration & Événements',
-                slug: 'decoration-evenements',
-                icon: '🎉',
-                order: 2,
-            },
-        }),
-        prisma.category.upsert({
-            where: { slug: 'mode-beaute' },
-            update: {},
-            create: {
-                name: 'Mode & Beauté',
-                slug: 'mode-beaute',
-                icon: '👗',
-                order: 3,
-            },
-        }),
-        prisma.category.upsert({
-            where: { slug: 'bebe-enfants' },
-            update: {},
-            create: {
-                name: 'Bébé & Enfants',
-                slug: 'bebe-enfants',
-                icon: '👶',
-                order: 4,
-            },
-        }),
-        prisma.category.upsert({
-            where: { slug: 'artisanat' },
-            update: {},
-            create: {
-                name: 'Artisanat',
-                slug: 'artisanat',
-                icon: '🎨',
-                order: 5,
-            },
-        }),
-    ])
-
-    console.log(`✅ ${categories.length} catégories créées`)
-
-    // Créer des utilisateurs de test
-    console.log('👥 Création des utilisateurs...')
-    const hashedPassword = await bcrypt.hash('password123', 10)
-
-    const users = await Promise.all([
-        prisma.user.upsert({
-            where: { email: 'sarah@example.com' },
-            update: {},
-            create: {
-                email: 'sarah@example.com',
-                name: 'Sarah Amrani',
-                password: hashedPassword,
-                phone: '0555123456',
-                city: 'Alger',
-                avatar: 'https://i.pravatar.cc/150?img=1',
-                isVerified: true,
-            },
-        }),
-        prisma.user.upsert({
-            where: { email: 'fatima@example.com' },
-            update: {},
-            create: {
-                email: 'fatima@example.com',
-                name: 'Fatima Benali',
-                password: hashedPassword,
-                phone: '0666234567',
-                city: 'Oran',
-                avatar: 'https://i.pravatar.cc/150?img=5',
-                isVerified: true,
-            },
-        }),
-        prisma.user.upsert({
-            where: { email: 'amina@example.com' },
-            update: {},
-            create: {
-                email: 'amina@example.com',
-                name: 'Amina Kaci',
-                password: hashedPassword,
-                phone: '0777345678',
-                city: 'Constantine',
-                avatar: 'https://i.pravatar.cc/150?img=9',
-                isVerified: false,
-            },
-        }),
-    ])
-
-    console.log(`✅ ${users.length} utilisateurs créés`)
-
-    // Créer des annonces de test
-    console.log('📢 Création des annonces...')
-
-    const adsData = [
+    const categories = [
         {
-            title: 'Gâteau d\'anniversaire personnalisé 3 étages',
-            description: 'Magnifique gâteau de 3 étages pour vos événements spéciaux. Décoration personnalisée selon vos souhaits. Plusieurs parfums disponibles : chocolat, vanille, fraise. Livraison possible dans Alger et environs.',
-            price: 8500,
-            location: 'Alger',
-            condition: 'Neuf',
-            images: [
-                'https://images.unsplash.com/photo-1558636508-e0db3814bd1d',
-                'https://images.unsplash.com/photo-1562440499-64c9a12de960',
-            ],
-            deliveryAvailable: true,
-            userId: users[0].id,
-            categoryId: categories[0].id,
+            name: "Cuisine & Pâtisserie Maison",
+            slug: "cuisine-patisserie-maison",
+            children: [
+                "Gâteaux traditionnels",
+                "Gâteaux modernes / événements",
+                "Pâtisserie orientale",
+                "Chocolats & confiseries",
+                "Plats faits maison",
+                "Catering / commandes événements"
+            ]
         },
         {
-            title: 'Décoration ballon arche pour mariage',
-            description: 'Service de décoration professionnelle avec arche de ballons. Idéal pour mariages, anniversaires et événements. Installation incluse. Photos portfolio disponibles sur demande.',
-            price: 12000,
-            location: 'Oran',
-            condition: 'Neuf',
-            images: [
-                'https://images.unsplash.com/photo-1530103862676-de8ec\u003e898cbd',
-            ],
-            deliveryAvailable: false,
-            userId: users[1].id,
-            categoryId: categories[1].id,
+            name: "Beauté & Bien-être",
+            slug: "beaute-bien-etre",
+            children: [
+                "Coiffure & soins capillaire",
+                "Maquillage & make-up",
+                "Soins visage",
+                "Soins corps",
+                "Onglerie",
+                "Épilation",
+                "Parfums & cosmétiques",
+                "Produits naturels / artisanaux"
+            ]
         },
         {
-            title: 'Robe de soirée élégante taille M',
-            description: 'Superbe robe de soirée portée une seule fois. Couleur bordeaux, taille M. Parfait état, nettoyée à sec. Idéale pour mariage ou soirée chic.',
-            price: 4500,
-            location: 'Constantine',
-            condition: 'Très bon état',
-            brand: 'Zara',
-            size: 'M',
-            images: [
-                'https://images.unsplash.com/photo-1566174053879-31528523f8ae',
-            ],
-            deliveryAvailable: true,
-            negotiable: true,
-            userId: users[2].id,
-            categoryId: categories[2].id,
+            name: "Mode & Accessoires",
+            slug: "mode-accessoires",
+            children: [
+                "Vêtements femme",
+                "Robes & tenues traditionnelles",
+                "Chaussures femme",
+                "Sacs & maroquinerie",
+                "Bijoux",
+                "Accessoires",
+                "Couture & retouches"
+            ]
         },
         {
-            title: 'Poussette bébé 3en1 comme neuve',
-            description: 'Poussette complète 3en1 : landau, poussette, siège auto. Utilisée 6 mois seulement. Très bon état, toutes les pièces incluses. Roues tout-terrain.',
-            price: 15000,
-            location: 'Alger',
-            condition: 'Très bon état',
-            brand: 'Chicco',
-            images: [
-                'https://images.unsplash.com/photo-1544743287-d72907de2e8d',
-            ],
-            deliveryAvailable: false,
-            userId: users[0].id,
-            categoryId: categories[3].id,
+            name: "Décoration & Événementiel",
+            slug: "decoration-evenementiel",
+            children: [
+                "Décoration de fêtes",
+                "Décoration mariages",
+                "Décoration anniversaires",
+                "Ballons & arches",
+                "Location matériel déco",
+                "Organisation d'événements"
+            ]
         },
-    ]
+        {
+            name: "Mariage & Fiançailles",
+            slug: "mariage-fiancailles",
+            children: [
+                "Tenues de mariée",
+                "Negafa & accessoires",
+                "Maquillage & coiffure mariage"
+            ]
+        },
+        {
+            name: "Artisanat & Créations",
+            slug: "artisanat-creations",
+            children: [
+                "Handmade / fait main",
+                "Broderie",
+                "Crochet & tricot",
+                "Bougies artisanales",
+                "Résine & créations personnalisées",
+                "Cadeaux personnalisés"
+            ]
+        },
+        {
+            name: "Maman & Enfants",
+            slug: "maman-enfants",
+            children: [
+                "Vêtements bébé & enfant",
+                "Accessoires bébé",
+                "Jouets éducatifs",
+                "Articles maternité"
+            ]
+        },
+        {
+            name: "Maison & Lifestyle",
+            slug: "maison-lifestyle",
+            children: [
+                "Décoration maison",
+                "Organisation intérieure",
+                "Produits ménagers naturels",
+                "Linge de maison",
+                "Objets design & cadeaux"
+            ]
+        },
+        {
+            name: "Services & Freelance",
+            slug: "services-freelance",
+            children: [
+                "Community management",
+                "Création de contenu",
+                "Design graphique",
+                "Photographie féminine",
+                "Assistance virtuelle"
+            ]
+        },
+        {
+            name: "Formation & Coaching",
+            slug: "formation-coaching",
+            children: [
+                "Coaching personnel",
+                "Coaching beauté",
+                "Coaching business femmes",
+                "Cours en ligne",
+                "Ateliers & workshops"
+            ]
+        },
+        {
+            name: "Emploi",
+            slug: "emploi",
+            children: [
+                "Offres d'emploi",
+                "Demandes d'emploi"
+            ]
+        },
+        {
+            name: "Services à domicile",
+            slug: "services-domicile",
+            children: [
+                "Femme de ménage",
+                "Garde d'enfants / Nounou",
+                "Aide aux personnes âgées",
+                "Cuisinière à domicile",
+                "Cours particuliers",
 
-    for (const adData of adsData) {
-        await prisma.ad.create({
-            data: adData,
-        })
+            ]
+        },
+        {
+            name: "Annonces & Autres",
+            slug: "annonces-autres",
+            children: [
+                "Partenariats",
+                "Offres spéciales",
+                "Recherches de services",
+                "Autres"
+            ]
+        }
+    ];
+
+    console.log("🗑️ Suppression des anciennes catégories...");
+    await prisma.category.deleteMany({});
+    console.log("✅ Table vidée");
+
+    console.log("🌱 Insertion des catégories...");
+
+    // Fonction pour normaliser les slugs (supprimer accents et caractères spéciaux)
+    const normalizeSlug = (text: string): string => {
+        return text
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
+            .replace(/[àáâãäå]/g, 'a')
+            .replace(/[èéêë]/g, 'e')
+            .replace(/[ìíîï]/g, 'i')
+            .replace(/[òóôõö]/g, 'o')
+            .replace(/[ùúûü]/g, 'u')
+            .replace(/[ýÿ]/g, 'y')
+            .replace(/[ç]/g, 'c')
+            .replace(/[ñ]/g, 'n')
+            .replace(/&/g, 'et')
+            .replace(/\//g, '-')
+            .replace(/'/g, '-')
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+    };
+
+    for (const cat of categories) {
+        const parent = await prisma.category.create({
+            data: {
+                name: cat.name,
+                slug: cat.slug,
+            },
+        });
+
+        for (const child of cat.children) {
+            const childSlug = `${cat.slug}-${normalizeSlug(child)}`;
+
+            await prisma.category.create({
+                data: {
+                    name: child,
+                    slug: childSlug,
+                    parentId: parent.id,
+                },
+            });
+        }
     }
 
-    console.log(`✅ ${adsData.length} annonces créées`)
-
-    console.log('✨ Seeding terminé avec succès!')
+    console.log("✅ Catégories créées avec succès !");
 }
 
-main()
-    .catch((e) => {
-        console.error('❌ Erreur lors du seeding:', e)
-        process.exit(1)
-    })
-    .finally(async () => {
-        await prisma.$disconnect()
-    })
+main().finally(() => prisma.$disconnect());

@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Revalider les chemins pour mettre à jour les caches
-        revalidateTag('ads', 'page')
+        revalidateTag('ads', 'default')
         revalidatePath('/')
         revalidatePath('/categories')
         revalidatePath('/dashboard/annonces')

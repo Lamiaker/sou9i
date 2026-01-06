@@ -42,12 +42,13 @@ enum VerificationStatus {
 
 // Types de champs dynamiques pour les sous-catégories
 enum FieldType {
-  TEXT      // Champ texte simple
-  TEXTAREA  // Champ texte long
-  NUMBER    // Champ numérique
-  SELECT    // Liste déroulante
-  BOOLEAN   // Case à cocher
-  IMAGE     // Upload d'image
+  TEXT        // Champ texte simple
+  TEXTAREA    // Champ texte long
+  NUMBER      // Champ numérique
+  SELECT      // Liste déroulante (choix unique)
+  MULTISELECT // Checkboxes (choix multiples)
+  BOOLEAN     // Case à cocher Oui/Non
+  IMAGE       // Upload d'image
 }
 
 // ============================================

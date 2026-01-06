@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-    MapPin, Phone, Clock,
+    MapPin, Phone, Clock, Tag,
     ShieldCheck, ChevronRight, ChevronLeft, Eye
 } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
@@ -195,20 +195,43 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
 
                         {/* Ad Details */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                            <div className="flex justify-between items-start gap-4">
-                                <div>
-                                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{ad.title}</h1>
-                                    <p className="text-3xl font-bold text-primary">{formatPrice(ad.price)}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <FavoriteButton adId={ad.id} size={24} className="hover:bg-red-50" />
-                                    <ShareButton
-                                        url={typeof window !== 'undefined' ? window.location.href : ""}
-                                        title={ad.title}
-                                        description={ad.description}
-                                        size={24}
-                                        className="text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full"
-                                    />
+                            <div className="flex flex-col gap-4">
+                                {ad.category && (
+                                    <div className="flex">
+                                        <Link
+                                            href={`/categories/${ad.category.slug}`}
+                                            className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/5 text-primary text-xs font-bold uppercase tracking-widest rounded-full border border-primary/10 hover:bg-primary hover:text-white transition-all group"
+                                        >
+                                            <Tag size={12} className="group-hover:scale-110 transition-transform" />
+                                            {ad.category.name}
+                                        </Link>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between items-start gap-4">
+                                    <div className="space-y-1">
+                                        <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                                            {ad.title}
+                                        </h1>
+                                        <div className="flex items-center gap-3">
+                                            <p className="text-3xl font-black text-primary tracking-tighter">
+                                                {formatPrice(ad.price)}
+                                            </p>
+                                            <span className="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md border border-green-100">
+                                                Prix fixe
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <FavoriteButton adId={ad.id} size={24} className="bg-white hover:bg-red-50" />
+                                        <ShareButton
+                                            url={typeof window !== 'undefined' ? window.location.href : ""}
+                                            title={ad.title}
+                                            description={ad.description}
+                                            size={24}
+                                            className="bg-white text-gray-400 hover:text-blue-500 hover:bg-blue-50"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -240,9 +263,12 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
                                 </div>
                             )}
 
-                            <div className="mt-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-3">Description</h2>
-                                <div className="prose prose-sm text-gray-700 whitespace-pre-line break-words overflow-hidden">
+                            <div className="mt-10">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="h-8 w-1 bg-primary rounded-full" />
+                                    <h2 className="text-xl font-bold text-gray-900 tracking-tight">Description détaillée</h2>
+                                </div>
+                                <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed whitespace-pre-line break-words bg-gray-50/30 p-6 rounded-3xl border border-gray-100/50">
                                     {ad.description}
                                 </div>
                             </div>

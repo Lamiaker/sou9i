@@ -175,8 +175,8 @@ export default function DeposerAnnonce() {
             return;
         }
 
-        if (!formData.categoryId) {
-            setError('Veuillez sélectionner une catégorie');
+        if (!isCategorySelected) {
+            setError(hasSubcategories ? 'Veuillez sélectionner une sous-catégorie' : 'Veuillez sélectionner une catégorie');
             return;
         }
 
@@ -304,6 +304,8 @@ export default function DeposerAnnonce() {
     };
 
     const selectedCat = categories.find(cat => cat.id === formData.categoryId);
+    const hasSubcategories = selectedCat?.children && selectedCat.children.length > 0;
+    const isCategorySelected = formData.categoryId && (!hasSubcategories || formData.subcategoryId);
     const isLoading = submitting || uploadingImages;
 
     return (
@@ -348,109 +350,13 @@ export default function DeposerAnnonce() {
 
                     <form className="p-6 sm:p-8 space-y-8" onSubmit={handleSubmit}>
 
-                        {/* Images */}
-                        <div className="space-y-4">
-                            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                                <Camera className="text-primary" size={24} />
-                                Photos (1-5)
-                            </h2>
-
-                            {/* Preview des images */}
-                            {previewUrls.length > 0 && (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                    {previewUrls.map((url, index) => (
-                                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
-                                            <Image
-                                                src={url}
-                                                alt={`Preview ${index + 1}`}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage(index)}
-                                                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                            {index === 0 && (
-                                                <div className="absolute bottom-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded">
-                                                    Photo principale
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Upload */}
-                            {selectedFiles.length < 5 && (
-                                <label className="block">
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary cursor-pointer transition">
-                                        <Upload className="mx-auto text-gray-400 mb-2" size={48} />
-                                        <p className="text-sm text-gray-600">
-                                            Cliquez pour ajouter des images
-                                        </p>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            Maximum 5 images (JPG, PNG)
-                                        </p>
-                                    </div>
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        accept="image/*"
-                                        multiple
-                                        onChange={handleImageSelect}
-                                        disabled={isLoading}
-                                    />
-                                </label>
-                            )}
-                        </div>
-
-                        {/* Détails */}
+                        {/* ÉTAPE 1: Catégorie - TOUJOURS EN PREMIER */}
                         <div className="space-y-6">
                             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                                 <Tag className="text-primary" size={24} />
-                                Détails de l'annonce
+                                Choisir une catégorie
                             </h2>
 
-                            {/* Titre */}
-                            <div>
-                                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Titre <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    id="title"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                    placeholder="Ex: iPhone 14 Pro Max - Comme neuf"
-                                    disabled={isLoading}
-                                    required
-                                />
-                            </div>
-
-                            {/* Description */}
-                            <div>
-                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description <span className="text-red-500">*</span>
-                                </label>
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    rows={5}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
-                                    placeholder="Décrivez votre article en détail..."
-                                    disabled={isLoading}
-                                    required
-                                />
-                            </div>
-
-                            {/* Catégorie */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <CategorySelect
                                     id="categoryId"
@@ -460,6 +366,7 @@ export default function DeposerAnnonce() {
                                     onChange={(value) => {
                                         setFormData(prev => ({ ...prev, categoryId: value, subcategoryId: '' }));
                                         setDynamicFieldValues({});
+                                        setError(null);
                                     }}
                                     options={categories.map(cat => ({
                                         id: cat.id,
@@ -471,7 +378,7 @@ export default function DeposerAnnonce() {
                                     variant="category"
                                 />
 
-                                {/* Sous-catégorie */}
+                                {/* Sous-catégorie - apparaît après avoir choisi la catégorie */}
                                 {selectedCat && selectedCat.children && selectedCat.children.length > 0 && (
                                     <CategorySelect
                                         id="subcategoryId"
@@ -479,218 +386,336 @@ export default function DeposerAnnonce() {
                                         value={formData.subcategoryId}
                                         onChange={(value) => {
                                             setFormData(prev => ({ ...prev, subcategoryId: value }));
+                                            setDynamicFieldValues({});
+                                            setError(null);
                                         }}
                                         options={selectedCat.children.map(child => ({
                                             id: child.id,
                                             name: child.name,
                                             icon: child.icon
                                         }))}
-                                        placeholder="Choisir (optionnel)"
+                                        placeholder="Choisir une sous-catégorie"
                                         disabled={isLoading}
                                         variant="subcategory"
                                     />
                                 )}
                             </div>
 
-                            {/* Prix et Localisation */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Prix (DZD) <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="relative">
-                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                        <input
-                                            type="number"
-                                            id="price"
-                                            name="price"
-                                            value={formData.price}
-                                            onChange={handleInputChange}
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                            placeholder="0"
-                                            min="0"
-                                            step="1"
-                                            disabled={isLoading}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Localisation <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                        <input
-                                            type="text"
-                                            id="location"
-                                            name="location"
-                                            value={formData.location}
-                                            onChange={handleInputChange}
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                                            placeholder="Ville ou Wilaya"
-                                            disabled={isLoading}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-
-
-                            {/* Champs dynamiques */}
-                            <DynamicFieldsInput
-                                categoryId={formData.subcategoryId || formData.categoryId}
-                                values={dynamicFieldValues}
-                                onChange={handleDynamicFieldChange}
-                                errors={dynamicFieldErrors}
-                                disabled={isLoading}
-                            />
-
-                            {/* Section Numéro de contact */}
-                            <div className="space-y-4 pt-6 border-t border-gray-100">
-                                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                                    <Phone className="text-primary" size={24} />
-                                    Numéro de contact
-                                </h2>
-
-                                <p className="text-sm text-gray-500">
-                                    Ce numéro sera visible par les acheteurs intéressés par votre annonce.
+                            {/* Message d'aide si pas de sélection complète */}
+                            {!isCategorySelected && (
+                                <p className="text-sm text-gray-500 italic flex items-center gap-2">
+                                    <AlertCircle size={16} className="text-primary/50" />
+                                    {!formData.categoryId
+                                        ? "Sélectionnez d'abord une catégorie pour continuer"
+                                        : "Veuillez choisir une sous-catégorie"}
                                 </p>
-
-                                <div className="space-y-3">
-                                    {/* Option 1: Utiliser le numéro du profil */}
-                                    <label
-                                        className={`
-                                            flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
-                                            ${formData.useProfilePhone
-                                                ? 'border-primary bg-primary/5 shadow-sm'
-                                                : 'border-gray-200 hover:border-gray-300 bg-white'
-                                            }
-                                        `}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="phoneChoice"
-                                            checked={formData.useProfilePhone}
-                                            onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: true, contactPhone: '' }))}
-                                            className="w-5 h-5 text-primary focus:ring-primary"
-                                            disabled={isLoading}
-                                        />
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-gray-900">
-                                                    Utiliser mon numéro d'inscription
-                                                </span>
-                                                {formData.useProfilePhone && (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                                        Recommandé
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {user?.phone ? (
-                                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                                    <Phone size={14} className="text-gray-400" />
-                                                    {user.phone}
-                                                </p>
-                                            ) : (
-                                                <p className="text-sm text-orange-500 mt-1">
-                                                    ⚠️ Aucun numéro enregistré dans votre profil
-                                                </p>
-                                            )}
-                                        </div>
-                                    </label>
-
-                                    {/* Option 2: Utiliser un autre numéro */}
-                                    <label
-                                        className={`
-                                            flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
-                                            ${!formData.useProfilePhone
-                                                ? 'border-primary bg-primary/5 shadow-sm'
-                                                : 'border-gray-200 hover:border-gray-300 bg-white'
-                                            }
-                                        `}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="phoneChoice"
-                                            checked={!formData.useProfilePhone}
-                                            onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: false }))}
-                                            className="w-5 h-5 text-primary focus:ring-primary mt-0.5"
-                                            disabled={isLoading}
-                                        />
-                                        <div className="flex-1 space-y-3">
-                                            <span className="font-medium text-gray-900">
-                                                Utiliser un autre numéro
-                                            </span>
-
-                                            {!formData.useProfilePhone && (
-                                                <div className="space-y-2 animate-fadeIn">
-                                                    <div className="relative">
-                                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                                        <input
-                                                            type="tel"
-                                                            value={formData.contactPhone}
-                                                            onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
-                                                            className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent outline-none transition ${formData.contactPhone.trim()
-                                                                ? isValidPhoneNumber(formData.contactPhone)
-                                                                    ? 'border-green-500 focus:ring-green-500'
-                                                                    : 'border-red-400 focus:ring-red-400'
-                                                                : 'border-gray-300 focus:ring-primary'
-                                                                }`}
-                                                            placeholder="Ex: 0555 12 34 56"
-                                                            disabled={isLoading}
-                                                        />
-                                                        {formData.contactPhone.trim() && (
-                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                                {isValidPhoneNumber(formData.contactPhone) ? (
-                                                                    <CheckCircle className="text-green-500" size={20} />
-                                                                ) : (
-                                                                    <AlertCircle className="text-red-400" size={20} />
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {formData.contactPhone.trim() && !isValidPhoneNumber(formData.contactPhone) && (
-                                                        <p className="text-xs text-red-500 flex items-center gap-1">
-                                                            <AlertCircle size={12} />
-                                                            Format requis: 05, 06 ou 07 suivi de 8 chiffres
-                                                        </p>
-                                                    )}
-                                                    {!formData.contactPhone.trim() && (
-                                                        <p className="text-xs text-gray-500">
-                                                            Format algérien: 05XX XX XX XX, 06XX XX XX XX ou 07XX XX XX XX
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </label>
-                                </div>
-
-                                {/* Avertissement si pas de numéro du profil et option 1 sélectionnée */}
-                                {formData.useProfilePhone && !user?.phone && (
-                                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
-                                        <AlertCircle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
-                                        <div>
-                                            <p className="text-sm text-orange-700 font-medium">
-                                                Vous n'avez pas de numéro enregistré
-                                            </p>
-                                            <p className="text-sm text-orange-600 mt-1">
-                                                Veuillez sélectionner "Utiliser un autre numéro" et entrer votre numéro de contact.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            )}
                         </div>
 
-                        {/* Bouton Submit */}
+                        {/* LE RESTE DU FORMULAIRE - APPARAÎT SEULEMENT APRÈS SÉLECTION COMPLÈTE */}
+                        {isCategorySelected && (
+                            <>
+                                {/* Images */}
+                                <div className="space-y-4 pt-6 border-t border-gray-200">
+                                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                                        <Camera className="text-primary" size={24} />
+                                        Photos (1-5)
+                                    </h2>
+
+                                    {/* Preview des images */}
+                                    {previewUrls.length > 0 && (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            {previewUrls.map((url, index) => (
+                                                <div key={index} className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
+                                                    <Image
+                                                        src={url}
+                                                        alt={`Preview ${index + 1}`}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeImage(index)}
+                                                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                    {index === 0 && (
+                                                        <div className="absolute bottom-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded">
+                                                            Photo principale
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Upload */}
+                                    {selectedFiles.length < 5 && (
+                                        <label className="block">
+                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary cursor-pointer transition">
+                                                <Upload className="mx-auto text-gray-400 mb-2" size={48} />
+                                                <p className="text-sm text-gray-600">
+                                                    Cliquez pour ajouter des images
+                                                </p>
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    Maximum 5 images (JPG, PNG)
+                                                </p>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handleImageSelect}
+                                                disabled={isLoading}
+                                            />
+                                        </label>
+                                    )}
+                                </div>
+
+                                {/* Détails */}
+                                <div className="space-y-6 pt-6 border-t border-gray-200">
+                                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                                        <Tag className="text-primary" size={24} />
+                                        Détails de l&apos;annonce
+                                    </h2>
+
+                                    {/* Titre */}
+                                    <div>
+                                        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Titre <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="title"
+                                            name="title"
+                                            value={formData.title}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                            placeholder="Ex: iPhone 14 Pro Max - Comme neuf"
+                                            disabled={isLoading}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Description */}
+                                    <div>
+                                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Description <span className="text-red-500">*</span>
+                                        </label>
+                                        <textarea
+                                            id="description"
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleInputChange}
+                                            rows={5}
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+                                            placeholder="Décrivez votre article en détail..."
+                                            disabled={isLoading}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Prix et Localisation */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Prix (DZD) <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                                <input
+                                                    type="number"
+                                                    id="price"
+                                                    name="price"
+                                                    value={formData.price}
+                                                    onChange={handleInputChange}
+                                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                                    placeholder="0"
+                                                    min="0"
+                                                    step="1"
+                                                    disabled={isLoading}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Localisation <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                                <input
+                                                    type="text"
+                                                    id="location"
+                                                    name="location"
+                                                    value={formData.location}
+                                                    onChange={handleInputChange}
+                                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                                    placeholder="Ville ou Wilaya"
+                                                    disabled={isLoading}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Champs dynamiques */}
+                                    <DynamicFieldsInput
+                                        categoryId={formData.subcategoryId || formData.categoryId}
+                                        values={dynamicFieldValues}
+                                        onChange={handleDynamicFieldChange}
+                                        errors={dynamicFieldErrors}
+                                        disabled={isLoading}
+                                    />
+                                </div>
+
+                                {/* Section Numéro de contact */}
+                                <div className="space-y-4 pt-6 border-t border-gray-100">
+                                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                                        <Phone className="text-primary" size={24} />
+                                        Numéro de contact
+                                    </h2>
+
+                                    <p className="text-sm text-gray-500">
+                                        Ce numéro sera visible par les acheteurs intéressés par votre annonce.
+                                    </p>
+
+                                    <div className="space-y-3">
+                                        {/* Option 1: Utiliser le numéro du profil */}
+                                        <label
+                                            className={`
+                                            flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
+                                            ${formData.useProfilePhone
+                                                    ? 'border-primary bg-primary/5 shadow-sm'
+                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                }
+                                        `}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="phoneChoice"
+                                                checked={formData.useProfilePhone}
+                                                onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: true, contactPhone: '' }))}
+                                                className="w-5 h-5 text-primary focus:ring-primary"
+                                                disabled={isLoading}
+                                            />
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-gray-900">
+                                                        Utiliser mon numéro d'inscription
+                                                    </span>
+                                                    {formData.useProfilePhone && (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                                            Recommandé
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {user?.phone ? (
+                                                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                                                        <Phone size={14} className="text-gray-400" />
+                                                        {user.phone}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-sm text-orange-500 mt-1">
+                                                        ⚠️ Aucun numéro enregistré dans votre profil
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </label>
+
+                                        {/* Option 2: Utiliser un autre numéro */}
+                                        <label
+                                            className={`
+                                            flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
+                                            ${!formData.useProfilePhone
+                                                    ? 'border-primary bg-primary/5 shadow-sm'
+                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                }
+                                        `}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="phoneChoice"
+                                                checked={!formData.useProfilePhone}
+                                                onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: false }))}
+                                                className="w-5 h-5 text-primary focus:ring-primary mt-0.5"
+                                                disabled={isLoading}
+                                            />
+                                            <div className="flex-1 space-y-3">
+                                                <span className="font-medium text-gray-900">
+                                                    Utiliser un autre numéro
+                                                </span>
+
+                                                {!formData.useProfilePhone && (
+                                                    <div className="space-y-2 animate-fadeIn">
+                                                        <div className="relative">
+                                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                                            <input
+                                                                type="tel"
+                                                                value={formData.contactPhone}
+                                                                onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
+                                                                className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent outline-none transition ${formData.contactPhone.trim()
+                                                                    ? isValidPhoneNumber(formData.contactPhone)
+                                                                        ? 'border-green-500 focus:ring-green-500'
+                                                                        : 'border-red-400 focus:ring-red-400'
+                                                                    : 'border-gray-300 focus:ring-primary'
+                                                                    }`}
+                                                                placeholder="Ex: 0555 12 34 56"
+                                                                disabled={isLoading}
+                                                            />
+                                                            {formData.contactPhone.trim() && (
+                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                                    {isValidPhoneNumber(formData.contactPhone) ? (
+                                                                        <CheckCircle className="text-green-500" size={20} />
+                                                                    ) : (
+                                                                        <AlertCircle className="text-red-400" size={20} />
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {formData.contactPhone.trim() && !isValidPhoneNumber(formData.contactPhone) && (
+                                                            <p className="text-xs text-red-500 flex items-center gap-1">
+                                                                <AlertCircle size={12} />
+                                                                Format requis: 05, 06 ou 07 suivi de 8 chiffres
+                                                            </p>
+                                                        )}
+                                                        {!formData.contactPhone.trim() && (
+                                                            <p className="text-xs text-gray-500">
+                                                                Format algérien: 05XX XX XX XX, 06XX XX XX XX ou 07XX XX XX XX
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    {/* Avertissement si pas de numéro du profil et option 1 sélectionnée */}
+                                    {formData.useProfilePhone && !user?.phone && (
+                                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
+                                            <AlertCircle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
+                                            <div>
+                                                <p className="text-sm text-orange-700 font-medium">
+                                                    Vous n&apos;avez pas de numéro enregistré
+                                                </p>
+                                                <p className="text-sm text-orange-600 mt-1">
+                                                    Veuillez sélectionner &quot;Utiliser un autre numéro&quot; et entrer votre numéro de contact.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {/* Bouton Submit - visible mais désactivé si pas de catégorie */}
                         <div className="pt-6 border-t border-gray-200">
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isLoading || !isCategorySelected}
                                 className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 px-6 rounded-xl hover:shadow-lg transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                             >
                                 {isLoading ? (

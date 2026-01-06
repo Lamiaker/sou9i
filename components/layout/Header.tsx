@@ -60,9 +60,9 @@ export default function Header() {
             <Image
               src={logo}
               alt="SweetLook"
-              width={130}
-              height={36}
-              style={{ transform: "scale(1.5)" }}
+              width={160}
+              height={45}
+              priority
               className="cursor-pointer object-contain"
             />
           </Link>
@@ -96,8 +96,8 @@ export default function Header() {
                 alt="SweetLook"
                 width={130}
                 height={36}
-                style={{ transform: "scale(1)" }}
-                className="cursor-pointer object-contain"
+                priority
+                className="cursor-pointer object-contain "
               />
             </Link>
 

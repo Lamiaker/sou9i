@@ -6,7 +6,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 
 // Helper function to revalidate all category-related pages
 function revalidateCategoryPages(slug?: string) {
-    revalidateTag('categories', 'page');            // Global tag invalidation
+    revalidateTag('categories', 'default');            // Global tag invalidation
     revalidatePath('/');                    // Homepage
     revalidatePath('/categories');          // Categories list page
     revalidatePath('/categories/[slug]', 'page'); // All category pages

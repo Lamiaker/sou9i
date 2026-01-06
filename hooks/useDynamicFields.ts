@@ -5,7 +5,7 @@ export interface DynamicField {
     categoryId: string
     name: string
     label: string
-    type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'SELECT' | 'BOOLEAN' | 'IMAGE'
+    type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'SELECT' | 'MULTISELECT' | 'BOOLEAN' | 'IMAGE'
     placeholder: string | null
     required: boolean
     order: number
@@ -100,6 +100,26 @@ export function validateFieldValue(
         case 'SELECT': {
             if (field.options && !field.options.includes(value)) {
                 return { valid: false, error: `Valeur invalide pour "${field.label}"` }
+            }
+            break
+        }
+
+        case 'MULTISELECT': {
+            try {
+                const selectedValues = JSON.parse(value)
+                if (!Array.isArray(selectedValues)) {
+                    return { valid: false, error: `Format invalide pour "${field.label}"` }
+                }
+                // Vérifier que toutes les valeurs sont dans les options
+                if (field.options) {
+                    for (const v of selectedValues) {
+                        if (!field.options.includes(v)) {
+                            return { valid: false, error: `Valeur invalide pour "${field.label}"` }
+                        }
+                    }
+                }
+            } catch {
+                return { valid: false, error: `Format invalide pour "${field.label}"` }
             }
             break
         }

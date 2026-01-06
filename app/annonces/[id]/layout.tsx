@@ -9,7 +9,7 @@ export async function generateMetadata(
     { params }: Props,
     parent: ResolvingMetadata
 ): Promise<Metadata> {
-    const id = params.id;
+    const { id } = await params;
 
     try {
         const ad = await AdService.getAdById(id);

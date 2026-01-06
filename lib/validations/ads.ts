@@ -6,7 +6,7 @@ import { z } from "zod"
 export const AD_VALIDATION = {
     TITLE_MIN: 3,
     TITLE_MAX: 100,
-    DESCRIPTION_MIN: 10,
+    DESCRIPTION_MIN: 5,
     DESCRIPTION_MAX: 5000,
     PRICE_MIN: 0,
     PRICE_MAX: 999_999_999, // ~1 milliard DZD max
