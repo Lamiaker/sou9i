@@ -311,7 +311,7 @@ export default function DeposerAnnonce() {
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-primary to-secondary px-6 py-8 text-white">
                         <h1 className="text-3xl font-bold">Déposer une annonce</h1>
@@ -348,10 +348,10 @@ export default function DeposerAnnonce() {
                         </div>
                     )}
 
-                    <form className="p-6 sm:p-8 space-y-8" onSubmit={handleSubmit}>
+                    <form className="p-6 sm:p-8 space-y-8 overflow-visible" onSubmit={handleSubmit}>
 
                         {/* ÉTAPE 1: Catégorie - TOUJOURS EN PREMIER */}
-                        <div className="space-y-6">
+                        <div className={`space-y-6 overflow-visible ${!isCategorySelected ? 'min-h-[500px] pb-8' : ''}`}>
                             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                                 <Tag className="text-primary" size={24} />
                                 Choisir une catégorie

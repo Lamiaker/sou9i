@@ -16,6 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: "SweetLook - Marketplace de Services et Articles en Algérie",
   description: "Votre plateforme en ligne pour acheter, vendre et proposer des services en Algérie. Mode, beauté, maison, artisanat et bien plus.",
   icons: {
