@@ -5,13 +5,13 @@ import { usePathname } from 'next/navigation';
 import { Clock, CheckCircle, Star, XCircle, Ban, Users, Search } from 'lucide-react';
 
 const tabs = [
-    { name: 'En attente', href: '/admin/users', icon: Clock },
-    { name: 'Vérifiés', href: '/admin/users/verified', icon: CheckCircle },
-    { name: 'Confiance', href: '/admin/users/trusted', icon: Star },
-    { name: 'Rejetés', href: '/admin/users/rejected', icon: XCircle },
-    { name: 'Bannis', href: '/admin/users/banned', icon: Ban },
-    { name: 'Tous', href: '/admin/users/all', icon: Users },
-    { name: 'Recherche ID', href: '/admin/search', icon: Search },
+    { name: 'En attente', href: '/sl-panel-9x7k/users', icon: Clock },
+    { name: 'Vérifiés', href: '/sl-panel-9x7k/users/verified', icon: CheckCircle },
+    { name: 'Confiance', href: '/sl-panel-9x7k/users/trusted', icon: Star },
+    { name: 'Rejetés', href: '/sl-panel-9x7k/users/rejected', icon: XCircle },
+    { name: 'Bannis', href: '/sl-panel-9x7k/users/banned', icon: Ban },
+    { name: 'Tous', href: '/sl-panel-9x7k/users/all', icon: Users },
+    { name: 'Recherche ID', href: '/sl-panel-9x7k/search', icon: Search },
 ];
 
 export default function UsersNav() {

@@ -6,7 +6,7 @@ import AdCard from "@/components/ui/AdCard";
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import Pagination from "@/components/ui/Pagination";
 import InfiniteScroll from "@/components/ui/InfiniteScroll";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { PaginationInfo } from "@/types";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -52,8 +52,14 @@ interface CategoryAdsClientProps {
     pagination?: PaginationInfo;
 }
 
-export default function CategoryAdsClient({ category, initialAds, pagination }: CategoryAdsClientProps) {
+export default function CategoryAdsClient({ category, initialAds, pagination: initialPagination }: CategoryAdsClientProps) {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    // Récupérer la page depuis l'URL
+    const pageInUrl = Number(searchParams?.get('page')) || 1;
+    const limit = initialPagination?.limit || 12;
+
     // States pour les filtres
     const [ads, setAds] = useState<AdForGrid[]>(initialAds);
     const [loading, setLoading] = useState(false);
@@ -68,10 +74,10 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
     // ===== Infinite Scroll pour mobile =====
     const [isMobile, setIsMobile] = useState(false);
     const [infiniteAds, setInfiniteAds] = useState<AdForGrid[]>(initialAds);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(pageInUrl);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [totalPages, setTotalPages] = useState(pagination?.totalPages || 1);
-    const [totalAds, setTotalAds] = useState(pagination?.total || 0);
+    const [totalPages, setTotalPages] = useState(initialPagination?.totalPages || 1);
+    const [totalAds, setTotalAds] = useState(initialPagination?.total || 0);
 
     // Debounce des filtres de prix et localisation
     const debouncedPriceMin = useDebounce(priceMin, 400);
@@ -92,23 +98,21 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // Mettre à jour les annonces quand initialAds change
+    // Mettre à jour les annonces quand initialAds change (ex: changement de catégorie via route)
     useEffect(() => {
-        setAds(initialAds);
-        setInfiniteAds(initialAds);
-        setCurrentPage(1);
-        setTotalPages(pagination?.totalPages || 1);
-        setTotalAds(pagination?.total || 0);
-    }, [initialAds, pagination]);
-
-    // Récupérer les annonces quand les filtres changent (avec debounce)
-    useEffect(() => {
-        // Si aucun filtre n'est appliqué, utiliser les données initiales
-        if (!selectedSubcategory && !debouncedPriceMin && !debouncedPriceMax && !debouncedLocation) {
+        if (pageInUrl === 1 && !selectedSubcategory && !debouncedPriceMin && !debouncedPriceMax && !debouncedLocation) {
             setAds(initialAds);
             setInfiniteAds(initialAds);
             setCurrentPage(1);
-            setTotalPages(pagination?.totalPages || 1);
+            setTotalPages(initialPagination?.totalPages || 1);
+            setTotalAds(initialPagination?.total || 0);
+        }
+    }, [initialAds, initialPagination, pageInUrl]);
+
+    // Récupérer les annonces quand les filtres OU la page changent
+    useEffect(() => {
+        // Ne pas fetcher si on est sur la page 1 et sans filtres (on a déjà les données via ISR)
+        if (pageInUrl === 1 && !selectedSubcategory && !debouncedPriceMin && !debouncedPriceMax && !debouncedLocation) {
             return;
         }
 
@@ -123,15 +127,22 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
                 if (debouncedLocation) params.append('location', debouncedLocation);
                 params.append('status', 'active');
 
+                // Ajouter la page seulement si on est pas en mode mobile (l'infinite scroll gère sa propre page)
+                if (!isMobile) {
+                    params.append('page', pageInUrl.toString());
+                    params.append('limit', limit.toString());
+                }
+
                 const response = await fetch(`/api/ads?${params.toString()}`);
                 const data = await response.json();
 
                 if (data.success) {
                     const newAds = Array.isArray(data.data) ? data.data : [];
                     setAds(newAds);
-                    setInfiniteAds(newAds);
-                    setCurrentPage(1);
-                    // Mettre à jour la pagination si disponible
+                    if (!isMobile) {
+                        setInfiniteAds(newAds);
+                        setCurrentPage(pageInUrl);
+                    }
                     if (data.pagination) {
                         setTotalPages(data.pagination.totalPages || 1);
                         setTotalAds(data.pagination.total || newAds.length);
@@ -145,7 +156,7 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
         };
 
         fetchFilteredAds();
-    }, [category.id, selectedSubcategory, debouncedPriceMin, debouncedPriceMax, debouncedLocation, initialAds, pagination?.totalPages]);
+    }, [category.id, selectedSubcategory, debouncedPriceMin, debouncedPriceMax, debouncedLocation, pageInUrl, isMobile, limit]);
 
     // ===== Fonction pour charger plus d'annonces (Infinite Scroll) =====
     const loadMoreAds = useCallback(async () => {
@@ -469,9 +480,9 @@ export default function CategoryAdsClient({ category, initialAds, pagination }: 
                 )}
 
                 {/* Pagination - Uniquement sur desktop */}
-                {!isMobile && pagination && pagination.totalPages > 1 && !hasFilters && (
+                {!isMobile && initialPagination && initialPagination.totalPages > 1 && !hasFilters && (
                     <Pagination
-                        pagination={pagination}
+                        pagination={initialPagination}
                         basePath={pathname || `/categories/${category.slug}`}
                         showItemsPerPage={true}
                     />

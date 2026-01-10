@@ -3,12 +3,27 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import NextTopLoader from 'nextjs-toploader';
-import SessionProvider from "@/components/providers/SessionProvider";
-import SWRProvider from "@/components/providers/SWRProvider";
-import ConditionalLayout from "@/components/layout/ConditionalLayout";
-import BanGuard from "@/components/auth/BanGuard";
 import { ToastProvider } from "@/components/ui/Toast";
 import NetworkStatus from "@/components/ui/NetworkStatus";
+
+/**
+ * RootLayout NEUTRE - Architecture ISR
+ * 
+ * ✅ Ce layout ne contient PAS :
+ * - force-dynamic (permet ISR aux enfants)
+ * - SessionProvider (déplacé dans les layouts enfants)
+ * - BanGuard (centralisé dans le middleware)
+ * - ConditionalLayout (remplacé par route groups)
+ * 
+ * La stratégie de rendu est déterminée par les layouts enfants :
+ * - (public)/layout.tsx  → ISR/SSG (pas de force-dynamic)
+ * - (protected)/layout.tsx → Dynamic (avec force-dynamic)
+ * - (auth)/layout.tsx → Dynamic (avec force-dynamic)
+ * - sl-panel-9x7k/layout.tsx → Dynamic (avec force-dynamic)
+ * 
+ * Sécurité : Le middleware gère l'authentification et le bannissement
+ * AVANT d'atteindre les pages. Aucune fuite de données auth dans le cache.
+ */
 
 const inter = Inter({
   variable: "--font-inter",
@@ -35,19 +50,10 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <NextTopLoader color="#ec4899" showSpinner={false} />
         <NetworkStatus />
-        <SessionProvider>
-          <SWRProvider>
-            <ToastProvider>
-              <BanGuard>
-                <ConditionalLayout>
-                  {children}
-                </ConditionalLayout>
-              </BanGuard>
-            </ToastProvider>
-          </SWRProvider>
-        </SessionProvider>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );
 }
-

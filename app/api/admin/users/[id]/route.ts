@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin } from '@/lib/admin-guard';
 import { prisma } from '@/lib/prisma';
+import { AdminPermission } from '@prisma/client';
 
-// GET: Récupérer tous les détails d'un utilisateur par son ID
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json(
-                { error: 'Non autorisé' },
-                { status: 401 }
-            );
-        }
+        const authResult = await requireAdmin(request, {
+            permissions: [AdminPermission.USERS_READ],
+        });
+        if (authResult instanceof NextResponse) return authResult;
 
         const { id: userId } = await params;
 
@@ -27,7 +22,6 @@ export async function GET(
             );
         }
 
-        // Récupérer l'utilisateur avec toutes ses relations
         const user = await prisma.user.findUnique({
             where: { id: userId },
             select: {
@@ -46,7 +40,6 @@ export async function GET(
                 bannedAt: true,
                 createdAt: true,
                 updatedAt: true,
-                // Annonces de l'utilisateur
                 ads: {
                     select: {
                         id: true,
@@ -69,7 +62,6 @@ export async function GET(
                     },
                     orderBy: { createdAt: 'desc' }
                 },
-                // Signalements envoyés par l'utilisateur
                 reportsSent: {
                     select: {
                         id: true,
@@ -93,7 +85,6 @@ export async function GET(
                     },
                     orderBy: { createdAt: 'desc' }
                 },
-                // Signalements reçus contre l'utilisateur
                 reportsReceived: {
                     select: {
                         id: true,
@@ -117,7 +108,6 @@ export async function GET(
                     },
                     orderBy: { createdAt: 'desc' }
                 },
-                // Favoris
                 favorites: {
                     select: {
                         id: true,
@@ -132,9 +122,8 @@ export async function GET(
                         }
                     },
                     orderBy: { createdAt: 'desc' },
-                    take: 20 // Limiter à 20 favoris
+                    take: 20
                 },
-                // Avis reçus
                 receivedReviews: {
                     select: {
                         id: true,
@@ -151,7 +140,6 @@ export async function GET(
                     },
                     orderBy: { createdAt: 'desc' }
                 },
-                // Avis envoyés
                 sentReviews: {
                     select: {
                         id: true,
@@ -167,7 +155,6 @@ export async function GET(
                     },
                     orderBy: { createdAt: 'desc' }
                 },
-                // Conversations (juste le compte)
                 _count: {
                     select: {
                         conversations: true,
@@ -184,7 +171,6 @@ export async function GET(
             );
         }
 
-        // Calculer des statistiques supplémentaires
         const stats = {
             totalAds: user.ads.length,
             activeAds: user.ads.filter(ad => ad.status === 'active' && ad.moderationStatus === 'APPROVED').length,

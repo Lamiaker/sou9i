@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 
-export default function SearchBarre() {
+// Composant interne qui utilise useSearchParams
+function SearchBarInner() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams?.get("q") || "");
   const router = useRouter();
@@ -41,5 +42,29 @@ export default function SearchBarre() {
         <Search size={18} />
       </button>
     </form>
+  );
+}
+
+// Skeleton pour le chargement
+function SearchBarSkeleton() {
+  return (
+    <div className="flex items-center border border-gray-300 rounded-2xl overflow-hidden shadow-sm bg-white max-w-lg w-full animate-pulse">
+      <div className="flex-1 px-5 py-2.5">
+        <div className="h-4 bg-gray-200 rounded w-48"></div>
+      </div>
+      <div className="h-9 w-9 rounded-xl bg-gray-200 mr-1.5"></div>
+    </div>
+  );
+}
+
+/**
+ * SearchBar avec Suspense boundary
+ * Permet le prerendering statique (ISR/SSG) des pages parentes
+ */
+export default function SearchBar() {
+  return (
+    <Suspense fallback={<SearchBarSkeleton />}>
+      <SearchBarInner />
+    </Suspense>
   );
 }

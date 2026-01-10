@@ -320,6 +320,49 @@ export class AdminService {
         })
     }
 
+    /**
+     * Bannir un utilisateur
+     */
+    static async banUser(userId: string, reason?: string) {
+        // Bannir l'utilisateur
+        const result = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                isBanned: true,
+                banReason: reason || 'Violation des conditions d\'utilisation',
+                bannedAt: new Date(),
+            },
+        });
+
+        // Rejeter toutes les annonces actives de l'utilisateur
+        await prisma.ad.updateMany({
+            where: {
+                userId,
+                moderationStatus: { in: ['APPROVED', 'PENDING'] }
+            },
+            data: {
+                moderationStatus: 'REJECTED',
+                rejectionReason: 'Compte banni: ' + (reason || 'Compte suspendu')
+            } as any,
+        });
+
+        return result;
+    }
+
+    /**
+     * Débannir un utilisateur
+     */
+    static async unbanUser(userId: string) {
+        return prisma.user.update({
+            where: { id: userId },
+            data: {
+                isBanned: false,
+                banReason: null,
+                bannedAt: null,
+            },
+        });
+    }
+
     // ============================================
     // GESTION DES ANNONCES
     // ============================================

@@ -221,7 +221,7 @@ export default function CategoryDetailView({ category, allCategories }: Category
             {/* Header / Breadcrumb */}
             <div className="flex items-center gap-4">
                 <Link
-                    href="/admin/categories"
+                    href="/sl-panel-9x7k/categories"
                     className="p-2 bg-white/5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                 >
                     <ArrowLeft size={20} />

@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 import { Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 const tabs = [
-    { name: 'En attente', href: '/admin/reports', icon: Clock },
-    { name: 'Résolus', href: '/admin/reports/resolved', icon: CheckCircle },
-    { name: 'Rejetés', href: '/admin/reports/rejected', icon: XCircle },
-    { name: 'Tous', href: '/admin/reports/all', icon: AlertTriangle },
+    { name: 'En attente', href: '/sl-panel-9x7k/reports', icon: Clock },
+    { name: 'Résolus', href: '/sl-panel-9x7k/reports/resolved', icon: CheckCircle },
+    { name: 'Rejetés', href: '/sl-panel-9x7k/reports/rejected', icon: XCircle },
+    { name: 'Tous', href: '/sl-panel-9x7k/reports/all', icon: AlertTriangle },
 ];
 
 export default function ReportsNav() {

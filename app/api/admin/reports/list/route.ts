@@ -1,26 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin } from '@/lib/admin-guard';
 import { AdminService } from '@/services';
 import { sanitizePaginationParams } from '@/lib/utils/pagination';
 import { PAGINATION } from '@/lib/constants/pagination';
+import { AdminPermission } from '@prisma/client';
 
-/**
- * GET - Récupérer la liste des signalements avec filtres
- */
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json(
-                { error: 'Non autorisé' },
-                { status: 403 }
-            );
-        }
+        const authResult = await requireAdmin(request, {
+            permissions: [AdminPermission.REPORTS_READ],
+        });
+        if (authResult instanceof NextResponse) return authResult;
 
         const { searchParams } = new URL(request.url);
-        // ✅ Validation sécurisée des paramètres de pagination
         const { page, limit } = sanitizePaginationParams(
             searchParams.get('page'),
             searchParams.get('limit'),
@@ -47,3 +39,5 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+
+

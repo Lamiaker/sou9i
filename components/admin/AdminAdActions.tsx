@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
 import { Check, X, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
 import { mutate } from "swr";
 
@@ -12,8 +13,15 @@ interface AdminAdActionsProps {
 }
 
 export default function AdminAdActions({ adId, moderationStatus, rejectionReason }: AdminAdActionsProps) {
+    const { data: session } = useSession();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    // ✅ ARCHITECTURE LONG TERME : Masquer le panneau si l'utilisateur n'est pas ADMIN
+    // Cela se fait côté client pour permettre au serveur de mettre la page en cache ISR.
+    if (!session || session.user.role !== 'ADMIN') {
+        return null;
+    }
 
     const handleAction = async (action: 'approve' | 'reject') => {
         let reason = '';
@@ -133,7 +141,7 @@ export default function AdminAdActions({ adId, moderationStatus, rejectionReason
                     )}
 
                     <a
-                        href="/admin/ads"
+                        href="/sl-panel-9x7k/ads"
                         className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium transition shadow-sm"
                     >
                         Admin

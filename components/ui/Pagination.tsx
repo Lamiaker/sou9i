@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
@@ -19,7 +19,8 @@ interface PaginationProps {
     enablePrefetch?: boolean;
 }
 
-export default function Pagination({
+// Composant interne qui utilise useSearchParams
+function PaginationInner({
     pagination,
     basePath,
     showPageNumbers = true,
@@ -229,3 +230,27 @@ export default function Pagination({
     );
 }
 
+// Fallback skeleton pour le chargement
+function PaginationSkeleton() {
+    return (
+        <div className="flex items-center justify-center gap-2 py-6 animate-pulse">
+            <div className="h-9 w-9 bg-gray-200 rounded-lg"></div>
+            <div className="h-9 w-9 bg-gray-200 rounded-lg"></div>
+            <div className="h-9 w-20 bg-gray-200 rounded-lg"></div>
+            <div className="h-9 w-9 bg-gray-200 rounded-lg"></div>
+            <div className="h-9 w-9 bg-gray-200 rounded-lg"></div>
+        </div>
+    );
+}
+
+/**
+ * Composant Pagination avec Suspense boundary
+ * Permet le prerendering statique (ISR/SSG) des pages parentes
+ */
+export default function Pagination(props: PaginationProps) {
+    return (
+        <Suspense fallback={<PaginationSkeleton />}>
+            <PaginationInner {...props} />
+        </Suspense>
+    );
+}

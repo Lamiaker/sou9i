@@ -19,6 +19,7 @@ export function SectionPublicite({ title, image }: SectionPubliciteProps) {
             src={image}
             alt={title}
             fill
+            sizes="(max-width: 1152px) 100vw, 1152px"
             className="object-cover"
           />
         </div>

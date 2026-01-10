@@ -1,24 +1,27 @@
+
+
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin, getRequestContext } from '@/lib/admin-guard';
+import { getAdminSession, logAdminAudit } from '@/lib/admin-auth';
 import { AdminService } from '@/services';
 import { sanitizePaginationParams } from '@/lib/utils/pagination';
 import { PAGINATION } from '@/lib/constants/pagination';
+import { AdminPermission } from '@prisma/client';
 
-// GET: Récupérer les utilisateurs avec pagination et filtres (pour SWR polling)
+// GET: Récupérer les utilisateurs avec pagination et filtres
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        // ✅ Nouvelle vérification avec système admin séparé
+        const authResult = await requireAdmin(request, {
+            permissions: [AdminPermission.USERS_READ],
+        });
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json(
-                { error: 'Non autorisé' },
-                { status: 403 }
-            );
+        // Si c'est une NextResponse, c'est une erreur d'auth
+        if (authResult instanceof NextResponse) {
+            return authResult;
         }
 
         const { searchParams } = new URL(request.url);
-        // ✅ Validation sécurisée des paramètres de pagination
         const { page, limit } = sanitizePaginationParams(
             searchParams.get('page'),
             searchParams.get('limit'),
@@ -56,15 +59,16 @@ export async function GET(request: NextRequest) {
     }
 }
 
+// POST: Actions sur les utilisateurs
 export async function POST(request: NextRequest) {
     try {
-        // Vérifier que l'utilisateur est admin
-        const session = await getServerSession(authOptions);
+        // Récupérer la session pour les actions qui nécessitent des permissions spécifiques
+        const session = await getAdminSession();
 
-        if (!session || session.user.role !== 'ADMIN') {
+        if (!session) {
             return NextResponse.json(
-                { error: 'Non autorisé' },
-                { status: 403 }
+                { error: 'Non autorisé', code: 'UNAUTHORIZED' },
+                { status: 401 }
             );
         }
 
@@ -78,24 +82,79 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Empêcher l'admin de se modifier lui-même pour certaines actions
-        if (userId === session.user.id && ['delete', 'demote'].includes(action)) {
+        // Déterminer les permissions requises selon l'action
+        let requiredPermission: AdminPermission;
+        switch (action) {
+            case 'verify':
+            case 'unverify':
+            case 'reject':
+                requiredPermission = AdminPermission.USERS_WRITE;
+                break;
+            case 'ban':
+            case 'unban':
+                requiredPermission = AdminPermission.USERS_BAN;
+                break;
+            case 'delete':
+                requiredPermission = AdminPermission.USERS_DELETE;
+                break;
+            case 'promote':
+            case 'demote':
+                requiredPermission = AdminPermission.ADMINS_MANAGE;
+                break;
+            default:
+                return NextResponse.json(
+                    { error: 'Action non reconnue' },
+                    { status: 400 }
+                );
+        }
+
+        // Vérifier la permission (super admin a toutes les permissions)
+        const hasPermission = session.admin.isSuperAdmin ||
+            session.admin.permissions.includes(requiredPermission);
+
+        if (!hasPermission) {
             return NextResponse.json(
-                { error: 'Vous ne pouvez pas effectuer cette action sur votre propre compte' },
-                { status: 400 }
+                { error: 'Permission insuffisante pour cette action', code: 'FORBIDDEN' },
+                { status: 403 }
             );
         }
 
+        // Récupérer contexte pour l'audit
+        const { ipAddress, userAgent } = getRequestContext(request);
+
+        // Exécuter l'action et logger
+        let result: { success: boolean; message: string };
+
         switch (action) {
             case 'verify':
-                // Peut être trusted ou regular verified
                 const { trusted } = body;
                 await AdminService.verifyUser(userId, trusted === true);
-                return NextResponse.json({ success: true, message: trusted ? 'Utilisateur marqué comme de confiance' : 'Utilisateur vérifié' });
+                result = {
+                    success: true,
+                    message: trusted ? 'Utilisateur marqué comme de confiance' : 'Utilisateur vérifié'
+                };
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: trusted ? 'USER_TRUSTED' : 'USER_VERIFIED',
+                    targetType: 'User',
+                    targetId: userId,
+                    ipAddress,
+                    userAgent,
+                });
+                break;
 
             case 'unverify':
                 await AdminService.unverifyUser(userId);
-                return NextResponse.json({ success: true, message: 'Vérification retirée' });
+                result = { success: true, message: 'Vérification retirée' };
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'USER_UNVERIFIED',
+                    targetType: 'User',
+                    targetId: userId,
+                    ipAddress,
+                    userAgent,
+                });
+                break;
 
             case 'reject':
                 const { reason } = body;
@@ -103,19 +162,84 @@ export async function POST(request: NextRequest) {
                     return NextResponse.json({ error: 'Motif requis pour le rejet' }, { status: 400 });
                 }
                 await AdminService.rejectUser(userId, reason);
-                return NextResponse.json({ success: true, message: 'Utilisateur rejeté' });
+                result = { success: true, message: 'Utilisateur rejeté' };
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'USER_REJECTED',
+                    targetType: 'User',
+                    targetId: userId,
+                    details: { reason },
+                    ipAddress,
+                    userAgent,
+                });
+                break;
+
+            case 'ban':
+                const { banReason } = body;
+                await AdminService.banUser(userId, banReason);
+                result = { success: true, message: 'Utilisateur banni' };
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'USER_BANNED',
+                    targetType: 'User',
+                    targetId: userId,
+                    details: { reason: banReason },
+                    ipAddress,
+                    userAgent,
+                });
+                break;
+
+            case 'unban':
+                await AdminService.unbanUser(userId);
+                result = { success: true, message: 'Utilisateur débanni' };
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'USER_UNBANNED',
+                    targetType: 'User',
+                    targetId: userId,
+                    ipAddress,
+                    userAgent,
+                });
+                break;
 
             case 'promote':
                 await AdminService.promoteToAdmin(userId);
-                return NextResponse.json({ success: true, message: 'Utilisateur promu admin' });
+                result = { success: true, message: 'Utilisateur promu admin' };
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'USER_PROMOTED_ADMIN',
+                    targetType: 'User',
+                    targetId: userId,
+                    ipAddress,
+                    userAgent,
+                });
+                break;
 
             case 'demote':
                 await AdminService.demoteToUser(userId);
-                return NextResponse.json({ success: true, message: 'Admin rétrogradé en utilisateur' });
+                result = { success: true, message: 'Admin rétrogradé en utilisateur' };
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'ADMIN_DEMOTED',
+                    targetType: 'User',
+                    targetId: userId,
+                    ipAddress,
+                    userAgent,
+                });
+                break;
 
             case 'delete':
                 await AdminService.deleteUser(userId);
-                return NextResponse.json({ success: true, message: 'Utilisateur supprimé' });
+                result = { success: true, message: 'Utilisateur supprimé' };
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'USER_DELETED',
+                    targetType: 'User',
+                    targetId: userId,
+                    ipAddress,
+                    userAgent,
+                });
+                break;
 
             default:
                 return NextResponse.json(
@@ -123,6 +247,8 @@ export async function POST(request: NextRequest) {
                     { status: 400 }
                 );
         }
+
+        return NextResponse.json(result);
     } catch (error) {
         console.error('Admin users API error:', error);
         return NextResponse.json(
@@ -131,3 +257,5 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+

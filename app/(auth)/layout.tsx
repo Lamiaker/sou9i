@@ -1,4 +1,14 @@
 import type { Metadata } from 'next';
+import PublicLayoutClient from "@/components/layout/PublicLayoutClient";
+
+/**
+ * Layout pour les pages d'authentification (login, signup, forgot-password, etc.)
+ * 
+ * ✅ Ce layout contient :
+ * - force-dynamic (pas de cache pour les formulaires auth)
+ * - SessionProvider (vérifie si déjà connecté pour redirect)
+ */
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
     title: 'Connexion / Inscription | SweetLook',
@@ -11,8 +21,10 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            {children}
-        </div>
+        <PublicLayoutClient>
+            <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+                {children}
+            </div>
+        </PublicLayoutClient>
     );
 }

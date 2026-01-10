@@ -330,7 +330,7 @@ export default function CategoriesManager({ initialCategories, pagination, curre
                         {categories.map((category) => renderCategory(category))}
 
                         {/* Pagination */}
-                        <AdminPagination pagination={pagination} basePath="/admin/categories" />
+                        <AdminPagination pagination={pagination} basePath="/sl-panel-9x7k/categories" />
                     </>
                 )}
             </div>

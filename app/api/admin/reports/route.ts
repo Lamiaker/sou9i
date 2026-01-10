@@ -1,49 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { AdminService } from '@/services';
-import { revalidatePath } from 'next/cache';
-
 /**
- * Revalider toutes les pages affectées par les actions sur les signalements
- */
-function revalidateReportPages() {
-    // Pages admin
-    revalidatePath('/admin/reports');
-    revalidatePath('/admin/reports/resolved');
-    revalidatePath('/admin/reports/rejected');
-    revalidatePath('/admin/reports/all');
-    revalidatePath('/admin/ads');
-    revalidatePath('/admin/users');
-    revalidatePath('/admin');
-
-    // Pages publiques du site (affectées si annonce supprimée/masquée ou utilisateur banni)
-    revalidatePath('/');                    // Page d'accueil
-    revalidatePath('/search');              // Recherche
-    revalidatePath('/categories', 'layout'); // Toutes les pages de catégories
-    revalidatePath('/annonces', 'layout');   // Toutes les pages d'annonces
-}
-
-/**
- * API Route pour la gestion des signalements par l'admin
+ * API Route: Admin Reports Management
  * 
- * Actions disponibles:
- * - resolve: Marquer comme résolu (sans action)
- * - reject: Rejeter le signalement (faux positif)
- * - delete_ad: Supprimer l'annonce signalée
- * - reject_ad: Rejeter l'annonce (la rendre invisible)
- * - ban_user: Bannir l'utilisateur signalé
- * - delete_ad_ban_user: Supprimer l'annonce ET bannir l'utilisateur
+ * Utilise le système d'authentification admin séparé (NON NextAuth).
+ * Toutes les actions sont protégées par des permissions granulaires.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { revalidateReportPages, revalidateAdsPages, revalidateUserPages } from '@/lib/cache-utils';
+import { requireAdmin, getRequestContext } from '@/lib/admin-guard';
+import { getAdminSession, logAdminAudit } from '@/lib/admin-auth';
+import { AdminService } from '@/services';
+import { AdminPermission } from '@prisma/client';
+
+/**
+ * POST - Actions sur les signalements
  */
 export async function POST(request: NextRequest) {
     try {
-        // Vérifier que l'utilisateur est admin
-        const session = await getServerSession(authOptions);
+        // Récupérer la session admin
+        const session = await getAdminSession();
 
-        if (!session || session.user.role !== 'ADMIN') {
+        if (!session) {
             return NextResponse.json(
-                { error: 'Non autorisé' },
-                { status: 403 }
+                { error: 'Non autorisé', code: 'UNAUTHORIZED' },
+                { status: 401 }
             );
         }
 
@@ -57,71 +37,84 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        let result;
+        // Déterminer les permissions requises selon l'action
+        let requiredPermissions: AdminPermission[] = [AdminPermission.REPORTS_READ];
 
         switch (action) {
-            // ============================================
-            // ACTIONS SIMPLES
-            // ============================================
-
             case 'resolve':
-                // Marquer comme résolu sans action particulière
+            case 'reject':
+                requiredPermissions = [AdminPermission.REPORTS_RESOLVE];
+                break;
+            case 'delete_ad':
+            case 'reject_ad':
+                requiredPermissions = [AdminPermission.REPORTS_RESOLVE, AdminPermission.ADS_DELETE];
+                break;
+            case 'ban_user':
+                requiredPermissions = [AdminPermission.REPORTS_RESOLVE, AdminPermission.USERS_BAN];
+                break;
+            case 'delete_ad_ban_user':
+                requiredPermissions = [AdminPermission.REPORTS_RESOLVE, AdminPermission.ADS_DELETE, AdminPermission.USERS_BAN];
+                break;
+        }
+
+        // Vérifier les permissions (super admin a tout)
+        const hasPermission = session.admin.isSuperAdmin ||
+            requiredPermissions.every(p => session.admin.permissions.includes(p));
+
+        if (!hasPermission) {
+            return NextResponse.json(
+                { error: 'Permission insuffisante pour cette action', code: 'FORBIDDEN' },
+                { status: 403 }
+            );
+        }
+
+        // Récupérer contexte pour l'audit
+        const { ipAddress, userAgent } = getRequestContext(request);
+
+        let result;
+        let auditAction: string;
+
+        switch (action) {
+            case 'resolve':
                 await AdminService.resolveReport(reportId);
-                revalidateReportPages();
-                return NextResponse.json({
-                    success: true,
-                    message: 'Signalement marqué comme résolu'
-                });
+                auditAction = 'REPORT_RESOLVED';
+                result = { success: true, message: 'Signalement marqué comme résolu' };
+                break;
 
             case 'reject':
-                // Rejeter le signalement (faux positif)
                 await AdminService.rejectReport(reportId);
-                revalidateReportPages();
-                return NextResponse.json({
-                    success: true,
-                    message: 'Signalement rejeté (faux positif)'
-                });
-
-            // ============================================
-            // ACTIONS SUR L'ANNONCE
-            // ============================================
+                auditAction = 'REPORT_REJECTED';
+                result = { success: true, message: 'Signalement rejeté (faux positif)' };
+                break;
 
             case 'delete_ad':
-                // Supprimer l'annonce signalée
                 result = await AdminService.resolveReportDeleteAd(reportId);
-                revalidateReportPages();
-                return NextResponse.json(result);
+                auditAction = 'REPORT_RESOLVED_AD_DELETED';
+                break;
 
             case 'reject_ad':
-                // Rejeter l'annonce (la rendre invisible mais pas supprimée)
                 result = await AdminService.resolveReportRejectAd(
                     reportId,
                     reason || 'Contenu signalé par la communauté'
                 );
-                revalidateReportPages();
-                return NextResponse.json(result);
-
-            // ============================================
-            // ACTIONS SUR L'UTILISATEUR
-            // ============================================
+                auditAction = 'REPORT_RESOLVED_AD_REJECTED';
+                break;
 
             case 'ban_user':
-                // Bannir l'utilisateur signalé
                 result = await AdminService.resolveReportBanUser(
                     reportId,
                     reason || 'Compte signalé par la communauté'
                 );
-                revalidateReportPages();
-                return NextResponse.json(result);
+                auditAction = 'REPORT_RESOLVED_USER_BANNED';
+                break;
 
             case 'delete_ad_ban_user':
-                // Supprimer l'annonce ET bannir l'utilisateur (cas grave)
                 result = await AdminService.resolveReportDeleteAdAndBanUser(
                     reportId,
                     reason || 'Annonce frauduleuse'
                 );
-                revalidateReportPages();
-                return NextResponse.json(result);
+                auditAction = 'REPORT_RESOLVED_AD_DELETED_USER_BANNED';
+                break;
 
             default:
                 return NextResponse.json(
@@ -129,6 +122,21 @@ export async function POST(request: NextRequest) {
                     { status: 400 }
                 );
         }
+
+        // Logger l'action
+        await logAdminAudit({
+            adminId: session.admin.id,
+            action: auditAction,
+            targetType: 'Report',
+            targetId: reportId,
+            details: { reason },
+            ipAddress,
+            userAgent,
+        });
+
+        revalidateReportPages();
+        return NextResponse.json(result);
+
     } catch (error: any) {
         console.error('Admin reports API error:', error);
         return NextResponse.json(
@@ -143,13 +151,13 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        // ✅ Nouvelle vérification avec système admin séparé
+        const authResult = await requireAdmin(request, {
+            permissions: [AdminPermission.REPORTS_READ],
+        });
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json(
-                { error: 'Non autorisé' },
-                { status: 403 }
-            );
+        if (authResult instanceof NextResponse) {
+            return authResult;
         }
 
         const { searchParams } = new URL(request.url);
@@ -180,3 +188,5 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+
+

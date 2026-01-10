@@ -48,22 +48,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
     ];
 
-    // Récupérer toutes les catégories
+    // Récupérer toutes les catégories avec la date de la dernière annonce
     let categoryPages: MetadataRoute.Sitemap = [];
     try {
         const categories = await prisma.category.findMany({
-            select: {
-                slug: true,
-                createdAt: true,
-            },
+            include: {
+                ads: {
+                    where: {
+                        status: 'active',
+                        moderationStatus: 'APPROVED'
+                    },
+                    orderBy: {
+                        updatedAt: 'desc'
+                    },
+                    take: 1,
+                    select: {
+                        updatedAt: true
+                    }
+                }
+            }
         });
 
-        categoryPages = categories.map((category) => ({
-            url: `${BASE_URL}/categories/${category.slug}`,
-            lastModified: category.createdAt,
-            changeFrequency: 'weekly' as const,
-            priority: 0.8,
-        }));
+        categoryPages = categories.map((category) => {
+            const lastAddDate = category.ads[0]?.updatedAt || category.createdAt;
+            return {
+                url: `${BASE_URL}/categories/${category.slug}`,
+                lastModified: lastAddDate,
+                changeFrequency: 'daily' as const, // Les catégories changent souvent
+                priority: 0.8,
+            };
+        });
     } catch (error) {
         console.error('Error fetching categories for sitemap:', error);
     }

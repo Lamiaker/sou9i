@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin } from '@/lib/admin-guard';
 import { AdminService } from '@/services';
 
-/**
- * GET /api/admin/stats/distribution?type=users|ads|reports|support
- * Récupère les distributions pour les graphiques (donut, bar charts)
- */
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
-        }
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) return authResult;
 
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type') as 'users' | 'ads' | 'reports' | 'support' | 'all';
@@ -34,7 +26,6 @@ export async function GET(request: NextRequest) {
                 data = await AdminService.getSupportDistribution();
                 break;
             case 'all':
-                // Récupérer toutes les distributions en parallèle
                 const [users, ads, reports, support] = await Promise.all([
                     AdminService.getUsersDistribution(),
                     AdminService.getAdsDistribution(),
@@ -59,3 +50,5 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
+
+

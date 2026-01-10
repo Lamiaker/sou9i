@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 import { Clock, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 
 const tabs = [
-    { name: 'En attente', href: '/admin/ads', icon: Clock },
-    { name: 'Validées', href: '/admin/ads/valid', icon: CheckCircle },
-    { name: 'Rejetées', href: '/admin/ads/rejet', icon: XCircle },
-    { name: 'Corbeille (Vendeurs)', href: '/admin/ads/poubelle', icon: Trash2 },
+    { name: 'En attente', href: '/sl-panel-9x7k/ads', icon: Clock },
+    { name: 'Validées', href: '/sl-panel-9x7k/ads/valid', icon: CheckCircle },
+    { name: 'Rejetées', href: '/sl-panel-9x7k/ads/rejet', icon: XCircle },
+    { name: 'Corbeille (Vendeurs)', href: '/sl-panel-9x7k/ads/poubelle', icon: Trash2 },
 ];
 
 export default function AdsNav() {

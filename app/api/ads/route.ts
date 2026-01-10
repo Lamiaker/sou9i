@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidateAdsPages } from '@/lib/cache-utils'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { AdService } from '@/services'
@@ -131,13 +131,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Revalider les chemins pour mettre à jour les caches
-        revalidateTag('ads', 'default')
-        revalidatePath('/')
-        revalidatePath('/categories')
-        revalidatePath('/dashboard/annonces')
-        revalidatePath('/categories/[slug]', 'page')
-        revalidatePath('/admin/ads')
-        revalidatePath('/admin')
+        revalidateAdsPages(ad.id);
 
         return NextResponse.json({
             success: true,
@@ -154,3 +148,5 @@ export async function POST(request: NextRequest) {
         )
     }
 }
+
+

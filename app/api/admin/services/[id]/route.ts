@@ -1,23 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-guard";
 import { ServiceRequestService } from "@/services/ServiceRequestService";
 import { ServiceRequestStatus } from "@prisma/client";
 
-// GET - Obtenir une demande par ID
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user || session.user.role !== "ADMIN") {
-            return NextResponse.json(
-                { error: "Accès non autorisé" },
-                { status: 403 }
-            );
-        }
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) return authResult;
 
         const { id } = await params;
         const serviceRequest = await ServiceRequestService.getById(id);
@@ -39,25 +31,17 @@ export async function GET(
     }
 }
 
-// PUT - Mettre à jour une demande
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user || session.user.role !== "ADMIN") {
-            return NextResponse.json(
-                { error: "Accès non autorisé" },
-                { status: 403 }
-            );
-        }
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) return authResult;
 
         const { id } = await params;
         const body = await request.json();
 
-        // Validation du statut si fourni
         const validStatuses: ServiceRequestStatus[] = [
             'NEW', 'CONTACTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'
         ];
@@ -84,20 +68,13 @@ export async function PUT(
     }
 }
 
-// DELETE - Supprimer une demande
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user || session.user.role !== "ADMIN") {
-            return NextResponse.json(
-                { error: "Accès non autorisé" },
-                { status: 403 }
-            );
-        }
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) return authResult;
 
         const { id } = await params;
         await ServiceRequestService.delete(id);

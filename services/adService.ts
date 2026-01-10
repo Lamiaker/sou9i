@@ -386,11 +386,7 @@ export class AdService {
         })
     }
 
-    /**
-     * Supprimer une annonce (Soft Delete)
-     * L'annonce est marquée comme 'deleted' mais reste en base de données.
-     * On ne supprime pas les fichiers images pour permettre la restauration.
-     */
+
     static async deleteAd(id: string, userId: string) {
         // Vérifier que l'utilisateur est le propriétaire
         const ad = await prisma.ad.findUnique({
@@ -441,5 +437,30 @@ export class AdService {
                 createdAt: 'desc',
             },
         })
+    }
+
+
+    static async getPopularAdIds(limit: number = 50): Promise<string[]> {
+        try {
+            const ads = await prisma.ad.findMany({
+                where: {
+                    status: 'active',
+                    moderationStatus: 'APPROVED',
+                },
+                select: {
+                    id: true,
+                },
+                orderBy: [
+                    { views: 'desc' },
+                    { createdAt: 'desc' },
+                ],
+                take: limit,
+            });
+
+            return ads.map(ad => ad.id);
+        } catch (error) {
+            console.error('Error fetching popular ad IDs:', error);
+            return [];
+        }
     }
 }

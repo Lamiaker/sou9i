@@ -51,6 +51,97 @@ enum FieldType {
   IMAGE       // Upload d'image
 }
 
+// Permissions granulaires pour les administrateurs
+enum AdminPermission {
+  USERS_READ        // Voir les utilisateurs
+  USERS_WRITE       // Modifier les utilisateurs (vérifier, rejeter)
+  USERS_DELETE      // Supprimer les utilisateurs
+  USERS_BAN         // Bannir/débannir les utilisateurs
+  ADS_READ          // Voir les annonces
+  ADS_MODERATE      // Approuver/rejeter les annonces
+  ADS_DELETE        // Supprimer les annonces
+  REPORTS_READ      // Voir les signalements
+  REPORTS_RESOLVE   // Résoudre les signalements
+  CATEGORIES_MANAGE // Gérer les catégories
+  SUPPORT_READ      // Voir les tickets support
+  SUPPORT_WRITE     // Répondre aux tickets
+  SETTINGS_MANAGE   // Gérer les paramètres du site
+  ADMINS_MANAGE     // Gérer les autres admins (super-admin uniquement)
+}
+
+// ============================================
+// MODÈLE ADMINISTRATEUR (SÉPARÉ DES USERS)
+// ============================================
+
+model Admin {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String    // Hashé avec bcrypt (12 rounds minimum)
+  name          String
+  
+  // Permissions granulaires (array de permissions)
+  permissions   AdminPermission[]
+  
+  // Flags de sécurité
+  isSuperAdmin  Boolean   @default(false) // Accès total, ne peut pas être supprimé
+  isActive      Boolean   @default(true)  // Compte actif/désactivé
+  
+  // Suivi des connexions
+  lastLoginAt   DateTime?
+  lastLoginIp   String?
+  failedAttempts Int      @default(0)
+  lockedUntil   DateTime?
+  
+  // Audit
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdById   String?   // ID de l'admin qui a créé ce compte
+
+  // Relations
+  sessions      AdminSession[]
+
+  @@index([email])
+  @@index([isActive])
+}
+
+// Sessions d'authentification admin (séparées de NextAuth)
+model AdminSession {
+  id            String   @id @default(cuid())
+  adminId       String
+  admin         Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  
+  tokenHash     String   @unique // SHA-256 hash du token (jamais le token brut)
+  expiresAt     DateTime
+  
+  // Contexte de sécurité
+  ipAddress     String?
+  userAgent     String?
+  
+  createdAt     DateTime @default(now())
+
+  @@index([adminId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+// Journal d'audit des actions admin
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  action      String   // ex: "USER_BANNED", "AD_APPROVED", "ADMIN_CREATED"
+  targetType  String?  // ex: "User", "Ad", "Admin"
+  targetId    String?  // ID de l'entité ciblée
+  details     Json?    // Détails supplémentaires (ancien/nouveau état, etc.)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
 // ============================================
 // MODÈLES UTILISATEUR
 // ============================================

@@ -25,11 +25,7 @@ function LoginForm() {
 
     useEffect(() => {
         if (status === 'authenticated') {
-            if (session?.user?.role === 'ADMIN') {
-                router.replace("/admin");
-            } else {
-                router.replace(redirectPath || "/");
-            }
+            router.replace(redirectPath || "/");
         }
     }, [status, session, router, redirectPath]);
 
@@ -130,12 +126,25 @@ function LoginForm() {
 
                 <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 mx-3 sm:mx-0">
                     <form className="space-y-6" onSubmit={handleSubmit}>
-                        {/* Message d'erreur */}
-                        {error && (
+                        {/* Message d'erreur pour utilisateur banni */}
+                        {error && (error.includes("suspendu") || error.includes("banni")) ? (
+                            <div className="rounded-md bg-red-50 border border-red-200 p-4">
+                                <p className="text-sm text-red-800 mb-2">{error}</p>
+                                <p className="text-sm text-red-700">
+                                    Pour contester cette décision, contactez-nous : {' '}
+                                    <a
+                                        href="mailto:support@sweetlook.net"
+                                        className="font-medium underline hover:text-red-900"
+                                    >
+                                        support@sweetlook.net
+                                    </a>
+                                </p>
+                            </div>
+                        ) : error ? (
                             <div className="rounded-md bg-red-50 p-3">
                                 <p className="text-sm text-red-800">{error}</p>
                             </div>
-                        )}
+                        ) : null}
 
                         {/* Email */}
                         <div>

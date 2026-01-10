@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin, getRequestContext } from '@/lib/admin-guard';
+import { getAdminSession, logAdminAudit } from '@/lib/admin-auth';
 import { AdminService } from '@/services';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateCategoryPages } from '@/lib/cache-utils';
+import { AdminPermission } from '@prisma/client';
 
-// Helper function to revalidate all category-related pages
-function revalidateCategoryPages(slug?: string) {
-    revalidateTag('categories', 'default');            // Global tag invalidation
-    revalidatePath('/');                    // Homepage
-    revalidatePath('/categories');          // Categories list page
-    revalidatePath('/categories/[slug]', 'page'); // All category pages
-    if (slug) {
-        revalidatePath(`/categories/${slug}`); // Specific category page
-    }
-}
-
-// Create category
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await getAdminSession();
+        if (!session) {
+            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+        }
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        const hasPermission = session.admin.isSuperAdmin ||
+            session.admin.permissions.includes(AdminPermission.CATEGORIES_MANAGE);
+        if (!hasPermission) {
+            return NextResponse.json({ error: 'Permission insuffisante' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -42,9 +36,18 @@ export async function POST(request: NextRequest) {
             trendingOrder: isTrending ? trendingOrder : null,
         });
 
-        // Revalidate pages to show new category
-        revalidateCategoryPages(slug);
+        const { ipAddress, userAgent } = getRequestContext(request);
+        await logAdminAudit({
+            adminId: session.admin.id,
+            action: 'CATEGORY_CREATED',
+            targetType: 'Category',
+            targetId: category.id,
+            details: { name, slug },
+            ipAddress,
+            userAgent,
+        });
 
+        revalidateCategoryPages(slug);
         return NextResponse.json({ success: true, category });
     } catch (error: any) {
         console.error('Create category error:', error);
@@ -55,13 +58,17 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Update category
 export async function PATCH(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await getAdminSession();
+        if (!session) {
+            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+        }
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        const hasPermission = session.admin.isSuperAdmin ||
+            session.admin.permissions.includes(AdminPermission.CATEGORIES_MANAGE);
+        if (!hasPermission) {
+            return NextResponse.json({ error: 'Permission insuffisante' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -83,9 +90,18 @@ export async function PATCH(request: NextRequest) {
             trendingOrder: isTrending ? trendingOrder : null,
         });
 
-        // Revalidate pages to show updated category
-        revalidateCategoryPages(slug);
+        const { ipAddress, userAgent } = getRequestContext(request);
+        await logAdminAudit({
+            adminId: session.admin.id,
+            action: 'CATEGORY_UPDATED',
+            targetType: 'Category',
+            targetId: categoryId,
+            details: { name, slug },
+            ipAddress,
+            userAgent,
+        });
 
+        revalidateCategoryPages(slug);
         return NextResponse.json({ success: true, category });
     } catch (error: any) {
         console.error('Update category error:', error);
@@ -96,13 +112,17 @@ export async function PATCH(request: NextRequest) {
     }
 }
 
-// Delete category
 export async function DELETE(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await getAdminSession();
+        if (!session) {
+            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+        }
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        const hasPermission = session.admin.isSuperAdmin ||
+            session.admin.permissions.includes(AdminPermission.CATEGORIES_MANAGE);
+        if (!hasPermission) {
+            return NextResponse.json({ error: 'Permission insuffisante' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -112,13 +132,20 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID catégorie requis' }, { status: 400 });
         }
 
-        // Si forceDelete est true, supprimer avec les annonces
+        const { ipAddress, userAgent } = getRequestContext(request);
+
         if (forceDelete) {
             const result = await AdminService.deleteCategoryWithAds(categoryId);
-
-            // Revalidate all pages after deletion
+            await logAdminAudit({
+                adminId: session.admin.id,
+                action: 'CATEGORY_DELETED_WITH_ADS',
+                targetType: 'Category',
+                targetId: categoryId,
+                details: { deletedAdsCount: result.deletedAdsCount },
+                ipAddress,
+                userAgent,
+            });
             revalidateCategoryPages();
-
             return NextResponse.json({
                 success: true,
                 message: result.message,
@@ -126,10 +153,8 @@ export async function DELETE(request: NextRequest) {
             });
         }
 
-        // Sinon, essayer de supprimer normalement
         const result = await AdminService.deleteCategory(categoryId);
 
-        // Si la catégorie a des annonces, renvoyer l'info pour demander confirmation
         if (result && 'hasAds' in result && result.hasAds) {
             return NextResponse.json({
                 hasAds: true,
@@ -137,16 +162,22 @@ export async function DELETE(request: NextRequest) {
                 categoryName: result.categoryName,
                 message: result.message,
                 requiresConfirmation: true
-            }, { status: 200 }); // 200 car c'est une réponse valide qui demande confirmation
+            }, { status: 200 });
         }
 
-        // Revalidate pages after successful deletion
-        revalidateCategoryPages();
+        await logAdminAudit({
+            adminId: session.admin.id,
+            action: 'CATEGORY_DELETED',
+            targetType: 'Category',
+            targetId: categoryId,
+            ipAddress,
+            userAgent,
+        });
 
+        revalidateCategoryPages();
         return NextResponse.json({ success: true, message: 'Catégorie supprimée' });
     } catch (error: any) {
         console.error('Delete category error:', error);
-        // Déterminer si c'est une erreur métier (400) ou serveur (500)
         const isBusinessError = error.message?.includes('annonce') ||
             error.message?.includes('sous-catégorie') ||
             error.message?.includes('introuvable');
@@ -156,4 +187,5 @@ export async function DELETE(request: NextRequest) {
         );
     }
 }
+
 

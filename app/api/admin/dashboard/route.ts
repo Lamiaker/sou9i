@@ -1,16 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-export const dynamic = 'force-dynamic';
+/**
+ * API Route: Admin Dashboard
+ * 
+ * Utilise le système d'authentification admin séparé.
+ */
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-guard';
 import { AdminService } from '@/services';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        // ✅ Nouvelle vérification avec système admin séparé
+        const authResult = await requireAdmin(request);
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        if (authResult instanceof NextResponse) {
+            return authResult;
         }
 
         const stats = await AdminService.getDashboardStats();
@@ -25,3 +31,5 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
+
+

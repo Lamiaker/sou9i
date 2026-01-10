@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
         // Revalider les pages dashboard pour l'utilisateur
         revalidatePath('/dashboard/support');
-        revalidatePath('/admin/support');
+        revalidatePath('/sl-panel-9x7k/support');
 
         return NextResponse.json({
             success: true,
@@ -111,3 +111,5 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+

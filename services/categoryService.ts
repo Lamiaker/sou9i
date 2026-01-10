@@ -25,6 +25,17 @@ export class CategoryService {
     }
 
     /**
+     * Récupérer tous les slugs de catégories pour generateStaticParams
+     * Utilisé au build pour pré-générer les pages catégories
+     */
+    static async getAllCategorySlugs(): Promise<string[]> {
+        const categories = await prisma.category.findMany({
+            select: { slug: true },
+        });
+        return categories.map(cat => cat.slug);
+    }
+
+    /**
      * Récupérer toutes les catégories parentes (sans parent)
      */
     static async getParentCategories() {

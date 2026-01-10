@@ -69,7 +69,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'danger',
         icon: 'AlertTriangle',
         priority: 1,
-        href: '/admin/reports',
+        href: '/sl-panel-9x7k/reports',
         checkFn: (stats) => stats.moderation?.pendingReports >= ALERT_THRESHOLDS.pendingReportsDanger,
         getMessage: (stats) => `${stats.moderation?.pendingReports} signalements en attente nécessitent une action urgente`,
     },
@@ -80,7 +80,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'danger',
         icon: 'ShoppingBag',
         priority: 1,
-        href: '/admin/ads?moderationStatus=PENDING',
+        href: '/sl-panel-9x7k/ads?moderationStatus=PENDING',
         checkFn: (stats) => stats.ads?.pending >= ALERT_THRESHOLDS.pendingAdsDanger,
         getMessage: (stats) => `${stats.ads?.pending} annonces attendent validation depuis trop longtemps`,
     },
@@ -91,7 +91,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'danger',
         icon: 'HeadphonesIcon',
         priority: 1,
-        href: '/admin/support',
+        href: '/sl-panel-9x7k/support',
         checkFn: (stats) => stats.moderation?.totalTicketsPending >= ALERT_THRESHOLDS.openTicketsDanger,
         getMessage: (stats) => `${stats.moderation?.totalTicketsPending} tickets de support en attente`,
     },
@@ -104,7 +104,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'warning',
         icon: 'AlertTriangle',
         priority: 2,
-        href: '/admin/reports',
+        href: '/sl-panel-9x7k/reports',
         checkFn: (stats) => {
             const count = stats.moderation?.pendingReports || 0;
             return count >= ALERT_THRESHOLDS.pendingReportsWarning && count < ALERT_THRESHOLDS.pendingReportsDanger;
@@ -118,7 +118,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'warning',
         icon: 'ShoppingBag',
         priority: 2,
-        href: '/admin/ads?moderationStatus=PENDING',
+        href: '/sl-panel-9x7k/ads?moderationStatus=PENDING',
         checkFn: (stats) => {
             const count = stats.ads?.pending || 0;
             return count >= ALERT_THRESHOLDS.pendingAdsWarning && count < ALERT_THRESHOLDS.pendingAdsDanger;
@@ -132,7 +132,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'warning',
         icon: 'Users',
         priority: 2,
-        href: '/admin/users?status=PENDING',
+        href: '/sl-panel-9x7k/users?status=PENDING',
         checkFn: (stats) => stats.users?.byStatus?.pending >= ALERT_THRESHOLDS.pendingUsersWarning,
         getMessage: (stats) => `${stats.users?.byStatus?.pending} utilisateurs attendent validation`,
     },
@@ -143,7 +143,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'warning',
         icon: 'HeadphonesIcon',
         priority: 2,
-        href: '/admin/support',
+        href: '/sl-panel-9x7k/support',
         checkFn: (stats) => {
             const count = stats.moderation?.totalTicketsPending || 0;
             return count >= ALERT_THRESHOLDS.openTicketsWarning && count < ALERT_THRESHOLDS.openTicketsDanger;
@@ -157,7 +157,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'warning',
         icon: 'TrendingDown',
         priority: 2,
-        href: '/admin/ads',
+        href: '/sl-panel-9x7k/ads',
         checkFn: (stats) => stats.ads?.approvalRate < ALERT_THRESHOLDS.lowApprovalRateThreshold && stats.ads?.total > 10,
         getMessage: (stats) => `Taux d'approbation à ${stats.ads?.approvalRate}% (seuil: ${ALERT_THRESHOLDS.lowApprovalRateThreshold}%)`,
     },
@@ -170,7 +170,7 @@ export const ALERT_RULES: AlertConfig[] = [
         type: 'info',
         icon: 'UserX',
         priority: 3,
-        href: '/admin/users?status=BANNED',
+        href: '/sl-panel-9x7k/users?status=BANNED',
         checkFn: (stats) => stats.users?.byStatus?.banned >= ALERT_THRESHOLDS.bannedUsersInfo,
         getMessage: (stats) => `${stats.users?.byStatus?.banned} comptes sont actuellement bannis`,
     },
@@ -231,3 +231,4 @@ export function countAlertsByType(alerts: ActiveAlert[]): { danger: number; warn
         { danger: 0, warning: 0, info: 0 }
     );
 }
+

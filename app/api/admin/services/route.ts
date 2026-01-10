@@ -1,20 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-guard";
 import { ServiceRequestService } from "@/services/ServiceRequestService";
 import { ServiceRequestStatus, ServiceType } from "@prisma/client";
 
-// GET - Obtenir toutes les demandes (admin)
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user || session.user.role !== "ADMIN") {
-            return NextResponse.json(
-                { error: "Accès non autorisé" },
-                { status: 403 }
-            );
-        }
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) return authResult;
 
         const { searchParams } = new URL(request.url);
         const status = searchParams.get("status") as ServiceRequestStatus | null;
@@ -38,3 +30,5 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+
+

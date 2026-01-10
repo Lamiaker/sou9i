@@ -11,6 +11,7 @@ export default function robots(): MetadataRoute.Robots {
                 disallow: [
                     '/api/',           // API routes
                     '/admin/',         // Admin pages
+                    '/sl-panel-9x7k/', // Secret Admin pages
                     '/dashboard/',     // User dashboard
                     '/deposer/',       // Ad posting form
                     '/banned/',        // Banned user page
@@ -24,6 +25,7 @@ export default function robots(): MetadataRoute.Robots {
                 disallow: [
                     '/api/',
                     '/admin/',
+                    '/sl-panel-9x7k/',
                     '/dashboard/',
                     '/deposer/',
                     '/banned/',

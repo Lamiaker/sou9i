@@ -70,8 +70,8 @@ export default function UserMenu() {
                         src={user.image || "/user.png"}
                         alt={user.name || "User"}
                         fill
+                        sizes="32px"
                         className="object-cover"
-                        unoptimized
                     />
                 </div>
                 <div className="hidden md:block text-left">

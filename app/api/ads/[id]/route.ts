@@ -6,6 +6,7 @@ import { deleteUnusedImages } from '@/lib/deleteImages'
 import { logServerError, AuthenticationError, ForbiddenError, ERROR_MESSAGES, ValidationError } from '@/lib/errors'
 import { errorResponse } from '@/lib/api-utils'
 import { updateAdSchema } from '@/lib/validations/ads'
+import { revalidateAdsPages } from '@/lib/cache-utils'
 
 // GET /api/ads/[id] - Récupérer une annonce par ID
 export async function GET(
@@ -102,6 +103,9 @@ export async function PATCH(
             negotiable: validatedData.negotiable,
         })
 
+        // ✅ Invalider le cache des pages liées à cette annonce
+        revalidateAdsPages(id, currentAd.category?.slug);
+
         return NextResponse.json({
             success: true,
             data: ad,
@@ -142,6 +146,9 @@ export async function DELETE(
 
         // Appel du service (qui vérifie la propriété)
         await AdService.deleteAd(id, userId)
+
+        // ✅ Invalider le cache des pages liées à cette annonce
+        revalidateAdsPages(id);
 
         return NextResponse.json({
             success: true,

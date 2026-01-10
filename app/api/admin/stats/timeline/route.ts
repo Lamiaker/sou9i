@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin } from '@/lib/admin-guard';
 import { AdminService } from '@/services';
 
-/**
- * GET /api/admin/stats/timeline?metric=users&days=30
- * Récupère les données temporelles pour les graphiques
- */
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
-        }
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) return authResult;
 
         const { searchParams } = new URL(request.url);
         const metric = searchParams.get('metric') as 'users' | 'ads' | 'reports' | 'messages' | 'favorites';
         const days = parseInt(searchParams.get('days') || '30', 10);
 
-        // Validation des paramètres
         const validMetrics = ['users', 'ads', 'reports', 'messages', 'favorites'];
         if (!metric || !validMetrics.includes(metric)) {
             return NextResponse.json(
@@ -46,3 +37,5 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
+
+

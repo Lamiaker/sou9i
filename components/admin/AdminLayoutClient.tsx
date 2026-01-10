@@ -1,8 +1,6 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
     LayoutDashboard,
@@ -21,19 +19,30 @@ import {
     Briefcase,
     BarChart3,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { ToastProvider } from "@/components/ui/Toast";
 
+// Types pour la session admin
+interface AdminSession {
+    id: string;
+    name: string;
+    email: string;
+    isSuperAdmin: boolean;
+    permissions: string[];
+}
+
+// URL secrète du panneau admin
+const ADMIN_PATH = '/sl-panel-9x7k';
+
 const menuItems = [
-    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-    { name: "Utilisateurs", href: "/admin/users", icon: Users },
-    { name: "Recherche", href: "/admin/search", icon: Search },
-    { name: "Annonces", href: "/admin/ads", icon: ShoppingBag },
-    { name: "Signalements", href: "/admin/reports", icon: AlertTriangle },
-    { name: "Catégories", href: "/admin/categories", icon: FolderTree },
-    { name: "Services", href: "/admin/services", icon: Briefcase },
-    { name: "Support", href: "/admin/support", icon: HelpCircle },
+    { name: "Dashboard", href: ADMIN_PATH, icon: LayoutDashboard },
+    { name: "Utilisateurs", href: `${ADMIN_PATH}/users`, icon: Users },
+    { name: "Annonces", href: `${ADMIN_PATH}/ads`, icon: ShoppingBag },
+    { name: "Catégories", href: `${ADMIN_PATH}/categories`, icon: FolderTree },
+    { name: "Recherche", href: `${ADMIN_PATH}/search`, icon: Search },
+    { name: "Analytics", href: `${ADMIN_PATH}/analytics`, icon: BarChart3 },
+    { name: "Signalements", href: `${ADMIN_PATH}/reports`, icon: AlertTriangle },
+    { name: "Services", href: `${ADMIN_PATH}/services`, icon: Briefcase },
+    { name: "Support", href: `${ADMIN_PATH}/support`, icon: HelpCircle },
 ];
 
 export default function AdminLayoutClient({
@@ -41,31 +50,80 @@ export default function AdminLayoutClient({
 }: {
     children: React.ReactNode;
 }) {
-    const { data: session, status } = useSession();
     const router = useRouter();
     const pathname = usePathname();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Redirect if not admin
-    useEffect(() => {
-        if (status === "authenticated" && session?.user?.role !== "ADMIN") {
-            router.push("/");
+    // Vérifier si on est sur la page de login
+    const isLoginPage = pathname === `${ADMIN_PATH}/login`;
+
+    // Récupérer la session admin depuis l'API
+    const fetchSession = useCallback(async () => {
+        // Sur la page de login, pas besoin de vérifier la session
+        if (isLoginPage) {
+            setIsLoading(false);
+            return;
         }
-    }, [session, status, router]);
 
-    if (status === "loading") {
+        try {
+            const response = await fetch('/api/admin/auth/session', {
+                credentials: 'include',
+            });
+            const data = await response.json();
+
+            if (data.authenticated && data.admin) {
+                setAdminSession(data.admin);
+            } else {
+                // Pas de session valide → redirection vers login
+                router.push(`${ADMIN_PATH}/login`);
+            }
+        } catch (error) {
+            console.error('Failed to fetch admin session:', error);
+            router.push(`${ADMIN_PATH}/login`);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [router, isLoginPage]);
+
+    useEffect(() => {
+        fetchSession();
+    }, [fetchSession]);
+
+    // Déconnexion admin
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/admin/auth/logout', {
+                method: 'POST',
+                credentials: 'include',
+            });
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            router.push(`${ADMIN_PATH}/login`);
+            router.refresh();
+        }
+    };
+
+    // Page de login : afficher directement les enfants sans le layout admin
+    if (isLoginPage) {
+        return <>{children}</>;
+    }
+
+    if (isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-white/70 text-sm">Chargement...</p>
+                    <p className="text-white/70 text-sm">Vérification de la session...</p>
                 </div>
             </div>
         );
     }
 
-    if (status === "unauthenticated" || session?.user?.role !== "ADMIN") {
+    if (!adminSession) {
         return null;
     }
 
@@ -106,7 +164,7 @@ export default function AdminLayoutClient({
                     <nav className="p-4 space-y-2">
                         {menuItems.map((item) => {
                             const isActive = pathname === item.href ||
-                                (item.href !== "/admin" && pathname?.startsWith(item.href));
+                                (item.href !== ADMIN_PATH && pathname?.startsWith(item.href));
                             return (
                                 <Link
                                     key={item.href}
@@ -126,7 +184,7 @@ export default function AdminLayoutClient({
 
                     <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
                         <button
-                            onClick={() => signOut({ callbackUrl: "/" })}
+                            onClick={handleLogout}
                             className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all duration-200"
                         >
                             <LogOut size={20} />
@@ -157,7 +215,7 @@ export default function AdminLayoutClient({
                     <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                         {menuItems.map((item) => {
                             const isActive = pathname === item.href ||
-                                (item.href !== "/admin" && pathname?.startsWith(item.href));
+                                (item.href !== ADMIN_PATH && pathname?.startsWith(item.href));
                             return (
                                 <Link
                                     key={item.href}
@@ -195,21 +253,26 @@ export default function AdminLayoutClient({
                             <div className="flex items-center gap-3 px-4 py-3 mb-2">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0">
                                     <span className="text-white font-bold text-sm">
-                                        {session?.user?.name?.charAt(0) || "A"}
+                                        {adminSession.name?.charAt(0) || "A"}
                                     </span>
                                 </div>
                                 <div className="overflow-hidden">
                                     <p className="text-white text-sm font-medium truncate">
-                                        {session?.user?.name || "Admin"}
+                                        {adminSession.name || "Admin"}
                                     </p>
                                     <p className="text-white/50 text-xs truncate">
-                                        {session?.user?.email}
+                                        {adminSession.email}
                                     </p>
+                                    {adminSession.isSuperAdmin && (
+                                        <span className="inline-block mt-1 px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                                            Super Admin
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         )}
                         <button
-                            onClick={() => signOut({ callbackUrl: "/" })}
+                            onClick={handleLogout}
                             className={`flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all duration-200 ${sidebarCollapsed ? "justify-center" : ""
                                 }`}
                         >

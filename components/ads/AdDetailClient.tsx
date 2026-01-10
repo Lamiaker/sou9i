@@ -143,9 +143,9 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
                                         src={ad.images[currentImageIndex]}
                                         alt={ad.title}
                                         fill
+                                        sizes="(max-width: 1024px) 100vw, 768px"
                                         className="object-contain"
                                         priority
-                                        unoptimized
                                     />
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-gray-400">
@@ -186,7 +186,7 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
                                             className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 ${currentImageIndex === idx ? "border-primary" : "border-transparent"
                                                 }`}
                                         >
-                                            <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover" unoptimized />
+                                            <Image src={img} alt={`Thumbnail ${idx}`} fill sizes="80px" className="object-cover" />
                                         </button>
                                     ))}
                                 </div>
@@ -299,8 +299,8 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
                                                 src={ad.user.avatar || "/user.png"}
                                                 alt={ad.user.name || "Vendeur"}
                                                 fill
+                                                sizes="64px"
                                                 className="object-cover"
-                                                unoptimized
                                             />
                                         </div>
                                         {ad.user.isVerified && (
@@ -383,8 +383,8 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
                                                         src={similarAd.images[0]}
                                                         alt={similarAd.title}
                                                         fill
+                                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                                                         className="object-cover group-hover:scale-105 transition duration-300"
-                                                        unoptimized
                                                     />
                                                 ) : (
                                                     <div className="flex items-center justify-center h-full text-gray-400">

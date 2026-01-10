@@ -112,8 +112,8 @@ export default function SectionFeatured({
                   src={product.photos[0]}
                   alt={product.title}
                   fill
+                  sizes="280px"
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
-                  unoptimized
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-black/0 to-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -142,8 +142,8 @@ export default function SectionFeatured({
                       src={product.sellerAvatar || "/user.png"}
                       alt={product.sellerName}
                       fill
+                      sizes="24px"
                       className="object-cover"
-                      unoptimized
                     />
                   </div>
                   <span className="text-xs font-medium text-gray-500 truncate">{product.sellerName}</span>

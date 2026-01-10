@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin } from '@/lib/admin-guard';
 import { prisma } from '@/lib/prisma';
 
-// Check if a category slug already exists
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
-        }
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) return authResult;
 
         const { searchParams } = new URL(request.url);
         const slug = searchParams.get('slug');
-        const excludeId = searchParams.get('excludeId'); // Pour exclure la catégorie en cours d'édition
+        const excludeId = searchParams.get('excludeId');
 
         if (!slug) {
             return NextResponse.json({ error: 'Slug requis' }, { status: 400 });
@@ -36,3 +31,5 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
+
+

@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin } from '@/lib/admin-guard';
 import { AdminService } from '@/services';
 import { evaluateAlerts, ALERT_THRESHOLDS } from '@/lib/admin-alerts';
 
-/**
- * GET /api/admin/alerts
- * Récupère les alertes actives basées sur les stats actuelles
- */
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const authResult = await requireAdmin(request);
+        if (authResult instanceof NextResponse) return authResult;
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
-        }
-
-        // Récupérer les stats enrichies
         const stats = await AdminService.getEnhancedDashboardStats();
-
-        // Évaluer les alertes
         const alerts = evaluateAlerts(stats);
 
         return NextResponse.json({
@@ -40,3 +29,5 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
+
+

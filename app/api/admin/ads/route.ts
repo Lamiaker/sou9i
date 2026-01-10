@@ -1,22 +1,26 @@
+
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { authOptions } from '@/lib/auth';
+import { revalidateAdsPages } from '@/lib/cache-utils';
+import { requireAdmin, getRequestContext } from '@/lib/admin-guard';
+import { getAdminSession, logAdminAudit } from '@/lib/admin-auth';
 import { AdminService } from '@/services';
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
 import { sanitizePaginationParams } from '@/lib/utils/pagination';
 import { PAGINATION } from '@/lib/constants/pagination';
+import { AdminPermission } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        // ✅ Nouvelle vérification avec système admin séparé
+        const authResult = await requireAdmin(request, {
+            permissions: [AdminPermission.ADS_READ],
+        });
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        if (authResult instanceof NextResponse) {
+            return authResult;
         }
 
         const searchParams = request.nextUrl.searchParams;
-        // ✅ Validation sécurisée des paramètres de pagination
         const { page, limit } = sanitizePaginationParams(
             searchParams.get('page'),
             searchParams.get('limit'),
@@ -48,13 +52,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        // Vérifier que l'utilisateur est admin
-        const session = await getServerSession(authOptions);
+        // Récupérer la session admin
+        const session = await getAdminSession();
 
-        if (!session || session.user.role !== 'ADMIN') {
+        if (!session) {
             return NextResponse.json(
-                { error: 'Non autorisé' },
-                { status: 403 }
+                { error: 'Non autorisé', code: 'UNAUTHORIZED' },
+                { status: 401 }
             );
         }
 
@@ -68,8 +72,40 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Déterminer les permissions requises selon l'action
+        let requiredPermission: AdminPermission;
         switch (action) {
-            case 'updateStatus': // Statut de disponibilité (active, sold, etc.)
+            case 'updateStatus':
+            case 'approve':
+            case 'reject':
+                requiredPermission = AdminPermission.ADS_MODERATE;
+                break;
+            case 'delete':
+                requiredPermission = AdminPermission.ADS_DELETE;
+                break;
+            default:
+                return NextResponse.json(
+                    { error: 'Action non reconnue' },
+                    { status: 400 }
+                );
+        }
+
+        // Vérifier la permission
+        const hasPermission = session.admin.isSuperAdmin ||
+            session.admin.permissions.includes(requiredPermission);
+
+        if (!hasPermission) {
+            return NextResponse.json(
+                { error: 'Permission insuffisante pour cette action', code: 'FORBIDDEN' },
+                { status: 403 }
+            );
+        }
+
+        // Récupérer contexte pour l'audit
+        const { ipAddress, userAgent } = getRequestContext(request);
+
+        switch (action) {
+            case 'updateStatus':
                 if (!status) {
                     return NextResponse.json(
                         { error: 'Statut requis' },
@@ -77,20 +113,32 @@ export async function POST(request: NextRequest) {
                     );
                 }
                 await AdminService.updateAdStatus(adId, status);
-                revalidateTag('ads', 'default');
-                revalidatePath('/dashboard/annonces');
-                revalidatePath('/annonces/' + adId);
+                revalidateAdsPages(adId);
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'AD_STATUS_UPDATED',
+                    targetType: 'Ad',
+                    targetId: adId,
+                    details: { newStatus: status },
+                    ipAddress,
+                    userAgent,
+                });
                 return NextResponse.json({ success: true, message: 'Statut mis à jour' });
 
-            case 'approve': // Modération: Approuver
+            case 'approve':
                 await AdminService.approveAd(adId);
-                revalidateTag('ads', 'default');
-                revalidatePath('/');
-                revalidatePath('/dashboard/annonces');
-                revalidatePath('/annonces/' + adId);
+                revalidateAdsPages(adId);
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'AD_APPROVED',
+                    targetType: 'Ad',
+                    targetId: adId,
+                    ipAddress,
+                    userAgent,
+                });
                 return NextResponse.json({ success: true, message: 'Annonce approuvée' });
 
-            case 'reject': // Modération: Rejeter
+            case 'reject':
                 const { reason } = body;
                 if (!reason) {
                     return NextResponse.json(
@@ -99,16 +147,29 @@ export async function POST(request: NextRequest) {
                     );
                 }
                 await AdminService.rejectAd(adId, reason);
-                revalidateTag('ads', 'default');
-                revalidatePath('/dashboard/annonces');
-                revalidatePath('/annonces/' + adId);
+                revalidateAdsPages(adId);
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'AD_REJECTED',
+                    targetType: 'Ad',
+                    targetId: adId,
+                    details: { reason },
+                    ipAddress,
+                    userAgent,
+                });
                 return NextResponse.json({ success: true, message: 'Annonce rejetée' });
 
             case 'delete':
                 await AdminService.deleteAd(adId);
-                revalidateTag('ads', 'default');
-                revalidatePath('/');
-                revalidatePath('/dashboard/annonces');
+                revalidateAdsPages(adId);
+                await logAdminAudit({
+                    adminId: session.admin.id,
+                    action: 'AD_DELETED',
+                    targetType: 'Ad',
+                    targetId: adId,
+                    ipAddress,
+                    userAgent,
+                });
                 return NextResponse.json({ success: true, message: 'Annonce supprimée' });
 
             default:
@@ -125,3 +186,5 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+

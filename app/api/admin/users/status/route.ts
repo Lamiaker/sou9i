@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getAdminSession, logAdminAudit } from '@/lib/admin-auth';
+import { getRequestContext } from '@/lib/admin-guard';
 import { prisma } from '@/lib/prisma';
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
+import { AdminPermission } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await getAdminSession();
+        if (!session) {
+            return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+        }
 
-        if (!session || session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        const hasPermission = session.admin.isSuperAdmin ||
+            session.admin.permissions.includes(AdminPermission.USERS_BAN);
+        if (!hasPermission) {
+            return NextResponse.json({ error: 'Permission insuffisante' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -19,7 +25,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'ID utilisateur requis' }, { status: 400 });
         }
 
-        // Empêcher toute modification sur un compte ADMIN
         const targetUser = await prisma.user.findUnique({
             where: { id: userId },
             select: { role: true }
@@ -29,12 +34,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Impossible de modifier un compte administrateur' }, { status: 403 });
         }
 
+        const { ipAddress, userAgent } = getRequestContext(request);
+
         if (action === 'ban') {
             if (!reason) {
                 return NextResponse.json({ error: 'Raison du blocage requise' }, { status: 400 });
             }
 
-            // 1. Bannir l'utilisateur
             await prisma.user.update({
                 where: { id: userId },
                 data: {
@@ -44,11 +50,10 @@ export async function POST(request: NextRequest) {
                 },
             } as any);
 
-            // 2. Masquer uniquement les annonces APPROVED ou PENDING (pas celles déjà REJECTED)
             await prisma.ad.updateMany({
                 where: {
                     userId: userId,
-                    moderationStatus: { in: ['APPROVED', 'PENDING'] } // Ne pas toucher aux REJECTED
+                    moderationStatus: { in: ['APPROVED', 'PENDING'] }
                 },
                 data: {
                     moderationStatus: 'REJECTED',
@@ -56,9 +61,18 @@ export async function POST(request: NextRequest) {
                 } as any,
             });
 
+            await logAdminAudit({
+                adminId: session.admin.id,
+                action: 'USER_BANNED',
+                targetType: 'User',
+                targetId: userId,
+                details: { reason },
+                ipAddress,
+                userAgent,
+            });
+
             return NextResponse.json({ success: true, message: 'Utilisateur banni et annonces masquées' });
         } else if (action === 'unban') {
-            // 1. Débannir l'utilisateur
             await prisma.user.update({
                 where: { id: userId },
                 data: {
@@ -68,17 +82,24 @@ export async function POST(request: NextRequest) {
                 },
             } as any);
 
-            // 2. Remettre ses annonces en attente de modération (PENDING)
-            // Note: On ne les approuve pas automatiquement, l'admin devra les revalider
             await prisma.ad.updateMany({
                 where: {
                     userId: userId,
-                    rejectionReason: { startsWith: 'Compte banni' } // Seulement celles rejetées à cause du ban
+                    rejectionReason: { startsWith: 'Compte banni' }
                 },
                 data: {
                     moderationStatus: 'PENDING',
                     rejectionReason: null
                 } as any,
+            });
+
+            await logAdminAudit({
+                adminId: session.admin.id,
+                action: 'USER_UNBANNED',
+                targetType: 'User',
+                targetId: userId,
+                ipAddress,
+                userAgent,
             });
 
             return NextResponse.json({ success: true, message: 'Utilisateur débanni - ses annonces sont en attente de modération' });
@@ -90,3 +111,5 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: ERROR_MESSAGES.GENERIC }, { status: 500 });
     }
 }
+
+
