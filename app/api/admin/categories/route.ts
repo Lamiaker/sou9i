@@ -4,6 +4,7 @@ import { getAdminSession, logAdminAudit } from '@/lib/admin-auth';
 import { AdminService } from '@/services';
 import { revalidateCategoryPages } from '@/lib/cache-utils';
 import { AdminPermission } from '@prisma/client';
+import { logServerError, getErrorMessage } from '@/lib/errors';
 
 export async function POST(request: NextRequest) {
     try {
@@ -50,10 +51,17 @@ export async function POST(request: NextRequest) {
         revalidateCategoryPages(slug);
         return NextResponse.json({ success: true, category });
     } catch (error: any) {
-        console.error('Create category error:', error);
+        const isBusinessError = error.message?.includes('existe');
+        if (isBusinessError) {
+            return NextResponse.json(
+                { error: getErrorMessage(error) },
+                { status: 400 }
+            );
+        }
+        logServerError(error, { route: '/api/admin/categories', action: 'create_category' });
         return NextResponse.json(
-            { error: error.message || 'Erreur serveur' },
-            { status: error.message?.includes('existe') ? 400 : 500 }
+            { error: 'Erreur serveur' },
+            { status: 500 }
         );
     }
 }
@@ -104,10 +112,17 @@ export async function PATCH(request: NextRequest) {
         revalidateCategoryPages(slug);
         return NextResponse.json({ success: true, category });
     } catch (error: any) {
-        console.error('Update category error:', error);
+        const isBusinessError = error.message?.includes('existe');
+        if (isBusinessError) {
+            return NextResponse.json(
+                { error: getErrorMessage(error) },
+                { status: 400 }
+            );
+        }
+        logServerError(error, { route: '/api/admin/categories', action: 'update_category' });
         return NextResponse.json(
-            { error: error.message || 'Erreur serveur' },
-            { status: error.message?.includes('existe') ? 400 : 500 }
+            { error: 'Erreur serveur' },
+            { status: 500 }
         );
     }
 }
@@ -177,13 +192,19 @@ export async function DELETE(request: NextRequest) {
         revalidateCategoryPages();
         return NextResponse.json({ success: true, message: 'Catégorie supprimée' });
     } catch (error: any) {
-        console.error('Delete category error:', error);
         const isBusinessError = error.message?.includes('annonce') ||
             error.message?.includes('sous-catégorie') ||
             error.message?.includes('introuvable');
+        if (isBusinessError) {
+            return NextResponse.json(
+                { error: getErrorMessage(error) },
+                { status: 400 }
+            );
+        }
+        logServerError(error, { route: '/api/admin/categories', action: 'delete_category' });
         return NextResponse.json(
-            { error: error.message || 'Erreur serveur' },
-            { status: isBusinessError ? 400 : 500 }
+            { error: 'Erreur serveur' },
+            { status: 500 }
         );
     }
 }

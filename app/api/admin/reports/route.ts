@@ -11,6 +11,7 @@ import { requireAdmin, getRequestContext } from '@/lib/admin-guard';
 import { getAdminSession, logAdminAudit } from '@/lib/admin-auth';
 import { AdminService } from '@/services';
 import { AdminPermission } from '@prisma/client';
+import { logServerError } from '@/lib/errors';
 
 /**
  * POST - Actions sur les signalements
@@ -138,9 +139,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(result);
 
     } catch (error: any) {
-        console.error('Admin reports API error:', error);
+        logServerError(error, { route: '/api/admin/reports', action: 'report_action' });
         return NextResponse.json(
-            { error: error.message || 'Erreur serveur' },
+            { error: 'Erreur serveur' },
             { status: 500 }
         );
     }

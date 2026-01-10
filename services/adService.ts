@@ -17,7 +17,6 @@ async function deleteAdImages(imageUrls: string[]): Promise<void> {
                 const filePath = path.join(process.cwd(), 'public', imageUrl);
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
-                    console.log(`Image supprimée: ${filePath}`);
                 }
             }
         } catch (error) {

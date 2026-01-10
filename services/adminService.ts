@@ -34,7 +34,6 @@ async function deleteAdImages(imageUrls: string[]): Promise<void> {
                 // Vérifier si le fichier existe avant de supprimer
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
-                    console.log(`Image supprimée: ${filePath}`);
                 }
             }
         } catch (error) {

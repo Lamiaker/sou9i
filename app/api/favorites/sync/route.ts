@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { FavoriteService } from '@/services'
 import { rateLimit } from '@/lib/rate-limit'
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
 
 // Limiteur : 10 syncs par heure par IP
 const limiter = rateLimit({
@@ -10,18 +11,7 @@ const limiter = rateLimit({
     uniqueTokenPerInterval: 500, // Max 500 IPs suivies
 })
 
-/**
- * POST /api/favorites/sync
- * Synchronise les favoris locaux (visiteur) avec le compte utilisateur
- * 
- * Body: { adIds: string[] } - Liste des IDs d'annonces à synchroniser
- * 
- * Comportement :
- * - Fusionne les favoris locaux avec les favoris serveur
- * - Ignore les doublons (déjà en favoris)
- * - Ignore les annonces invalides (supprimées ou inexistantes)
- * - Retourne les favoris finaux après synchronisation
- */
+
 export async function POST(request: NextRequest) {
     try {
         // Rate Limiting
@@ -85,11 +75,11 @@ export async function POST(request: NextRequest) {
             message: `${result.added} favoris ajoutés, ${result.skipped} ignorés (doublons ou invalides)`
         })
     } catch (error) {
-        console.error('Error syncing favorites:', error)
+        logServerError(error, { route: '/api/favorites/sync', action: 'sync_favorites' });
         return NextResponse.json(
             {
                 success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la synchronisation des favoris'
+                error: ERROR_MESSAGES.GENERIC
             },
             { status: 500 }
         )

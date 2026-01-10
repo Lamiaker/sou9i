@@ -52,8 +52,6 @@ export function initSocketServer(httpServer: any): SocketIOServer {
     })
 
     io.on('connection', (socket: Socket) => {
-        console.log('🔌 Client connecté:', socket.id)
-
         // Authentification
         socket.on('authenticate', async (userId: string) => {
             if (!userId) return

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { AdService } from '@/services';
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
 
 export async function POST(
     request: NextRequest,
@@ -64,11 +65,11 @@ export async function POST(
         return response;
 
     } catch (error) {
-        console.error('Error incrementing views:', error);
+        logServerError(error, { route: '/api/ads/[id]/views', action: 'increment_views' });
         return NextResponse.json(
             {
                 success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de l\'incrémentation des vues'
+                error: ERROR_MESSAGES.GENERIC
             },
             { status: 500 }
         );

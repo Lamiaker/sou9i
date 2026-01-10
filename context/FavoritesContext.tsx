@@ -136,8 +136,6 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
-                    console.log(`Sync réussie: ${data.data.added} ajoutés, ${data.data.skipped} ignorés`);
-
                     // Stocker le résultat pour notification
                     setSyncResult({
                         added: data.data.added,

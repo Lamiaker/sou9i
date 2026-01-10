@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { SubcategoryFieldService } from '@/services'
+import { logServerError, getErrorMessage, ERROR_MESSAGES } from '@/lib/errors'
 
 // GET /api/categories/[id]/fields - Récupérer les champs d'une catégorie
 export async function GET(
@@ -17,12 +18,9 @@ export async function GET(
             data: fields,
         })
     } catch (error) {
-        console.error('Error fetching category fields:', error)
+        logServerError(error, { route: '/api/categories/[id]/fields', action: 'get_fields' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la récupération des champs',
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }
@@ -105,20 +103,16 @@ export async function POST(
             data: field,
         }, { status: 201 })
     } catch (error) {
-        console.error('Error creating field:', error)
-
         if (error instanceof Error && error.message.includes('existe déjà')) {
             return NextResponse.json(
-                { success: false, error: error.message },
+                { success: false, error: getErrorMessage(error) },
                 { status: 409 }
             )
         }
 
+        logServerError(error, { route: '/api/categories/[id]/fields', action: 'create_field' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la création du champ',
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }
@@ -158,12 +152,9 @@ export async function PUT(
             data: fields,
         })
     } catch (error) {
-        console.error('Error reordering fields:', error)
+        logServerError(error, { route: '/api/categories/[id]/fields', action: 'reorder_fields' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors du réordonnancement des champs',
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }

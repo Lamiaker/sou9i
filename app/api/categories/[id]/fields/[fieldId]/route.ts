@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { SubcategoryFieldService } from '@/services'
+import { logServerError, getErrorMessage, ERROR_MESSAGES } from '@/lib/errors'
 
 // GET /api/categories/[id]/fields/[fieldId] - Récupérer un champ spécifique
 export async function GET(
@@ -17,20 +18,16 @@ export async function GET(
             data: field,
         })
     } catch (error) {
-        console.error('Error fetching field:', error)
-
         if (error instanceof Error && error.message.includes('non trouvé')) {
             return NextResponse.json(
-                { success: false, error: error.message },
+                { success: false, error: 'Champ non trouvé' },
                 { status: 404 }
             )
         }
 
+        logServerError(error, { route: '/api/categories/[id]/fields/[fieldId]', action: 'get_field' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la récupération du champ',
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }
@@ -106,27 +103,23 @@ export async function PUT(
             data: field,
         })
     } catch (error) {
-        console.error('Error updating field:', error)
-
         if (error instanceof Error && error.message.includes('non trouvé')) {
             return NextResponse.json(
-                { success: false, error: error.message },
+                { success: false, error: 'Champ non trouvé' },
                 { status: 404 }
             )
         }
 
         if (error instanceof Error && error.message.includes('existe déjà')) {
             return NextResponse.json(
-                { success: false, error: error.message },
+                { success: false, error: getErrorMessage(error) },
                 { status: 409 }
             )
         }
 
+        logServerError(error, { route: '/api/categories/[id]/fields/[fieldId]', action: 'update_field' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la modification du champ',
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }
@@ -155,20 +148,16 @@ export async function DELETE(
             message: 'Champ supprimé avec succès',
         })
     } catch (error) {
-        console.error('Error deleting field:', error)
-
         if (error instanceof Error && error.message.includes('non trouvé')) {
             return NextResponse.json(
-                { success: false, error: error.message },
+                { success: false, error: 'Champ non trouvé' },
                 { status: 404 }
             )
         }
 
+        logServerError(error, { route: '/api/categories/[id]/fields/[fieldId]', action: 'delete_field' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la suppression du champ',
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }

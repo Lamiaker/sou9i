@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { UserService } from '@/services';
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
 
 // GET /api/user/stats - Récupérer les statistiques du dashboard de l'utilisateur
 export async function GET() {
@@ -24,11 +25,11 @@ export async function GET() {
             data: stats,
         });
     } catch (error) {
-        console.error('Error fetching user stats:', error);
+        logServerError(error, { route: '/api/user/stats', action: 'get_user_stats' });
         return NextResponse.json(
             {
                 success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la récupération des statistiques'
+                error: ERROR_MESSAGES.GENERIC
             },
             { status: 500 }
         );

@@ -18,8 +18,6 @@ export default function ProfilePage() {
     const [userData, setUserData] = useState<any>(null);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-    // ... (useEffect reste pareil) ...
-
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -144,7 +142,7 @@ export default function ProfilePage() {
                                     alt="Profile"
                                     fill
                                     className="object-cover"
-                                    unoptimized
+                                    sizes="128px"
                                 />
                             </div>
                             {/* Input file caché pour l'upload */}
@@ -257,18 +255,6 @@ export default function ProfilePage() {
                                 </div>
                                 <p className="mt-1 text-xs text-gray-500">Cette ville sera pré-remplie lors de vos dépôts d'annonces.</p>
                             </div>
-
-                            {/* Bio commentée car pas dans le modèle User pour l'instant */}
-                            {/* <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Bio (Optionnel)</label>
-                                <textarea
-                                    name="bio"
-                                    rows={3}
-                                    defaultValue={userData.bio || ""}
-                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
-                                    placeholder="Dites-en un peu plus sur vous..."
-                                ></textarea>
-                            </div> */}
                         </div>
 
                         <div className="pt-4 flex justify-end">

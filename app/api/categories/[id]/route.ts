@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { CategoryService } from '@/services/categoryService'
+import { logServerError, getErrorMessage, ERROR_MESSAGES } from '@/lib/errors'
 
 // GET /api/categories/[id] - Récupérer une catégorie par ID ou slug
 export async function GET(
@@ -13,7 +14,7 @@ export async function GET(
         const searchParams = request.nextUrl.searchParams
         const includeRelations = searchParams.get('includeRelations') !== 'false'
 
-        console.log('Fetching category with id/slug:', id)
+
 
         let category
 
@@ -57,20 +58,16 @@ export async function GET(
             data: category,
         })
     } catch (error) {
-        console.error('Error fetching category:', error)
-
         if (error instanceof Error && error.message === 'Catégorie non trouvée') {
             return NextResponse.json(
-                { success: false, error: error.message },
+                { success: false, error: 'Catégorie non trouvée' },
                 { status: 404 }
             )
         }
 
+        logServerError(error, { route: '/api/categories/[id]', action: 'get_category' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la récupération de la catégorie'
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }
@@ -110,28 +107,24 @@ export async function PUT(
             data: category,
         })
     } catch (error) {
-        console.error('Error updating category:', error)
-
         if (error instanceof Error) {
             if (error.message === 'Catégorie non trouvée') {
                 return NextResponse.json(
-                    { success: false, error: error.message },
+                    { success: false, error: 'Catégorie non trouvée' },
                     { status: 404 }
                 )
             }
             if (error.message.includes('existe déjà')) {
                 return NextResponse.json(
-                    { success: false, error: error.message },
+                    { success: false, error: getErrorMessage(error) },
                     { status: 409 }
                 )
             }
         }
 
+        logServerError(error, { route: '/api/categories/[id]', action: 'update_category' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la mise à jour de la catégorie'
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }
@@ -153,28 +146,24 @@ export async function DELETE(
             message: 'Catégorie supprimée avec succès',
         })
     } catch (error) {
-        console.error('Error deleting category:', error)
-
         if (error instanceof Error) {
             if (error.message === 'Catégorie non trouvée') {
                 return NextResponse.json(
-                    { success: false, error: error.message },
+                    { success: false, error: 'Catégorie non trouvée' },
                     { status: 404 }
                 )
             }
             if (error.message.includes('Impossible de supprimer')) {
                 return NextResponse.json(
-                    { success: false, error: error.message },
+                    { success: false, error: getErrorMessage(error) },
                     { status: 409 }
                 )
             }
         }
 
+        logServerError(error, { route: '/api/categories/[id]', action: 'delete_category' });
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Erreur lors de la suppression de la catégorie'
-            },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         )
     }

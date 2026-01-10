@@ -12,8 +12,6 @@ export default function handler(req: NextApiRequest, res: any) {
         return
     }
 
-    console.log('🚀 Initialisation du serveur Socket.io...')
-
     // On passe l'instance du serveur HTTP de Next.js à notre utilitaire
     initSocketServer(res.socket.server)
 
