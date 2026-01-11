@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth'
 import { MessageService } from '@/services'
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
 import { sendMessageSchema, getMessagesSchema, validateRequest, validateSearchParams } from '@/lib/validations'
-import { messageRateLimiter } from '@/lib/rate-limit-enhanced'
+import { checkMessageRateLimit } from '@/lib/rate-limit-hybrid'
 
 /**
  * POST /api/messages
@@ -26,18 +26,22 @@ export async function POST(request: NextRequest) {
 
         const userId = session.user.id
 
-        // ✅ SÉCURITÉ: Rate Limiting (30 messages / minute)
-        const rateLimit = messageRateLimiter.check(userId)
-        if (!rateLimit.success) {
+        // ✅ SÉCURITÉ: Rate Limiting Hybride (30 messages / minute)
+        const rateLimitResult = await checkMessageRateLimit(userId)
+        if (!rateLimitResult.success) {
             return NextResponse.json(
                 {
                     success: false,
                     error: "Vous envoyez trop de messages. Veuillez patienter.",
-                    retryAfter: rateLimit.retryAfter
+                    retryAfter: rateLimitResult.retryAfter
                 },
                 {
                     status: 429,
-                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfter || 60),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+                    }
                 }
             )
         }

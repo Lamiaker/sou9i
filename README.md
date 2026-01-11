@@ -66,6 +66,7 @@ Une plateforme de marketplace moderne construite avec Next.js 16, permettant aux
 | **Recharts** | 3.6.0 | Graphiques admin |
 | **Resend** | 6.6.0 | Envoi d'emails |
 | **Zod** | 4.1.13 | Validation de schémas |
+| **Redis** | 5.10.0 | Caching & Rate Limiting |
 
 ---
 
@@ -81,7 +82,7 @@ Une plateforme de marketplace moderne construite avec Next.js 16, permettant aux
 ```bash
 # 1. Cloner le repository
 git clone <repository-url>
-cd marchefemme
+cd sweetlook
 
 # 2. Installer les dépendances
 npm install
@@ -97,7 +98,10 @@ npx prisma db push
 # 5. Seeder la base de données (optionnel)
 npx prisma db seed
 
-# 6. Lancer le serveur de développement
+# 6. Lancer Redis (Production ou Docker)
+# Assurez-vous d'avoir une instance Redis qui tourne
+
+# 7. Lancer le serveur de développement
 npm run dev
 ```
 
@@ -125,6 +129,12 @@ GOOGLE_CLIENT_SECRET="votre-client-secret"
 
 # Resend (emails)
 RESEND_API_KEY="re_xxxxxxxxxxxx"
+
+# Redis (Production)
+REDIS_HOST="localhost"
+REDIS_PORT="6379"
+REDIS_PASSWORD="" # Laisser vide si pas de mot de passe
+# REDIS_URL="" # Alternative si vous utilisez une URL complète (ex: Upstash)
 ```
 
 ---
@@ -309,7 +319,7 @@ npm run create-admin [email] [password] [name]
 
 # Exemple avec valeurs par défaut
 npm run create-admin
-# Email: admin@marchefemme.com
+# Email: admin@sweetlook.net
 # Password: Password123!
 ```
 

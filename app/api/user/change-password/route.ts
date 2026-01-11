@@ -4,17 +4,27 @@ import { authOptions } from '@/lib/auth'
 import { UserService } from '@/services'
 import { prisma } from '@/lib/prisma'
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
-import { passwordResetRateLimiter, getClientIP } from '@/lib/rate-limit-enhanced'
+import { checkChangePasswordRateLimit, getClientIP } from '@/lib/rate-limit-hybrid'
 
 export async function POST(request: NextRequest) {
     try {
-        // ✅ RATE LIMITING
+        // ✅ RATE LIMITING HYBRIDE
         const ip = getClientIP(request)
-        const rateLimit = passwordResetRateLimiter.check(ip)
-        if (!rateLimit.success) {
+        const rateLimitResult = await checkChangePasswordRateLimit(ip)
+        if (!rateLimitResult.success) {
             return NextResponse.json(
-                { error: 'Trop de tentatives. Veuillez réessayer plus tard.' },
-                { status: 429 }
+                {
+                    error: 'Trop de tentatives. Veuillez réessayer plus tard.',
+                    retryAfter: rateLimitResult.retryAfter
+                },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfter || 60),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+                    }
+                }
             )
         }
 

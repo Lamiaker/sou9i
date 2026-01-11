@@ -2,11 +2,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loginAdmin } from '@/lib/admin-auth';
 import { z } from 'zod';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 // Schéma de validation
 const loginSchema = z.object({
     email: z.string().email('Email invalide'),
     password: z.string().min(8, 'Mot de passe trop court'),
+    captchaToken: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,7 +31,24 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { email, password } = validation.data;
+        const { email, password, captchaToken } = validation.data;
+
+        // 0. Vérification CAPTCHA en production
+        if (process.env.NODE_ENV === 'production') {
+            if (!captchaToken) {
+                return NextResponse.json(
+                    { error: 'Vérification CAPTCHA requise' },
+                    { status: 400 }
+                );
+            }
+            const captchaResult = await verifyTurnstileToken(captchaToken, ipAddress);
+            if (!captchaResult.success) {
+                return NextResponse.json(
+                    { error: captchaResult.error || 'Échec de la vérification CAPTCHA' },
+                    { status: 400 }
+                );
+            }
+        }
 
         // Tenter la connexion
         const result = await loginAdmin(email, password, ipAddress, userAgent);

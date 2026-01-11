@@ -10,14 +10,7 @@ import { SupportService } from '@/services/supportService';
 import { TicketCategory, TicketStatus } from '@prisma/client';
 import { z } from 'zod';
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
-import { createRateLimiter, getClientIP } from '@/lib/rate-limit-enhanced';
-
-// ✅ SÉCURITÉ: Rate Limiter pour les tickets (5 par heure)
-const supportRateLimiter = createRateLimiter('support', {
-    limit: 5,
-    windowMs: 60 * 60 * 1000, // 1 heure
-    message: 'Vous avez atteint la limite de tickets. Veuillez réessayer plus tard.',
-});
+import { checkSupportRateLimit, getClientIP } from '@/lib/rate-limit-hybrid';
 
 // ✅ SÉCURITÉ: Schéma de validation Zod
 const createTicketSchema = z.object({
@@ -83,17 +76,21 @@ export async function POST(request: NextRequest) {
 
         // ✅ SÉCURITÉ: Rate limiting par IP ou userId
         const identifier = userId || getClientIP(request);
-        const rateLimit = supportRateLimiter.check(identifier);
-        if (!rateLimit.success) {
+        const rateLimitResult = await checkSupportRateLimit(identifier);
+        if (!rateLimitResult.success) {
             return NextResponse.json(
                 {
                     success: false,
                     error: 'Vous avez atteint la limite de tickets. Veuillez réessayer plus tard.',
-                    retryAfter: rateLimit.retryAfter
+                    retryAfter: rateLimitResult.retryAfter
                 },
                 {
                     status: 429,
-                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfter || 60),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+                    }
                 }
             );
         }

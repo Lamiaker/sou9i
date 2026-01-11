@@ -4,6 +4,7 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { UserService } from '@/services'
 import { loginSchema } from '@/lib/validations/auth'
+import { verifyTurnstileToken } from '@/lib/turnstile'
 
 // Extend NextAuth types for role support
 declare module 'next-auth' {
@@ -49,6 +50,7 @@ export const authOptions: NextAuthOptions = {
             credentials: {
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' },
+                captchaToken: { label: 'Captcha', type: 'text' },
             },
             async authorize(credentials) {
                 // 1. Validation stricte des inputs avec Zod
@@ -58,7 +60,18 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Format d\'email ou mot de passe invalide')
                 }
 
-                const { email, password } = parsedCredentials.data
+                const { email, password, captchaToken } = parsedCredentials.data
+
+                // 1.5 Vérification CAPTCHA en production
+                if (process.env.NODE_ENV === 'production') {
+                    if (!captchaToken) {
+                        throw new Error('Vérification CAPTCHA requise')
+                    }
+                    const captchaResult = await verifyTurnstileToken(captchaToken)
+                    if (!captchaResult.success) {
+                        throw new Error(captchaResult.error || 'Échec de la vérification CAPTCHA')
+                    }
+                }
 
                 // 2. Récupération de l'utilisateur avec le rôle
                 const user: any = await prisma.user.findUnique({

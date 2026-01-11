@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { AdService } from '@/services'
 import { logServerError, ERROR_MESSAGES, AuthenticationError } from '@/lib/errors'
 import { createAdSchema, adFiltersSchema, validateSearchParams } from '@/lib/validations'
-import { adCreationRateLimiter } from '@/lib/rate-limit-enhanced'
+import { checkAdCreationRateLimit } from '@/lib/rate-limit-hybrid'
 
 // GET /api/ads - Récupérer toutes les annonces avec filtres
 export async function GET(request: NextRequest) {
@@ -65,18 +65,22 @@ export async function POST(request: NextRequest) {
         // Utiliser l'ID de la session authentifiée (impossible à usurper)
         const userId = session.user.id
 
-        // ✅ SÉCURITÉ: Rate Limiting (10 annonces / heure)
-        const rateLimit = adCreationRateLimiter.check(userId)
-        if (!rateLimit.success) {
+        // ✅ SÉCURITÉ: Rate Limiting Hybride (10 annonces / heure)
+        const rateLimitResult = await checkAdCreationRateLimit(userId)
+        if (!rateLimitResult.success) {
             return NextResponse.json(
                 {
                     success: false,
                     error: "Vous avez atteint la limite de création d'annonces. Veuillez réessayer plus tard.",
-                    retryAfter: rateLimit.retryAfter
+                    retryAfter: rateLimitResult.retryAfter
                 },
                 {
                     status: 429,
-                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfter || 3600),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+                    }
                 }
             )
         }

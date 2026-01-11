@@ -7,7 +7,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { FavoriteService } from '@/services'
 import { logServerError, getErrorMessage } from '@/lib/errors'
-import { apiRateLimiter, getClientIP } from '@/lib/rate-limit-enhanced'
+import { checkFavoritesRateLimit, getClientIP } from '@/lib/rate-limit-hybrid'
 
 // GET /api/favorites - Récupérer les favoris d'un utilisateur
 export async function GET(request: NextRequest) {
@@ -48,13 +48,24 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // ✅ RATE LIMITING
+        // ✅ RATE LIMITING HYBRIDE
         const ip = getClientIP(request)
-        const rateLimit = apiRateLimiter.check(ip)
-        if (!rateLimit.success) {
+        const rateLimitResult = await checkFavoritesRateLimit(ip)
+        if (!rateLimitResult.success) {
             return NextResponse.json(
-                { success: false, error: 'Trop de requêtes. Veuillez patienter.' },
-                { status: 429 }
+                {
+                    success: false,
+                    error: 'Trop de requêtes. Veuillez patienter.',
+                    retryAfter: rateLimitResult.retryAfter
+                },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfter || 60),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+                    }
+                }
             )
         }
 

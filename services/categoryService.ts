@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { unstable_cache } from 'next/cache'
+import { invalidateCategoriesCache } from '@/lib/cache'
 
 
 export class CategoryService {
@@ -430,13 +431,18 @@ export class CategoryService {
             throw new Error('Une catégorie avec ce slug existe déjà')
         }
 
-        return prisma.category.create({
+        const category = await prisma.category.create({
             data,
             include: {
                 parent: true,
                 children: true,
             },
         })
+
+        // Invalider le cache Redis
+        await invalidateCategoriesCache();
+
+        return category;
     }
 
     /**
@@ -473,7 +479,7 @@ export class CategoryService {
             }
         }
 
-        return prisma.category.update({
+        const updated = await prisma.category.update({
             where: { id },
             data,
             include: {
@@ -481,6 +487,11 @@ export class CategoryService {
                 children: true,
             },
         })
+
+        // Invalider le cache Redis
+        await invalidateCategoriesCache();
+
+        return updated;
     }
 
     /**
@@ -593,8 +604,13 @@ export class CategoryService {
             )
         }
 
-        return prisma.category.delete({
+        const deleted = await prisma.category.delete({
             where: { id },
         })
+
+        // Invalider le cache Redis
+        await invalidateCategoriesCache();
+
+        return deleted;
     }
 }

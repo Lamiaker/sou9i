@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Phone, MapPin } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { getErrorMessage } from "@/lib/errors";
+import TurnstileWidget from "@/components/ui/TurnstileWidget";
 
 export default function SignupPage() {
     const { status } = useSession();
@@ -27,6 +28,8 @@ export default function SignupPage() {
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const [captchaError, setCaptchaError] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -87,6 +90,11 @@ export default function SignupPage() {
             return;
         }
 
+        if (process.env.NODE_ENV === 'production' && !captchaToken) {
+            setErrors({ general: "Veuillez vérifier que vous n'êtes pas un robot" });
+            return;
+        }
+
         setLoading(true);
         setErrors({}); // Clear previous errors
 
@@ -100,6 +108,7 @@ export default function SignupPage() {
                     phone: formData.phone,
                     city: formData.city,
                     password: formData.password,
+                    captchaToken,
                 }),
             });
 
@@ -291,6 +300,25 @@ export default function SignupPage() {
                             </div>
                             {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
                         </div>
+
+                        <TurnstileWidget
+                            onVerify={(token) => {
+                                setCaptchaToken(token);
+                                setCaptchaError(false);
+                            }}
+                            onError={() => {
+                                setCaptchaToken(null);
+                                setCaptchaError(true);
+                            }}
+                            onExpire={() => {
+                                setCaptchaToken(null);
+                            }}
+                        />
+                        {captchaError && (
+                            <p className="text-red-500 text-xs mt-1">
+                                Erreur CAPTCHA. Veuillez rafraîchir la page.
+                            </p>
+                        )}
 
                         {/* Bouton submit */}
                         <div>

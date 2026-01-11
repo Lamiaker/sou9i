@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CategoryService } from '@/services/categoryService';
+import { getCachedCategoriesWithAds } from '@/lib/cache';
 
 export async function GET(request: NextRequest) {
     try {
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
         const skip = parseInt(searchParams.get('skip') || '0', 10);
         const take = parseInt(searchParams.get('take') || '4', 10);
 
-        const result = await CategoryService.getCategoriesWithAds({ skip, take });
+        const result = await getCachedCategoriesWithAds(skip, take);
 
         return NextResponse.json(result);
     } catch (error) {

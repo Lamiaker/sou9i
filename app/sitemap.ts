@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 
 // Configuration du site
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://sweetlook.dz';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://sweetlook.net';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Date actuelle pour lastModified

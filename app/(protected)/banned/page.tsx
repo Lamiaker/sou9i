@@ -5,7 +5,7 @@ import { signOut, useSession } from "next-auth/react";
 import { ShieldX, LogOut, MessageCircle, Mail, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const SUPPORT_EMAIL = "support@sweetlook.dz";
+const SUPPORT_EMAIL = "support@sweetlook.net";
 
 export default function BannedPage() {
     const { data: session } = useSession();

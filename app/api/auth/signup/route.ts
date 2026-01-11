@@ -1,15 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UserService } from '@/services'
 import { registerSchema } from '@/lib/validations/auth'
-import { authRateLimiter, getClientIP } from '@/lib/rate-limit-enhanced'
-import { logServerError, ConflictError, RateLimitError, ValidationError } from '@/lib/errors'
+import { checkSignupRateLimit, resetSignupRateLimit, getClientIP } from '@/lib/rate-limit-hybrid'
+import { logServerError, ConflictError, ValidationError } from '@/lib/errors'
 import { errorResponse } from '@/lib/api-utils'
+import { verifyTurnstileToken } from '@/lib/turnstile'
 
 export async function POST(request: NextRequest) {
     try {
-        // 1. Rate Limiting amélioré avec blocage progressif
+        // 1. Rate Limiting hybride (Redis avec fallback mémoire)
         const ip = getClientIP(request)
-        const rateLimitResult = authRateLimiter.check(ip)
+        const body = await request.json()
+
+        // 0. Vérification CAPTCHA en production
+        if (process.env.NODE_ENV === 'production') {
+            if (!body.captchaToken) {
+                return NextResponse.json(
+                    { success: false, error: 'CAPTCHA requis' },
+                    { status: 400 }
+                )
+            }
+            const captchaResult = await verifyTurnstileToken(body.captchaToken, ip)
+            if (!captchaResult.success) {
+                return NextResponse.json(
+                    { success: false, error: captchaResult.error || 'Échec de la vérification CAPTCHA' },
+                    { status: 400 }
+                )
+            }
+        }
+
+        // 1. Rate Limiting hybride (Redis avec fallback mémoire)
+        const rateLimitResult = await checkSignupRateLimit(ip)
 
         if (!rateLimitResult.success) {
             // Ajouter les headers de rate limit
@@ -29,7 +50,7 @@ export async function POST(request: NextRequest) {
             return response
         }
 
-        const body = await request.json()
+        // const body = await request.json() // Deja fait au dessus
 
         // 2. Validation Zod
         const parsedBody = registerSchema.safeParse(body)
@@ -51,7 +72,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Succès - réinitialiser le rate limit pour cette IP
-        authRateLimiter.reset(ip)
+        await resetSignupRateLimit(ip)
 
         return NextResponse.json(
             {
@@ -76,6 +97,3 @@ export async function POST(request: NextRequest) {
         return errorResponse(error, { route: '/api/auth/signup' })
     }
 }
-
-
-

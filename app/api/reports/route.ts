@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
-import { reportRateLimiter } from '@/lib/rate-limit-enhanced';
+import { checkReportRateLimit } from '@/lib/rate-limit-hybrid';
 import { z } from 'zod';
 
 // ✅ SÉCURITÉ: Schéma de validation Zod pour les signalements
@@ -48,16 +48,20 @@ export async function POST(request: NextRequest) {
         }
 
         // ✅ SÉCURITÉ: Rate Limiting (5 signalements / heure)
-        const rateLimit = reportRateLimiter.check(session.user.id);
-        if (!rateLimit.success) {
+        const rateLimitResult = await checkReportRateLimit(session.user.id);
+        if (!rateLimitResult.success) {
             return NextResponse.json(
                 {
                     error: 'Vous avez atteint la limite de signalements. Veuillez réessayer plus tard.',
-                    retryAfter: rateLimit.retryAfter
+                    retryAfter: rateLimitResult.retryAfter
                 },
                 {
                     status: 429,
-                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfter || 60),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+                    }
                 }
             );
         }

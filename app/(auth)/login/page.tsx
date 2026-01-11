@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Check } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { getErrorMessage } from "@/lib/errors";
+import TurnstileWidget from "@/components/ui/TurnstileWidget";
 
 function LoginForm() {
     const router = useRouter();
@@ -18,6 +19,8 @@ function LoginForm() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const [captchaError, setCaptchaError] = useState(false);
 
     const redirectPath = searchParams?.get("callbackUrl");
     const message = searchParams?.get("message");
@@ -46,12 +49,19 @@ function LoginForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+
+        if (process.env.NODE_ENV === 'production' && !captchaToken) {
+            setError("Veuillez vérifier que vous n'êtes pas un robot");
+            return;
+        }
+
         setLoading(true);
 
         try {
             const result = await signIn('credentials', {
                 email: formData.email,
                 password: formData.password,
+                captchaToken,
                 redirect: false,
             });
 
@@ -209,6 +219,26 @@ function LoginForm() {
                                 </Link>
                             </div>
                         </div>
+
+                        <TurnstileWidget
+                            onVerify={(token) => {
+                                setCaptchaToken(token);
+                                setCaptchaError(false);
+                            }}
+                            onError={() => {
+                                setCaptchaToken(null);
+                                setCaptchaError(true);
+                            }}
+                            onExpire={() => {
+                                setCaptchaToken(null);
+                            }}
+                        />
+
+                        {captchaError && (
+                            <p className="text-red-500 text-xs mt-1">
+                                Erreur CAPTCHA. Veuillez rafraîchir la page.
+                            </p>
+                        )}
 
                         {/* Submit button */}
                         <div>

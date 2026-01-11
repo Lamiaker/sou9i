@@ -1,6 +1,6 @@
-import { CategoryService } from "@/services";
 import DeposerAdForm from "@/components/forms/DeposerAdForm";
 import { Metadata } from "next";
+import { getCachedCategoriesHierarchy } from "@/lib/cache";
 
 /**
  * Page de dépôt d'annonce - Zone Protégée
@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DeposerPage() {
-    // Récupérer les catégories (sera servi par le cache unstable_cache du service)
-    const categories = await CategoryService.getCategoriesHierarchy();
+    // Récupérer les catégories avec cache Redis
+    const categories = await getCachedCategoriesHierarchy();
 
     return <DeposerAdForm initialCategories={categories} />;
 }

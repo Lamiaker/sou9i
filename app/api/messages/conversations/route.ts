@@ -6,14 +6,7 @@ import { authOptions } from '@/lib/auth'
 import { MessageService } from '@/services'
 import { z } from 'zod'
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
-import { createRateLimiter } from '@/lib/rate-limit-enhanced'
-
-// ✅ SÉCURITÉ: Rate limiter pour la création de conversations (20/heure)
-const conversationRateLimiter = createRateLimiter('conversations', {
-    limit: 20,
-    windowMs: 60 * 60 * 1000, // 1 heure
-    message: 'Trop de conversations créées. Veuillez patienter.',
-});
+import { checkConversationRateLimit } from '@/lib/rate-limit-hybrid'
 
 // ✅ SÉCURITÉ: Schéma de validation Zod
 const createConversationSchema = z.object({
@@ -64,18 +57,22 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // ✅ SÉCURITÉ: Rate Limiting
-        const rateLimit = conversationRateLimiter.check(session.user.id)
-        if (!rateLimit.success) {
+        // ✅ SÉCURITÉ: Rate Limiting Hybride
+        const rateLimitResult = await checkConversationRateLimit(session.user.id);
+        if (!rateLimitResult.success) {
             return NextResponse.json(
                 {
                     success: false,
                     error: 'Trop de conversations créées. Veuillez patienter.',
-                    retryAfter: rateLimit.retryAfter
+                    retryAfter: rateLimitResult.retryAfter
                 },
                 {
                     status: 429,
-                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfter || 60),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+                    }
                 }
             )
         }

@@ -33,6 +33,7 @@ yarn-error.log*
 # ✅ SÉCURITÉ: Fichiers d'environnement - NE JAMAIS COMMITER
 .env
 .env.*
+!.env.example
 .env.local
 .env.development
 .env.development.local

@@ -4,49 +4,49 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Configuration de l'email
-const FROM_EMAIL = process.env.EMAIL_FROM || 'SweetLook <noreply@sweetlook.dz>';
+const FROM_EMAIL = process.env.EMAIL_FROM || 'SweetLook <noreply@sweetlook.net>';
 const APP_NAME = 'SweetLook';
 const APP_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
 interface SendEmailOptions {
-    to: string;
-    subject: string;
-    html: string;
-    text?: string;
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
 }
 
 /**
  * Envoie un email via Resend
  */
 export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<{ success: boolean; error?: string }> {
-    try {
-        const { error } = await resend.emails.send({
-            from: FROM_EMAIL,
-            to,
-            subject,
-            html,
-            text,
-        });
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject,
+      html,
+      text,
+    });
 
-        if (error) {
-            console.error('Erreur envoi email:', error);
-            return { success: false, error: error.message };
-        }
-
-        return { success: true };
-    } catch (error) {
-        console.error('Erreur envoi email:', error);
-        return { success: false, error: 'Erreur lors de l\'envoi de l\'email' };
+    if (error) {
+      console.error('Erreur envoi email:', error);
+      return { success: false, error: error.message };
     }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur envoi email:', error);
+    return { success: false, error: 'Erreur lors de l\'envoi de l\'email' };
+  }
 }
 
 /**
  * Envoie un email de réinitialisation de mot de passe
  */
 export async function sendPasswordResetEmail(email: string, token: string): Promise<{ success: boolean; error?: string }> {
-    const resetUrl = `${APP_URL}/reset-password?token=${token}`;
+  const resetUrl = `${APP_URL}/reset-password?token=${token}`;
 
-    const html = `
+  const html = `
     <!DOCTYPE html>
     <html lang="fr">
     <head>
@@ -134,7 +134,7 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     </html>
   `;
 
-    const text = `
+  const text = `
     Réinitialisation de votre mot de passe - ${APP_NAME}
 
     Bonjour,
@@ -151,10 +151,10 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     © ${new Date().getFullYear()} ${APP_NAME}
   `;
 
-    return sendEmail({
-        to: email,
-        subject: `Réinitialisation de votre mot de passe - ${APP_NAME}`,
-        html,
-        text,
-    });
+  return sendEmail({
+    to: email,
+    subject: `Réinitialisation de votre mot de passe - ${APP_NAME}`,
+    html,
+    text,
+  });
 }

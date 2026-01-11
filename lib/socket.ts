@@ -1,5 +1,7 @@
 import { Server as HttpServer } from 'http'
 import { Server as SocketIOServer, Socket } from 'socket.io'
+import { createAdapter } from '@socket.io/redis-adapter'
+import { createClient } from 'redis'
 import { MessageService } from '@/services'
 
 // Types pour les événements WebSocket
@@ -29,27 +31,76 @@ export interface UserTypingEvent {
     isTyping: boolean
 }
 
-// Map pour garder trace des utilisateurs connectés
+// Map pour garder trace des utilisateurs connectés (local au worker)
 const userSockets = new Map<string, Set<string>>()
 
 let io: SocketIOServer | null = null
 
 /**
+ * Configure l'adapter Redis pour Socket.io
+ * Permet la synchronisation des messages entre workers PM2
+ */
+async function setupRedisAdapter(socketServer: SocketIOServer): Promise<void> {
+    // Vérifier si Redis est configuré
+    const redisHost = process.env.REDIS_HOST
+    const redisPort = process.env.REDIS_PORT
+
+    if (!redisHost && !process.env.REDIS_URL) {
+        console.log('[Socket.io] Redis non configuré, mode single-instance')
+        return
+    }
+
+    try {
+        const redisConfig = process.env.REDIS_URL
+            ? { url: process.env.REDIS_URL }
+            : {
+                socket: {
+                    host: redisHost || '127.0.0.1',
+                    port: parseInt(redisPort || '6379'),
+                },
+                password: process.env.REDIS_PASSWORD || undefined,
+            }
+
+        // Créer deux clients Redis (pub et sub)
+        const pubClient = createClient(redisConfig)
+        const subClient = pubClient.duplicate()
+
+        pubClient.on('error', (err) => console.error('[Socket.io Redis Pub] Erreur:', err.message))
+        subClient.on('error', (err) => console.error('[Socket.io Redis Sub] Erreur:', err.message))
+
+        await Promise.all([pubClient.connect(), subClient.connect()])
+
+        // Appliquer l'adapter Redis
+        socketServer.adapter(createAdapter(pubClient, subClient))
+
+        console.log('[Socket.io] Adapter Redis connecté ✓')
+    } catch (error) {
+        console.error('[Socket.io] Erreur connexion Redis adapter:', error)
+        console.log('[Socket.io] Fallback en mode single-instance')
+    }
+}
+
+/**
  * Initialise le serveur Socket.io (utilisé par la route API)
  */
-export function initSocketServer(httpServer: any): SocketIOServer {
+export async function initSocketServer(httpServer: any): Promise<SocketIOServer> {
     if (io) return io
 
     io = new SocketIOServer(httpServer, {
         path: '/api/socket',
         addTrailingSlash: false,
         cors: {
-            origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+            origin: process.env.NEXTAUTH_URL || process.env.SOCKET_IO_CORS_ORIGIN || 'http://localhost:3000',
             methods: ['GET', 'POST'],
             credentials: true,
         },
         transports: ['websocket', 'polling'],
     })
+
+    // Configurer l'adapter Redis en production
+    if (process.env.NODE_ENV === 'production') {
+        await setupRedisAdapter(io)
+    }
 
     io.on('connection', (socket: Socket) => {
         // Authentification
@@ -126,13 +177,11 @@ export function getIO(): SocketIOServer | null {
 
 /**
  * Helper pour diffuser un nouveau message depuis n'importe où (ex: API REST)
+ * Avec Redis adapter, le message sera propagé à tous les workers
  */
 export function broadcastNewMessage(message: NewMessageEvent) {
     if (io) {
         io.to(`conversation:${message.conversationId}`).emit('new_message', message)
-
-        // Optionnel : Notifier spécifiquement les sockets de l'utilisateur (pour les badges hors conversation active)
-        // Note: socket.io rooms s'occupent déjà de ça si l'utilisateur est dans la room
     }
 }
 
@@ -147,4 +196,3 @@ export function broadcastMessagesRead(conversationId: string, userId: string) {
         })
     }
 }
-

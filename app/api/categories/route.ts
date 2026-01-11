@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CategoryService } from '@/services'
 import { logServerError, ERROR_MESSAGES, ConflictError } from '@/lib/errors'
+import { getCachedAllCategories, getCachedCategoriesHierarchy } from '@/lib/cache'
 
 // GET /api/categories - Récupérer toutes les catégories
 export async function GET(request: NextRequest) {
@@ -27,10 +28,14 @@ export async function GET(request: NextRequest) {
         // Selon le type demandé
         switch (type) {
             case 'hierarchy':
-                // Catégories hiérarchiques (parents avec leurs enfants) - avec pagination
-                const result = await CategoryService.getCategoriesHierarchyPaginated({ page, limit })
-                categories = result.categories
-                pagination = result.pagination
+                // Si pas de pagination spécifique, utiliser la hiérarchie complète mise en cache
+                if (page === 1 && limit >= 50) {
+                    categories = await getCachedCategoriesHierarchy()
+                } else {
+                    const result = await CategoryService.getCategoriesHierarchyPaginated({ page, limit })
+                    categories = result.categories
+                    pagination = result.pagination
+                }
                 break
 
             case 'parents':
@@ -44,7 +49,7 @@ export async function GET(request: NextRequest) {
                 if (withCount) {
                     categories = await CategoryService.getCategoriesWithCount()
                 } else {
-                    categories = await CategoryService.getAllCategories()
+                    categories = await getCachedAllCategories()
                 }
                 break
         }

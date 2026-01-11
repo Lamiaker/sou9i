@@ -2,26 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { FavoriteService } from '@/services'
-import { rateLimit } from '@/lib/rate-limit'
+import { checkApiRateLimit, getClientIP } from '@/lib/rate-limit-hybrid'
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors'
-
-// Limiteur : 10 syncs par heure par IP
-const limiter = rateLimit({
-    interval: 60 * 60 * 1000, // 1 heure
-    uniqueTokenPerInterval: 500, // Max 500 IPs suivies
-})
 
 
 export async function POST(request: NextRequest) {
     try {
-        // Rate Limiting
-        const ip = request.headers.get('x-forwarded-for') || 'anonymous'
-        try {
-            await limiter.check(10, ip) // 10 syncs max par heure
-        } catch {
+        // Rate Limiting Hybride
+        const ip = getClientIP(request)
+        const rateLimitResult = await checkApiRateLimit(ip)
+        if (!rateLimitResult.success) {
             return NextResponse.json(
-                { success: false, error: 'Trop de synchronisations. Veuillez réessayer plus tard.' },
-                { status: 429 }
+                {
+                    success: false,
+                    error: 'Trop de synchronisations. Veuillez réessayer plus tard.',
+                    retryAfter: rateLimitResult.retryAfter
+                },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfter || 60),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+                    }
+                }
             )
         }
 

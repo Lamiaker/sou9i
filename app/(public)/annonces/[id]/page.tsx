@@ -21,7 +21,7 @@ export async function generateStaticParams() {
 }
 
 // Configuration
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://sweetlook.dz';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://sweetlook.net';
 
 // Générer les métadonnées dynamiques pour le SEO et Open Graph
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

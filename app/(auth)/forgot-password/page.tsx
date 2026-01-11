@@ -3,23 +3,32 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Mail, ArrowLeft, Send, CheckCircle, AlertCircle } from "lucide-react";
+import TurnstileWidget from "@/components/ui/TurnstileWidget";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const [captchaError, setCaptchaError] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+
+        if (process.env.NODE_ENV === 'production' && !captchaToken) {
+            setError("Veuillez vérifier que vous n'êtes pas un robot");
+            return;
+        }
+
         setLoading(true);
 
         try {
             const response = await fetch("/api/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ email, captchaToken }),
             });
 
             const data = await response.json();
@@ -158,6 +167,26 @@ export default function ForgotPasswordPage() {
                                 />
                             </div>
                         </div>
+
+                        <TurnstileWidget
+                            onVerify={(token) => {
+                                setCaptchaToken(token);
+                                setCaptchaError(false);
+                            }}
+                            onError={() => {
+                                setCaptchaToken(null);
+                                setCaptchaError(true);
+                            }}
+                            onExpire={() => {
+                                setCaptchaToken(null);
+                            }}
+                        />
+
+                        {captchaError && (
+                            <p className="text-red-500 text-xs mt-1">
+                                Erreur CAPTCHA. Veuillez rafraîchir la page.
+                            </p>
+                        )}
 
                         {/* Bouton d'envoi */}
                         <button

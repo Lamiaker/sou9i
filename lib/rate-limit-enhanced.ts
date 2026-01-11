@@ -1,12 +1,13 @@
 /**
- * Système de Rate Limiting amélioré
+ * Système de Rate Limiting amélioré (version mémoire)
  * 
- * ⚠️ NOTE: En environnement serverless (Vercel), ce rate limiter en mémoire
- * n'est pas parfait car chaque fonction a son propre état.
- * Pour une protection robuste en production, migrer vers Redis/Upstash.
+ * Ce rate limiter en mémoire est utilisé comme fallback.
+ * En production avec PM2 cluster, utilisez les fonctions Redis de lib/redis.ts :
+ * - checkRateLimitRedis() pour le rate limiting distribué
+ * - resetRateLimitRedis() pour réinitialiser
  * 
- * Ce rate limiter offre néanmoins une protection de base et fonctionne bien
- * pour les environnements non-serverless ou pour limiter les cold starts.
+ * Le rate limiting en mémoire fonctionne bien en développement
+ * et pour les cas où Redis n'est pas disponible.
  */
 
 interface RateLimitEntry {

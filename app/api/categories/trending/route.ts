@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { CategoryService } from '@/services/categoryService';
+import { getCachedTrendingCategories } from '@/lib/cache';
 
 export async function GET() {
     try {
-        const trendingCategories = await CategoryService.getTrendingCategories();
+        const trendingCategories = await getCachedTrendingCategories();
 
         return NextResponse.json({
             success: true,
