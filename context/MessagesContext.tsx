@@ -180,10 +180,19 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     )
 }
 
-export function useGlobalMessages() {
+export function useGlobalMessages(): MessagesContextType {
     const context = useContext(MessagesContext)
+
+    // Retourner des valeurs par défaut pour les utilisateurs non authentifiés
     if (context === undefined) {
-        throw new Error('useGlobalMessages must be used within a MessagesProvider')
+        return {
+            conversations: [],
+            unreadTotal: 0,
+            isLoading: false,
+            refreshConversations: async () => { },
+            markAsRead: () => { },
+        }
     }
+
     return context
 }

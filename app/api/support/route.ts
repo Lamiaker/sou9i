@@ -1,8 +1,4 @@
-/**
- * API Route: Support Tickets
- * GET - Récupérer les tickets (user: ses tickets, admin: tous)
- * POST - Créer un nouveau ticket
- */
+
 
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
@@ -12,6 +8,31 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { SupportService } from '@/services/supportService';
 import { TicketCategory, TicketStatus } from '@prisma/client';
+import { z } from 'zod';
+import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
+import { createRateLimiter, getClientIP } from '@/lib/rate-limit-enhanced';
+
+// ✅ SÉCURITÉ: Rate Limiter pour les tickets (5 par heure)
+const supportRateLimiter = createRateLimiter('support', {
+    limit: 5,
+    windowMs: 60 * 60 * 1000, // 1 heure
+    message: 'Vous avez atteint la limite de tickets. Veuillez réessayer plus tard.',
+});
+
+// ✅ SÉCURITÉ: Schéma de validation Zod
+const createTicketSchema = z.object({
+    subject: z.string()
+        .min(5, 'Le sujet doit contenir au moins 5 caractères')
+        .max(200, 'Le sujet ne peut pas dépasser 200 caractères')
+        .trim(),
+    message: z.string()
+        .min(10, 'Le message doit contenir au moins 10 caractères')
+        .max(5000, 'Le message ne peut pas dépasser 5000 caractères')
+        .trim(),
+    category: z.enum(['QUESTION', 'BUG', 'REPORT_CONTENT', 'SUGGESTION', 'ACCOUNT', 'PAYMENT', 'OTHER']),
+    guestEmail: z.string().email('Email invalide').optional(),
+    guestName: z.string().max(100).optional(),
+});
 
 // GET - Récupérer les tickets
 export async function GET(request: NextRequest) {
@@ -56,24 +77,48 @@ export async function GET(request: NextRequest) {
 // POST - Créer un ticket
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
-        const { subject, message, category, guestEmail, guestName } = body;
+        // Session optionnelle (permet tickets anonymes)
+        const session = await getServerSession(authOptions);
+        const userId = session?.user?.id;
 
-        // Validation catégorie
-        const validCategories: TicketCategory[] = [
-            'QUESTION', 'BUG', 'REPORT_CONTENT', 'SUGGESTION', 'ACCOUNT', 'PAYMENT', 'OTHER'
-        ];
-
-        if (!category || !validCategories.includes(category)) {
+        // ✅ SÉCURITÉ: Rate limiting par IP ou userId
+        const identifier = userId || getClientIP(request);
+        const rateLimit = supportRateLimiter.check(identifier);
+        if (!rateLimit.success) {
             return NextResponse.json(
-                { success: false, error: 'Catégorie invalide' },
+                {
+                    success: false,
+                    error: 'Vous avez atteint la limite de tickets. Veuillez réessayer plus tard.',
+                    retryAfter: rateLimit.retryAfter
+                },
+                {
+                    status: 429,
+                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                }
+            );
+        }
+
+        // ✅ SÉCURITÉ: Validation Zod
+        let body;
+        try {
+            body = await request.json();
+        } catch {
+            return NextResponse.json(
+                { success: false, error: 'Corps de la requête invalide' },
                 { status: 400 }
             );
         }
 
-        // Session optionnelle (permet tickets anonymes)
-        const session = await getServerSession(authOptions);
-        const userId = session?.user?.id;
+        const validation = createTicketSchema.safeParse(body);
+        if (!validation.success) {
+            const firstError = validation.error.issues[0]?.message || 'Données invalides';
+            return NextResponse.json(
+                { success: false, error: firstError },
+                { status: 400 }
+            );
+        }
+
+        const { subject, message, category, guestEmail, guestName } = validation.data;
 
         // Si pas connecté, email requis
         if (!userId && !guestEmail) {
@@ -103,10 +148,9 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
-        console.error('Erreur POST /api/support:', error);
-        const message = error instanceof Error ? error.message : 'Erreur serveur';
+        logServerError(error, { route: '/api/support', action: 'create_ticket' });
         return NextResponse.json(
-            { success: false, error: message },
+            { success: false, error: ERROR_MESSAGES.GENERIC },
             { status: 500 }
         );
     }

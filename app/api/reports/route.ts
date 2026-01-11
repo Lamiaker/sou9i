@@ -3,6 +3,26 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
+import { reportRateLimiter } from '@/lib/rate-limit-enhanced';
+import { z } from 'zod';
+
+// ✅ SÉCURITÉ: Schéma de validation Zod pour les signalements
+const reportSchema = z.object({
+    reason: z.enum([
+        'Fraude ou arnaque',
+        'Contenu inapproprié',
+        'Produit interdit',
+        'Fausse annonce',
+        'Harcèlement',
+        'Spam ou publicité',
+        'Autre'
+    ]),
+    details: z.string().max(2000, 'Les détails sont limités à 2000 caractères').optional(),
+    adId: z.string().regex(/^c[a-z0-9]{24,}$/i, 'ID annonce invalide').optional(),
+    reportedUserId: z.string().regex(/^c[a-z0-9]{24,}$/i, 'ID utilisateur invalide').optional(),
+}).refine(data => data.adId || data.reportedUserId, {
+    message: 'Vous devez signaler une annonce ou un utilisateur',
+});
 
 // Raisons de signalement prédéfinies
 const VALID_REASONS = [
@@ -27,30 +47,42 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const body = await request.json();
-        const { reason, details, adId, reportedUserId } = body;
-
-        // Validation
-        if (!reason) {
+        // ✅ SÉCURITÉ: Rate Limiting (5 signalements / heure)
+        const rateLimit = reportRateLimiter.check(session.user.id);
+        if (!rateLimit.success) {
             return NextResponse.json(
-                { error: 'La raison du signalement est requise' },
+                {
+                    error: 'Vous avez atteint la limite de signalements. Veuillez réessayer plus tard.',
+                    retryAfter: rateLimit.retryAfter
+                },
+                {
+                    status: 429,
+                    headers: { 'Retry-After': String(rateLimit.retryAfter) }
+                }
+            );
+        }
+
+        // ✅ SÉCURITÉ: Validation Zod
+        let body;
+        try {
+            body = await request.json();
+        } catch {
+            return NextResponse.json(
+                { error: 'Corps de la requête invalide' },
                 { status: 400 }
             );
         }
 
-        if (!VALID_REASONS.includes(reason)) {
+        const validation = reportSchema.safeParse(body);
+        if (!validation.success) {
+            const firstError = validation.error.issues[0]?.message || 'Données invalides';
             return NextResponse.json(
-                { error: 'Raison de signalement invalide' },
+                { error: firstError },
                 { status: 400 }
             );
         }
 
-        if (!adId && !reportedUserId) {
-            return NextResponse.json(
-                { error: 'Vous devez signaler une annonce ou un utilisateur' },
-                { status: 400 }
-            );
-        }
+        const { reason, details, adId, reportedUserId } = validation.data;
 
         // Empêcher de se signaler soi-même
         if (reportedUserId && reportedUserId === session.user.id) {
