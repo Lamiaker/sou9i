@@ -15,7 +15,7 @@ async function hasValidAdminCookie(request: NextRequest): Promise<boolean> {
     return !!adminToken && adminToken.length === 64;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // ============================================
