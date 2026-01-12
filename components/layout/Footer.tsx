@@ -73,12 +73,12 @@ export default function Footer() {
                         <ul className="space-y-3 text-sm">
                             <li className="flex items-start gap-3">
                                 <MapPin size={18} className="shrink-0 text-primary" />
-                                <span>Alger, Algérie</span>
+                                <span>Oran, Algérie</span>
                             </li>
-                            <li className="flex items-center gap-3">
+                            {/* <li className="flex items-center gap-3">
                                 <Phone size={18} className="shrink-0 text-primary" />
                                 <span>+213 555 123 456</span>
-                            </li>
+                            </li> */}
                             <li className="flex items-center gap-3">
                                 <Mail size={18} className="shrink-0 text-primary" />
                                 <span>contact@sweetlook.net</span>
