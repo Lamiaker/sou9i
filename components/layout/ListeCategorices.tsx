@@ -22,7 +22,8 @@ export default function ListeCategorices({ isMobileMenu = false, onSelectItem, s
     withCount: true
   });
 
-  const MAX_DESKTOP_CATEGORIES = 6;
+  const MAX_DESKTOP_CATEGORIES = 6
+    ;
 
   // Réorganiser les catégories : mettre "Autres" en dernier
   const sortedCategories = useMemo(() => {
