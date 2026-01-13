@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -49,6 +50,7 @@ interface AdData {
     views: number;
     createdAt: string;
     contactPhone: string | null;
+    showPhone: boolean;
     user: AdUser;
     category: AdCategory | null;
     dynamicFields: DynamicFieldValue[];
@@ -71,8 +73,11 @@ interface AdDetailClientProps {
 }
 
 export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) {
+    const { data: session, status } = useSession();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [showPhone, setShowPhone] = useState(false);
+
+    const isOwner = session?.user?.id === ad.user.id;
 
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev + 1) % ad.images.length);
@@ -317,25 +322,31 @@ export default function AdDetailClient({ ad, similarAds }: AdDetailClientProps) 
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <button
-                                        onClick={() => setShowPhone(!showPhone)}
-                                        className="w-full bg-secondary hover:bg-primary text-white font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2"
-                                    >
-                                        <Phone size={20} />
-                                        {showPhone
-                                            ? (ad.contactPhone || ad.user.phone || "Numéro non renseigné")
-                                            : "Voir le numéro"}
-                                    </button>
+                                <div className="space-y-3 min-h-[50px]">
+                                    {status !== "loading" && (ad.showPhone || !isOwner) && (
+                                        <>
+                                            {ad.showPhone && (
+                                                <button
+                                                    onClick={() => setShowPhone(!showPhone)}
+                                                    className="w-full bg-secondary hover:bg-primary text-white font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2"
+                                                >
+                                                    <Phone size={20} />
+                                                    {showPhone
+                                                        ? (ad.contactPhone || ad.user.phone || "Numéro non renseigné")
+                                                        : "Voir le numéro"}
+                                                </button>
+                                            )}
 
-                                    <ContactSellerButton
-                                        sellerId={ad.user.id}
-                                        sellerName={ad.user.name || undefined}
-                                        adId={ad.id}
-                                        adTitle={ad.title}
-                                        variant="outline"
-                                        fullWidth
-                                    />
+                                            <ContactSellerButton
+                                                sellerId={ad.user.id}
+                                                sellerName={ad.user.name || undefined}
+                                                adId={ad.id}
+                                                adTitle={ad.title}
+                                                variant={ad.showPhone ? "outline" : "primary"}
+                                                fullWidth
+                                            />
+                                        </>
+                                    )}
                                 </div>
 
                                 <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">

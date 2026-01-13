@@ -26,6 +26,7 @@ interface FormData {
     location: string;
     useProfilePhone: boolean;
     contactPhone: string;
+    showPhone: boolean;
 }
 
 interface DeposerAdFormProps {
@@ -47,6 +48,7 @@ export default function DeposerAdForm({ initialCategories }: DeposerAdFormProps)
         location: '',
         useProfilePhone: true,
         contactPhone: '',
+        showPhone: true,
     });
 
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -204,6 +206,7 @@ export default function DeposerAdForm({ initialCategories }: DeposerAdFormProps)
                 contactPhone,
                 images: imageUrls,
                 dynamicFields: dynamicFieldsData,
+                showPhone: formData.showPhone,
             };
 
             const response = await fetch('/api/ads', {
@@ -524,115 +527,156 @@ export default function DeposerAdForm({ initialCategories }: DeposerAdFormProps)
                                 <div className="space-y-4 pt-6 border-t border-gray-100">
                                     <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                                         <Phone className="text-primary" size={24} />
-                                        Numéro de contact
+                                        Numéro de téléphone
                                     </h2>
 
-                                    <p className="text-sm text-gray-500">
-                                        Ce numéro sera visible par les acheteurs intéressés par votre annonce.
-                                    </p>
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-4">
+                                        <p className="text-sm text-gray-700 font-medium">
+                                            Voulez-vous que votre numéro de téléphone soit visible sur l'annonce ?
+                                        </p>
+                                        <div className="flex gap-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({ ...prev, showPhone: true }))}
+                                                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${formData.showPhone
+                                                    ? 'bg-primary text-white shadow-md'
+                                                    : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/50'
+                                                    }`}
+                                            >
+                                                Oui, afficher
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({ ...prev, showPhone: false }))}
+                                                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${!formData.showPhone
+                                                    ? 'bg-gray-800 text-white shadow-md'
+                                                    : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-800/50'
+                                                    }`}
+                                            >
+                                                Non, masquer
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                    <div className="space-y-3">
-                                        <label
-                                            className={`
-                                            flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
-                                            ${formData.useProfilePhone
-                                                    ? 'border-primary bg-primary/5 shadow-sm'
-                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
-                                                }
-                                        `}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="phoneChoice"
-                                                checked={formData.useProfilePhone}
-                                                onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: true, contactPhone: '' }))}
-                                                className="w-5 h-5 text-primary focus:ring-primary"
-                                                disabled={isLoading}
-                                            />
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-gray-900">
-                                                        Utiliser mon numéro d'inscription
-                                                    </span>
-                                                    {formData.useProfilePhone && (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                                            Recommandé
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {user?.phone ? (
-                                                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                                        <Phone size={14} className="text-gray-400" />
-                                                        {user.phone}
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-sm text-orange-500 mt-1">
-                                                        ⚠️ Aucun numéro enregistré dans votre profil
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </label>
+                                    {formData.showPhone && (
+                                        <div className="space-y-4 animate-fadeIn">
+                                            <p className="text-sm text-gray-500">
+                                                L'acheteur pourra vous appeler directement via ce numéro.
+                                            </p>
 
-                                        <label
-                                            className={`
-                                            flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
-                                            ${!formData.useProfilePhone
-                                                    ? 'border-primary bg-primary/5 shadow-sm'
-                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
-                                                }
-                                        `}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="phoneChoice"
-                                                checked={!formData.useProfilePhone}
-                                                onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: false }))}
-                                                className="w-5 h-5 text-primary focus:ring-primary mt-0.5"
-                                                disabled={isLoading}
-                                            />
-                                            <div className="flex-1 space-y-3">
-                                                <span className="font-medium text-gray-900">
-                                                    Utiliser un autre numéro
-                                                </span>
-
-                                                {!formData.useProfilePhone && (
-                                                    <div className="space-y-2 animate-fadeIn">
-                                                        <div className="relative">
-                                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                                            <input
-                                                                type="tel"
-                                                                value={formData.contactPhone}
-                                                                onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
-                                                                className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent outline-none transition ${formData.contactPhone.trim()
-                                                                    ? isValidPhoneNumber(formData.contactPhone)
-                                                                        ? 'border-green-500 focus:ring-green-500'
-                                                                        : 'border-red-400 focus:ring-red-400'
-                                                                    : 'border-gray-300 focus:ring-primary'
-                                                                    }`}
-                                                                placeholder="Ex: 0555 12 34 56"
-                                                                disabled={isLoading}
-                                                            />
-                                                            {formData.contactPhone.trim() && (
-                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                                    {isValidPhoneNumber(formData.contactPhone) ? (
-                                                                        <CheckCircle className="text-green-500" size={20} />
-                                                                    ) : (
-                                                                        <AlertCircle className="text-red-400" size={20} />
-                                                                    )}
-                                                                </div>
+                                            <div className="space-y-3">
+                                                <label
+                                                    className={`
+                                                    flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
+                                                    ${formData.useProfilePhone
+                                                            ? 'border-primary bg-primary/5 shadow-sm'
+                                                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                        }
+                                                `}
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name="phoneChoice"
+                                                        checked={formData.useProfilePhone}
+                                                        onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: true, contactPhone: '' }))}
+                                                        className="w-5 h-5 text-primary focus:ring-primary"
+                                                        disabled={isLoading}
+                                                    />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-gray-900">
+                                                                Utiliser mon numéro d'inscription
+                                                            </span>
+                                                            {formData.useProfilePhone && (
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                                                    Recommandé
+                                                                </span>
                                                             )}
                                                         </div>
-                                                        {formData.contactPhone.trim() && !isValidPhoneNumber(formData.contactPhone) && (
-                                                            <p className="text-xs text-red-500 flex items-center gap-1">
-                                                                <AlertCircle size={12} />
-                                                                Format requis: 05, 06 ou 07 suivi de 8 chiffres
+                                                        {user?.phone ? (
+                                                            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                                                                <Phone size={14} className="text-gray-400" />
+                                                                {user.phone}
+                                                            </p>
+                                                        ) : (
+                                                            <p className="text-sm text-orange-500 mt-1">
+                                                                ⚠️ Aucun numéro enregistré dans votre profil
                                                             </p>
                                                         )}
                                                     </div>
-                                                )}
+                                                </label>
+
+                                                <label
+                                                    className={`
+                                                    flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all
+                                                    ${!formData.useProfilePhone
+                                                            ? 'border-primary bg-primary/5 shadow-sm'
+                                                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                        }
+                                                `}
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name="phoneChoice"
+                                                        checked={!formData.useProfilePhone}
+                                                        onChange={() => setFormData(prev => ({ ...prev, useProfilePhone: false }))}
+                                                        className="w-5 h-5 text-primary focus:ring-primary mt-0.5"
+                                                        disabled={isLoading}
+                                                    />
+                                                    <div className="flex-1 space-y-3">
+                                                        <span className="font-medium text-gray-900">
+                                                            Utiliser un autre numéro
+                                                        </span>
+
+                                                        {!formData.useProfilePhone && (
+                                                            <div className="space-y-2 animate-fadeIn">
+                                                                <div className="relative">
+                                                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                                                    <input
+                                                                        type="tel"
+                                                                        value={formData.contactPhone}
+                                                                        onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
+                                                                        className={`w-full pl-10 pr-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent outline-none transition ${formData.contactPhone.trim()
+                                                                            ? isValidPhoneNumber(formData.contactPhone)
+                                                                                ? 'border-green-500 focus:ring-green-500'
+                                                                                : 'border-red-400 focus:ring-red-400'
+                                                                            : 'border-gray-300 focus:ring-primary'
+                                                                            }`}
+                                                                        placeholder="Ex: 0555 12 34 56"
+                                                                        disabled={isLoading}
+                                                                    />
+                                                                    {formData.contactPhone.trim() && (
+                                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                                            {isValidPhoneNumber(formData.contactPhone) ? (
+                                                                                <CheckCircle className="text-green-500" size={20} />
+                                                                            ) : (
+                                                                                <AlertCircle className="text-red-400" size={20} />
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                {formData.contactPhone.trim() && !isValidPhoneNumber(formData.contactPhone) && (
+                                                                    <p className="text-xs text-red-500 flex items-center gap-1">
+                                                                        <AlertCircle size={12} />
+                                                                        Format requis: 05/06/07 ou +213 suivi de 8 chiffres
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </label>
                                             </div>
-                                        </label>
-                                    </div>
+                                        </div>
+                                    )}
+
+                                    {!formData.showPhone && (
+                                        <div className="p-4 bg-gray-100 rounded-xl border border-gray-200 flex items-start gap-3">
+                                            <AlertCircle className="text-gray-500 flex-shrink-0 mt-0.5" size={20} />
+                                            <p className="text-sm text-gray-600">
+                                                Votre numéro ne sera pas affiché. Les acheteurs devront vous contacter via la messagerie interne.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         )}

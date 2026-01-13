@@ -264,6 +264,7 @@ model Ad {
   images      String[] @default([])
   
   // Options
+  showPhone         Boolean @default(true)
   deliveryAvailable Boolean @default(false)
   negotiable        Boolean @default(true)
   

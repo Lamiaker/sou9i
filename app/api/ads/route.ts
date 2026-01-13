@@ -129,6 +129,7 @@ export async function POST(request: NextRequest) {
             brand: validatedData.brand,
             size: validatedData.size,
             images: validatedData.images,
+            showPhone: validatedData.showPhone,
             deliveryAvailable: validatedData.deliveryAvailable,
             negotiable: validatedData.negotiable,
             dynamicFields: validatedData.dynamicFields,

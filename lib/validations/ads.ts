@@ -13,7 +13,7 @@ export const AD_VALIDATION = {
     LOCATION_MIN: 2,
     LOCATION_MAX: 100,
     IMAGES_MAX: 5,
-    PHONE_PATTERN: /^(0|\+213)[5-7][0-9]{8}$|^[0-9\s\-+]{8,15}$/,
+    PHONE_PATTERN: /^(?:\+213|0)\s*[5-7][\s0-9]{8,15}$/,
 }
 
 /**
@@ -64,6 +64,7 @@ export const createAdSchema = z.object({
     condition: z.string().optional(),
     brand: z.string().max(50).optional(),
     size: z.string().max(20).optional(),
+    showPhone: z.boolean().optional().default(true),
     deliveryAvailable: z.boolean().optional().default(false),
     negotiable: z.boolean().optional().default(false),
 

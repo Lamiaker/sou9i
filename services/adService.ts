@@ -260,6 +260,7 @@ export class AdService {
         size?: string
         deliveryAvailable?: boolean
         negotiable?: boolean
+        showPhone?: boolean
         dynamicFields?: FieldValueInput[]
     }) {
         // ✅ IDEMPOTENCE: Vérifier si une annonce identique a été créée il y a moins de 30 secondes
@@ -302,6 +303,7 @@ export class AdService {
                 deliveryAvailable: data.deliveryAvailable || false,
                 negotiable: data.negotiable !== undefined ? data.negotiable : true,
                 moderationStatus: moderationStatus,
+                showPhone: data.showPhone !== undefined ? data.showPhone : true,
                 user: {
                     connect: { id: data.userId },
                 },

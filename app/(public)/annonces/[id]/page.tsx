@@ -235,6 +235,7 @@ export default async function AdDetailPage({ params }: PageProps) {
         views: ad.views,
         createdAt: ad.createdAt instanceof Date ? ad.createdAt.toISOString() : String(ad.createdAt),
         contactPhone: ad.contactPhone,
+        showPhone: ad.showPhone,
         user: {
             id: ad.user.id,
             name: ad.user.name,
