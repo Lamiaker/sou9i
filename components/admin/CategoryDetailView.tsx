@@ -288,7 +288,7 @@ export default function CategoryDetailView({ category, allCategories }: Category
                             </h3>
                         </div>
 
-                        {category.children.length > 0 ? (
+                        {category.children && category.children.length > 0 ? (
                             <div className="divide-y divide-white/5">
                                 {category.children.map((child: any) => (
                                     <div key={child.id} className="p-3 sm:p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
