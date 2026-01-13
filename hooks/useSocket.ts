@@ -42,77 +42,116 @@ interface UseSocketOptions {
     onMessagesRead?: (data: { conversationId: string; userId: string }) => void
 }
 
+// Singleton pour la connexion Socket.IO
+let globalSocket: Socket | null = null
+let connectionCount = 0
+
 export function useSocket(options: UseSocketOptions = {}) {
     const { data: session, status } = useSession()
-    const socketRef = useRef<Socket | null>(null)
     const [isConnected, setIsConnected] = useState(false)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+    // Utiliser des refs pour les callbacks pour éviter les re-renders
+    const onNewMessageRef = useRef(options.onNewMessage)
+    const onTypingRef = useRef(options.onTyping)
+    const onNotificationRef = useRef(options.onNotification)
+    const onMessagesReadRef = useRef(options.onMessagesRead)
+
+    // Mettre à jour les refs quand les callbacks changent
+    useEffect(() => {
+        onNewMessageRef.current = options.onNewMessage
+        onTypingRef.current = options.onTyping
+        onNotificationRef.current = options.onNotification
+        onMessagesReadRef.current = options.onMessagesRead
+    }, [options.onNewMessage, options.onTyping, options.onNotification, options.onMessagesRead])
+
     const {
         autoConnect = true,
-        onNewMessage,
-        onTyping,
-        onNotification,
-        onMessagesRead,
     } = options
+
+    const userIdRef = useRef<string | null>(null)
 
     // Connexion au serveur Socket.IO
     const connect = useCallback(() => {
-        if (socketRef.current?.connected) return
+        if (globalSocket?.connected) {
+            setIsConnected(true)
+            return
+        }
+
+        if (globalSocket) {
+            // Socket existe mais pas connecté, on reconnecte
+            globalSocket.connect()
+            return
+        }
 
         const socket = io({
             path: '/api/socket',
             transports: ['websocket', 'polling'],
             autoConnect: false,
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
         })
 
         socket.on('connect', () => {
+            console.log('✅ Socket.io connecté')
             setIsConnected(true)
 
             // Authentifier l'utilisateur
-            if (session?.user?.id) {
-                socket.emit('authenticate', session.user.id)
+            if (userIdRef.current) {
+                socket.emit('authenticate', userIdRef.current)
             }
         })
 
         socket.on('authenticated', () => {
+            console.log('✅ Socket.io authentifié')
             setIsAuthenticated(true)
         })
 
         socket.on('new_message', (message: SocketMessage) => {
-            onNewMessage?.(message)
+            onNewMessageRef.current?.(message)
         })
 
         socket.on('user_typing', (event: TypingEvent) => {
-            onTyping?.(event)
+            onTypingRef.current?.(event)
         })
 
         socket.on('notification', (event: NotificationEvent) => {
-            onNotification?.(event)
+            onNotificationRef.current?.(event)
         })
 
         socket.on('messages_read', (data: { conversationId: string; userId: string }) => {
-            onMessagesRead?.(data)
+            onMessagesReadRef.current?.(data)
         })
 
         socket.on('error', (error) => {
             console.error('❌ Socket erreur:', error)
         })
 
-        socket.on('disconnect', () => {
+        socket.on('disconnect', (reason) => {
+            console.log('⚠️ Socket.io déconnecté:', reason)
             setIsConnected(false)
             setIsAuthenticated(false)
         })
 
+        socket.on('connect_error', (error) => {
+            console.error('❌ Socket.io erreur de connexion:', error.message)
+        })
+
         socket.connect()
-        socketRef.current = socket
-    }, [session?.user?.id, onNewMessage, onTyping, onNotification, onMessagesRead])
+        globalSocket = socket
+    }, [])
 
     // Déconnexion
     const disconnect = useCallback(() => {
-        if (socketRef.current) {
-            socketRef.current.disconnect()
-            socketRef.current = null
+        connectionCount--
+
+        // Ne déconnecter que si plus aucun composant n'utilise le socket
+        if (connectionCount <= 0 && globalSocket) {
+            console.log('🔌 Déconnexion Socket.io')
+            globalSocket.disconnect()
+            globalSocket = null
+            connectionCount = 0
             setIsConnected(false)
             setIsAuthenticated(false)
         }
@@ -120,55 +159,58 @@ export function useSocket(options: UseSocketOptions = {}) {
 
     // Rejoindre une conversation
     const joinConversation = useCallback((conversationId: string) => {
-        socketRef.current?.emit('join_conversation', conversationId)
+        globalSocket?.emit('join_conversation', conversationId)
     }, [])
 
     // Quitter une conversation
     const leaveConversation = useCallback((conversationId: string) => {
-        socketRef.current?.emit('leave_conversation', conversationId)
+        globalSocket?.emit('leave_conversation', conversationId)
     }, [])
 
     // Envoyer un message
     const sendMessage = useCallback((conversationId: string, content: string) => {
-        if (!session?.user?.id || !socketRef.current?.connected) {
+        if (!userIdRef.current || !globalSocket?.connected) {
             console.error('Cannot send message: not connected or not authenticated')
             return false
         }
 
-        socketRef.current.emit('send_message', {
+        globalSocket.emit('send_message', {
             conversationId,
             content,
-            senderId: session.user.id,
+            senderId: userIdRef.current,
         })
 
         return true
-    }, [session?.user?.id])
+    }, [])
 
     // Envoyer un indicateur de frappe
     const sendTypingIndicator = useCallback((conversationId: string, isTyping: boolean) => {
-        socketRef.current?.emit('typing', { conversationId, isTyping })
+        globalSocket?.emit('typing', { conversationId, isTyping })
     }, [])
 
     // Marquer les messages comme lus
     const markAsRead = useCallback((conversationId: string) => {
-        socketRef.current?.emit('mark_read', { conversationId })
+        globalSocket?.emit('mark_read', { conversationId })
     }, [])
 
     // Auto-connect quand l'utilisateur est authentifié
     useEffect(() => {
         if (autoConnect && status === 'authenticated' && session?.user?.id) {
+            userIdRef.current = session.user.id
+            connectionCount++
             connect()
         }
 
         return () => {
-            disconnect()
+            if (status === 'authenticated') {
+                disconnect()
+            }
         }
-    }, [autoConnect, status, session?.user?.id, connect, disconnect])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoConnect, status, session?.user?.id])
 
-    // Returning ref.current is intentional for stable reference
-    // eslint-disable-next-line react-hooks/refs
     return {
-        socket: socketRef.current,
+        socket: globalSocket,
         isConnected,
         isAuthenticated,
         connect,
