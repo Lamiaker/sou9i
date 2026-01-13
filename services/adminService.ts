@@ -1250,6 +1250,7 @@ export class AdminService {
      * Statistiques enrichies avec tendances et comparaisons
      */
     static async getEnhancedDashboardStats() {
+        console.time('getEnhancedDashboardStats');
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -1260,21 +1261,14 @@ export class AdminService {
         const [
             // Utilisateurs
             totalUsers,
-            newUsersThisMonth,
-            newUsersLastMonth,
             newUsersLast7Days,
             newUsersPrev7Days,
-            verifiedUsers,
-            trustedUsers,
-            pendingUsers,
+            usersByStatus,
             bannedUsers,
 
             // Annonces
             totalAds,
-            activeAds,
-            pendingAds,
-            approvedAds,
-            rejectedAds,
+            adsByModeration,
             newAdsThisMonth,
             newAdsLastMonth,
             totalViews,
@@ -1282,8 +1276,7 @@ export class AdminService {
             // Signalements & Support
             pendingReports,
             resolvedReportsThisMonth,
-            openTickets,
-            inProgressTickets,
+            supportStats,
 
             // Catégories
             totalCategories,
@@ -1297,21 +1290,21 @@ export class AdminService {
         ] = await Promise.all([
             // Utilisateurs
             prisma.user.count(),
-            prisma.user.count({ where: { createdAt: { gte: startOfMonth } } }),
-            prisma.user.count({ where: { createdAt: { gte: startOfLastMonth, lt: startOfMonth } } }),
             prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
             prisma.user.count({ where: { createdAt: { gte: fourteenDaysAgo, lt: sevenDaysAgo } } }),
-            prisma.user.count({ where: { verificationStatus: 'VERIFIED' } }),
-            prisma.user.count({ where: { verificationStatus: 'TRUSTED' } }),
-            prisma.user.count({ where: { verificationStatus: 'PENDING', role: 'USER' } }),
+            prisma.user.groupBy({
+                by: ['verificationStatus'],
+                _count: { id: true },
+                where: { role: 'USER' }
+            }),
             prisma.user.count({ where: { isBanned: true } }),
 
             // Annonces
             prisma.ad.count(),
-            prisma.ad.count({ where: { status: 'active', moderationStatus: 'APPROVED' } }),
-            prisma.ad.count({ where: { moderationStatus: 'PENDING' } }),
-            prisma.ad.count({ where: { moderationStatus: 'APPROVED' } }),
-            prisma.ad.count({ where: { moderationStatus: 'REJECTED' } }),
+            prisma.ad.groupBy({
+                by: ['moderationStatus'],
+                _count: { id: true }
+            }),
             prisma.ad.count({ where: { createdAt: { gte: startOfMonth } } }),
             prisma.ad.count({ where: { createdAt: { gte: startOfLastMonth, lt: startOfMonth } } }),
             prisma.ad.aggregate({ _sum: { views: true } }),
@@ -1319,8 +1312,10 @@ export class AdminService {
             // Signalements & Support
             prisma.report.count({ where: { status: 'PENDING' } }),
             prisma.report.count({ where: { status: 'RESOLVED', updatedAt: { gte: startOfMonth } } }),
-            prisma.supportTicket.count({ where: { status: 'OPEN' } }),
-            prisma.supportTicket.count({ where: { status: 'IN_PROGRESS' } }),
+            prisma.supportTicket.groupBy({
+                by: ['status'],
+                _count: { id: true }
+            }),
 
             // Catégories
             prisma.category.count({ where: { parentId: null } }),
@@ -1333,13 +1328,36 @@ export class AdminService {
             prisma.review.aggregate({ _avg: { rating: true } }),
         ]);
 
+        // Helper pour extraire les counts des groupBy
+        const getCount = (arr: any[], key: string, value: any) =>
+            arr.find(i => i[key] === value)?._count?.id || 0;
+
+        const verifiedUsers = getCount(usersByStatus, 'verificationStatus', 'VERIFIED');
+        const trustedUsers = getCount(usersByStatus, 'verificationStatus', 'TRUSTED');
+        const pendingUsers = getCount(usersByStatus, 'verificationStatus', 'PENDING');
+
+        const approvedAds = getCount(adsByModeration, 'moderationStatus', 'APPROVED');
+        const pendingAds = getCount(adsByModeration, 'moderationStatus', 'PENDING');
+        const rejectedAds = getCount(adsByModeration, 'moderationStatus', 'REJECTED');
+
+        const openTickets = getCount(supportStats, 'status', 'OPEN');
+        const inProgressTickets = getCount(supportStats, 'status', 'IN_PROGRESS');
+
+        // Récupération séparée de certains counts qui ne peuvent pas être groupés facilement avec les autres
+        const [newUsersThisMonth, newUsersLastMonth] = await Promise.all([
+            prisma.user.count({ where: { createdAt: { gte: startOfMonth } } }),
+            prisma.user.count({ where: { createdAt: { gte: startOfLastMonth, lt: startOfMonth } } }),
+        ]);
+
+        const activeAds = await prisma.ad.count({ where: { status: 'active', moderationStatus: 'APPROVED' } });
+
         // Calcul des tendances (% évolution)
         const calcTrend = (current: number, previous: number): number => {
             if (previous === 0) return current > 0 ? 100 : 0;
             return Math.round(((current - previous) / previous) * 100);
         };
 
-        return {
+        const result = {
             users: {
                 total: totalUsers,
                 newThisMonth: newUsersThisMonth,
@@ -1383,6 +1401,9 @@ export class AdminService {
                 avgRating: avgRating._avg.rating ? Math.round(avgRating._avg.rating * 10) / 10 : 0,
             },
         };
+
+        console.timeEnd('getEnhancedDashboardStats');
+        return result;
     }
 
     /**
@@ -1391,6 +1412,7 @@ export class AdminService {
      * @param days - Nombre de jours à récupérer (7, 30, 90)
      */
     static async getStatsTimeline(metric: 'users' | 'ads' | 'reports' | 'messages' | 'favorites', days: number = 30) {
+        console.time(`getStatsTimeline:${metric}`);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
         startDate.setHours(0, 0, 0, 0);
@@ -1455,17 +1477,20 @@ export class AdminService {
         });
 
         // Convertir en tableau ordonné
-        return Object.entries(dailyCounts).map(([date, count]) => ({
+        const result = Object.entries(dailyCounts).map(([date, count]) => ({
             date,
             count,
             label: new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
         }));
+        console.timeEnd(`getStatsTimeline:${metric}`);
+        return result;
     }
 
     /**
      * Distribution des utilisateurs par statut et ville
      */
     static async getUsersDistribution() {
+        console.time('getUsersDistribution');
         const [byStatus, byCity, topCreators] = await Promise.all([
             // Par statut de vérification
             prisma.user.groupBy({
@@ -1525,6 +1550,7 @@ export class AdminService {
      * Distribution des annonces par catégorie et statut
      */
     static async getAdsDistribution() {
+        console.time('getAdsDistribution');
         const [byCategory, byStatus, byModeration, byLocation, topViewed, topFavorited] = await Promise.all([
             // Par catégorie parente (top 10)
             prisma.ad.groupBy({
@@ -1592,6 +1618,7 @@ export class AdminService {
 
         const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
+        console.timeEnd('getAdsDistribution');
         return {
             byCategory: byCategory.map((c) => {
                 const cat = categoryMap.get(c.categoryId);

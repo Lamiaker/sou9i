@@ -64,8 +64,8 @@ export const isValidEmail = (email: string): boolean => {
  * Valide un numéro de téléphone algérien
  */
 export const isValidPhoneNumber = (phone: string): boolean => {
-    // Format: 05 XX XX XX XX ou 06 XX XX XX XX ou 07 XX XX XX XX
-    const phoneRegex = /^(05|06|07)\d{8}$/;
+    // Format: 05 XX XX XX XX ou 06 XX XX XX XX ou 07 XX XX XX XX ou +213...
+    const phoneRegex = /^(?:\+213|0)(5|6|7)\d{8}$/;
     const cleanPhone = phone.replace(/\s/g, '');
     return phoneRegex.test(cleanPhone);
 };

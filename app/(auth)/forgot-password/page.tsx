@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { Mail, ArrowLeft, Send, CheckCircle, AlertCircle } from "lucide-react";
-import TurnstileWidget from "@/components/ui/TurnstileWidget";
+import TurnstileWidget, { TurnstileWidgetRef } from "@/components/ui/TurnstileWidget";
 
 export default function ForgotPasswordPage() {
+    const turnstileRef = useRef<TurnstileWidgetRef>(null);
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -19,6 +20,7 @@ export default function ForgotPasswordPage() {
 
         if (process.env.NODE_ENV === 'production' && !captchaToken) {
             setError("Veuillez vérifier que vous n'êtes pas un robot");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
 
@@ -37,9 +39,16 @@ export default function ForgotPasswordPage() {
                 setSuccess(true);
             } else {
                 setError(data.error || "Une erreur est survenue");
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Reset captcha on error
+                turnstileRef.current?.reset();
+                setCaptchaToken(null);
             }
         } catch {
             setError("Une erreur est survenue. Veuillez réessayer.");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            turnstileRef.current?.reset();
+            setCaptchaToken(null);
         } finally {
             setLoading(false);
         }
@@ -169,6 +178,7 @@ export default function ForgotPasswordPage() {
                         </div>
 
                         <TurnstileWidget
+                            ref={turnstileRef}
                             onVerify={(token) => {
                                 setCaptchaToken(token);
                                 setCaptchaError(false);

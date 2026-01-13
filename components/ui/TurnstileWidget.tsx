@@ -1,7 +1,7 @@
 'use client';
 
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
-import { useRef, useCallback } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useCallback } from 'react';
 
 interface TurnstileWidgetProps {
     onVerify: (token: string) => void;
@@ -10,15 +10,35 @@ interface TurnstileWidgetProps {
     className?: string;
 }
 
-export default function TurnstileWidget({
+export interface TurnstileWidgetRef {
+    reset: () => void;
+}
+
+const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetProps>(({
     onVerify,
     onError,
     onExpire,
     className = ''
-}: TurnstileWidgetProps) {
-    const ref = useRef<TurnstileInstance>(null);
+}, ref) => {
+    const turnstileRef = useRef<TurnstileInstance>(null);
+
+    useImperativeHandle(ref, () => ({
+        reset: () => {
+            turnstileRef.current?.reset();
+        }
+    }));
 
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+    const handleError = useCallback(() => {
+        onError?.();
+        turnstileRef.current?.reset();
+    }, [onError]);
+
+    const handleExpire = useCallback(() => {
+        onExpire?.();
+        turnstileRef.current?.reset();
+    }, [onExpire]);
 
     // En développement sans clé, afficher un placeholder
     if (!siteKey) {
@@ -39,21 +59,10 @@ export default function TurnstileWidget({
         return null;
     }
 
-    const handleError = useCallback(() => {
-        onError?.();
-        // Reset le widget pour permettre une nouvelle tentative
-        ref.current?.reset();
-    }, [onError]);
-
-    const handleExpire = useCallback(() => {
-        onExpire?.();
-        ref.current?.reset();
-    }, [onExpire]);
-
     return (
         <div className={className}>
             <Turnstile
-                ref={ref}
+                ref={turnstileRef}
                 siteKey={siteKey}
                 onSuccess={onVerify}
                 onError={handleError}
@@ -65,4 +74,8 @@ export default function TurnstileWidget({
             />
         </div>
     );
-}
+});
+
+TurnstileWidget.displayName = 'TurnstileWidget';
+
+export default TurnstileWidget;

@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Check } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { getErrorMessage } from "@/lib/errors";
-import TurnstileWidget from "@/components/ui/TurnstileWidget";
+import TurnstileWidget, { TurnstileWidgetRef } from "@/components/ui/TurnstileWidget";
 
 function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const turnstileRef = useRef<TurnstileWidgetRef>(null);
 
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -52,6 +53,7 @@ function LoginForm() {
 
         if (process.env.NODE_ENV === 'production' && !captchaToken) {
             setError("Veuillez vérifier que vous n'êtes pas un robot");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
 
@@ -72,12 +74,19 @@ function LoginForm() {
                 } else {
                     setError("Email ou mot de passe incorrect");
                 }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Reset captcha on login error
+                turnstileRef.current?.reset();
+                setCaptchaToken(null);
                 return;
             }
 
             router.refresh(); // Refresh pour mettre à jour la session
         } catch (err) {
             setError(getErrorMessage(err));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            turnstileRef.current?.reset();
+            setCaptchaToken(null);
         } finally {
             setLoading(false);
         }
@@ -221,6 +230,7 @@ function LoginForm() {
                         </div>
 
                         <TurnstileWidget
+                            ref={turnstileRef}
                             onVerify={(token) => {
                                 setCaptchaToken(token);
                                 setCaptchaError(false);

@@ -24,6 +24,7 @@ import {
     ArrowDownRight,
     Star,
     Award,
+    AlertTriangle,
 } from 'lucide-react';
 import {
     TimelineChart,
@@ -33,6 +34,7 @@ import {
     CHART_COLORS,
 } from '@/components/admin/charts';
 import { downloadCSV, EXPORT_HEADERS } from '@/lib/export-csv';
+import { getErrorMessage } from '@/lib/errors';
 
 // Sélecteur de période
 function PeriodSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -188,7 +190,7 @@ export default function AnalyticsPage() {
     const [days, setDays] = useState(30);
 
     // Stats enrichies
-    const { data: statsData, mutate: mutateStats } = useSWR('/api/admin/stats', {
+    const { data: statsData, error: statsError, mutate: mutateStats } = useSWR('/api/admin/stats', {
         refreshInterval: 120000,
     });
 
@@ -211,16 +213,35 @@ export default function AnalyticsPage() {
     );
 
     // Distributions
-    const { data: distributionData } = useSWR('/api/admin/stats/distribution?type=all', {
+    const { data: distributionData, error: distributionError } = useSWR('/api/admin/stats/distribution?type=all', {
         refreshInterval: 300000,
     });
 
-    const isLoading = !statsData || !distributionData;
+    const isLoading = (!statsData && !statsError) || (!distributionData && !distributionError);
+
+    if (statsError || distributionError) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8 bg-red-500/10 border border-red-500/20 rounded-2xl mx-4">
+                <AlertTriangle className="w-12 h-12 text-red-500" />
+                <div className="text-center">
+                    <h2 className="text-xl font-bold text-white mb-2">Une erreur est survenue lors du chargement des analyses</h2>
+                    <p className="text-white/60 mb-4">{getErrorMessage(statsError || distributionError)}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
+                    >
+                        Réessayer
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                <p className="text-white/40 animate-pulse text-sm">Chargement des analyses détaillées...</p>
             </div>
         );
     }

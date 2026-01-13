@@ -8,13 +8,14 @@
  * et ses propres sessions.
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
-import TurnstileWidget from '@/components/ui/TurnstileWidget';
+import TurnstileWidget, { TurnstileWidgetRef } from '@/components/ui/TurnstileWidget';
 
 export default function AdminLoginPage() {
     const router = useRouter();
+    const turnstileRef = useRef<TurnstileWidgetRef>(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -47,6 +48,9 @@ export default function AdminLoginPage() {
 
             if (!response.ok) {
                 setError(data.error || 'Erreur de connexion');
+                // Reset captcha on login error
+                turnstileRef.current?.reset();
+                setCaptchaToken(null);
                 return;
             }
 
@@ -56,6 +60,8 @@ export default function AdminLoginPage() {
 
         } catch (err) {
             setError('Impossible de contacter le serveur');
+            turnstileRef.current?.reset();
+            setCaptchaToken(null);
         } finally {
             setIsLoading(false);
         }
@@ -149,6 +155,7 @@ export default function AdminLoginPage() {
                         </div>
 
                         <TurnstileWidget
+                            ref={turnstileRef}
                             onVerify={(token) => {
                                 setCaptchaToken(token);
                                 setCaptchaError(false);

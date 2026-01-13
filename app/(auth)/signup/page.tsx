@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Phone, MapPin } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { getErrorMessage } from "@/lib/errors";
-import TurnstileWidget from "@/components/ui/TurnstileWidget";
+import TurnstileWidget, { TurnstileWidgetRef } from "@/components/ui/TurnstileWidget";
 
 export default function SignupPage() {
     const { status } = useSession();
     const router = useRouter();
+    const turnstileRef = useRef<TurnstileWidgetRef>(null);
 
     useEffect(() => {
         if (status === 'authenticated') {
@@ -55,11 +56,12 @@ export default function SignupPage() {
             newErrors.email = "Email invalide";
         }
 
-        // Téléphone
+        // Téléphone (nettoyage des espaces pour la validation)
+        const cleanPhone = formData.phone.replace(/\s/g, "");
         if (!formData.phone.trim()) {
             newErrors.phone = "Le téléphone est requis";
-        } else if (!/^(05|06|07)[0-9]{8}$/.test(formData.phone.replace(/\s/g, ""))) {
-            newErrors.phone = "Numéro invalide (ex: 0555123456)";
+        } else if (!/^(?:\+213|0)(5|6|7)[0-9]{8}$/.test(cleanPhone)) {
+            newErrors.phone = "Format invalide (ex: 0555123456 ou +213555123456)";
         }
 
         // Ville
@@ -79,8 +81,16 @@ export default function SignupPage() {
             newErrors.confirmPassword = "Les mots de passe ne correspondent pas";
         }
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Reset captcha on validation error as well
+            turnstileRef.current?.reset();
+            return false;
+        }
+
+        setErrors({});
+        return true;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -92,6 +102,7 @@ export default function SignupPage() {
 
         if (process.env.NODE_ENV === 'production' && !captchaToken) {
             setErrors({ general: "Veuillez vérifier que vous n'êtes pas un robot" });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
 
@@ -105,7 +116,7 @@ export default function SignupPage() {
                 body: JSON.stringify({
                     name: formData.name,
                     email: formData.email,
-                    phone: formData.phone,
+                    phone: formData.phone.replace(/\s/g, ""), // Envoyer le numéro sans espaces
                     city: formData.city,
                     password: formData.password,
                     captchaToken,
@@ -116,16 +127,21 @@ export default function SignupPage() {
 
             if (!response.ok) {
                 setErrors({ general: data.error || 'Une erreur est survenue' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Reset captcha on server error to allow retry
+                turnstileRef.current?.reset();
+                setCaptchaToken(null);
                 return;
             }
 
             // Succès ! Redirection vers login
-            // alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
-            window.location.href = '/login';
             window.location.href = '/login';
         } catch (err) {
             console.error('Erreur d\'inscription:', err);
             setErrors({ general: getErrorMessage(err) });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            turnstileRef.current?.reset();
+            setCaptchaToken(null);
         } finally {
             setLoading(false);
         }
@@ -302,6 +318,7 @@ export default function SignupPage() {
                         </div>
 
                         <TurnstileWidget
+                            ref={turnstileRef}
                             onVerify={(token) => {
                                 setCaptchaToken(token);
                                 setCaptchaError(false);

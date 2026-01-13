@@ -5,6 +5,7 @@ import "./globals.css";
 import NextTopLoader from 'nextjs-toploader';
 import { ToastProvider } from "@/components/ui/Toast";
 import NetworkStatus from "@/components/ui/NetworkStatus";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 /**
  * RootLayout NEUTRE - Architecture ISR
@@ -48,6 +49,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
+        <GoogleAnalytics ga_id={process.env.NEXT_PUBLIC_GA_ID || ''} />
         <NextTopLoader color="#ec4899" showSpinner={false} />
         <NetworkStatus />
         <ToastProvider>

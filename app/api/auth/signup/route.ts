@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
         // const body = await request.json() // Deja fait au dessus
 
         // 2. Validation Zod
+        if (body.phone) {
+            body.phone = body.phone.replace(/\s/g, "");
+        }
         const parsedBody = registerSchema.safeParse(body)
 
         if (!parsedBody.success) {
