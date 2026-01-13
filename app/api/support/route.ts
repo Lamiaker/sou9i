@@ -11,6 +11,7 @@ import { TicketCategory, TicketStatus } from '@prisma/client';
 import { z } from 'zod';
 import { logServerError, ERROR_MESSAGES } from '@/lib/errors';
 import { checkSupportRateLimit, getClientIP } from '@/lib/rate-limit-hybrid';
+import { getAdminSession } from '@/lib/admin-auth';
 
 // ✅ SÉCURITÉ: Schéma de validation Zod
 const createTicketSchema = z.object({
@@ -30,21 +31,27 @@ const createTicketSchema = z.object({
 // GET - Récupérer les tickets
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const { searchParams } = new URL(request.url);
+        const status = searchParams.get('status') as string | null;
+        const category = searchParams.get('category') as string | null;
 
-        if (!session?.user?.id) {
+        // 1. Vérifier session NextAuth (User ou Admin par NextAuth)
+        const nextAuthSession = await getServerSession(authOptions);
+
+        // 2. Vérifier session Admin dédiée
+        const adminSession = await getAdminSession();
+
+        const isAdmin = nextAuthSession?.user?.role === 'ADMIN' || !!adminSession;
+
+        if (!nextAuthSession?.user?.id && !adminSession) {
             return NextResponse.json(
                 { success: false, error: 'Non autorisé' },
                 { status: 401 }
             );
         }
 
-        const { searchParams } = new URL(request.url);
-        const status = searchParams.get('status') as string | null;
-        const category = searchParams.get('category') as string | null;
-
         // Admin peut voir tous les tickets
-        if (session.user.role === 'ADMIN') {
+        if (isAdmin) {
             const tickets = await SupportService.getAllTickets({
                 status: status as TicketStatus | undefined,
                 category: category as TicketCategory | undefined,
@@ -53,10 +60,16 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ success: true, data: tickets });
         }
 
-        // User voit ses propres tickets
-        const tickets = await SupportService.getUserTickets(session.user.id);
+        // User (via NextAuth) voit ses propres tickets
+        if (nextAuthSession?.user?.id) {
+            const tickets = await SupportService.getUserTickets(nextAuthSession.user.id);
+            return NextResponse.json({ success: true, data: tickets });
+        }
 
-        return NextResponse.json({ success: true, data: tickets });
+        return NextResponse.json(
+            { success: false, error: 'Non autorisé' },
+            { status: 401 }
+        );
 
     } catch (error) {
         console.error('Erreur GET /api/support:', error);

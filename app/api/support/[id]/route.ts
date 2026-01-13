@@ -8,9 +8,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { revalidatePath } from 'next/cache';
+import { getAdminSession } from '@/lib/admin-auth';
 import { SupportService } from '@/services/supportService';
 import { TicketStatus } from '@prisma/client';
-import { revalidatePath } from 'next/cache';
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -20,9 +21,16 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
         const { id } = await params;
-        const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id) {
+        // 1. Vérifier session NextAuth
+        const nextAuthSession = await getServerSession(authOptions);
+
+        // 2. Vérifier session Admin dédiée
+        const adminSession = await getAdminSession();
+
+        const isAdmin = nextAuthSession?.user?.role === 'ADMIN' || !!adminSession;
+
+        if (!nextAuthSession?.user?.id && !adminSession) {
             return NextResponse.json(
                 { success: false, error: 'Non autorisé' },
                 { status: 401 }
@@ -39,7 +47,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         }
 
         // Vérifier que l'utilisateur a accès
-        if (session.user.role !== 'ADMIN' && ticket.userId !== session.user.id) {
+        if (!isAdmin && ticket.userId !== nextAuthSession?.user?.id) {
             return NextResponse.json(
                 { success: false, error: 'Accès non autorisé' },
                 { status: 403 }
@@ -61,9 +69,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
         const { id } = await params;
-        const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id || session.user.role !== 'ADMIN') {
+        // 1. Vérifier session NextAuth
+        const nextAuthSession = await getServerSession(authOptions);
+
+        // 2. Vérifier session Admin dédiée
+        const adminSession = await getAdminSession();
+
+        const isAdmin = nextAuthSession?.user?.role === 'ADMIN' || !!adminSession;
+        const adminId = adminSession?.admin?.id || nextAuthSession?.user?.id;
+
+        if (!isAdmin || !adminId) {
             return NextResponse.json(
                 { success: false, error: 'Réservé aux administrateurs' },
                 { status: 403 }
@@ -75,7 +91,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
         // Si réponse admin
         if (adminResponse) {
-            const ticket = await SupportService.respondToTicket(id, session.user.id, adminResponse);
+            const ticket = await SupportService.respondToTicket(id, adminId, adminResponse);
 
             // Revalidate user's support pages
             revalidatePath('/dashboard/support');
@@ -126,9 +142,16 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
         const { id } = await params;
-        const session = await getServerSession(authOptions);
 
-        if (!session?.user?.id || session.user.role !== 'ADMIN') {
+        // 1. Vérifier session NextAuth
+        const nextAuthSession = await getServerSession(authOptions);
+
+        // 2. Vérifier session Admin dédiée
+        const adminSession = await getAdminSession();
+
+        const isAdmin = nextAuthSession?.user?.role === 'ADMIN' || !!adminSession;
+
+        if (!isAdmin) {
             return NextResponse.json(
                 { success: false, error: 'Réservé aux administrateurs' },
                 { status: 403 }

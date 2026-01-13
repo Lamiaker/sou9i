@@ -67,7 +67,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
     REJECTED: { label: 'Rejeté', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: XCircle },
 };
 
-export default function ReportsTable({ reports, pagination, onMutate, basePath = '/admin/reports' }: ReportsTableProps) {
+export default function ReportsTable({ reports, pagination, onMutate, basePath = '/sl-panel-9x7k/reports' }: ReportsTableProps) {
     const router = useRouter();
     const [loading, setLoading] = useState<string | null>(null);
     const [showActionModal, setShowActionModal] = useState<string | null>(null);

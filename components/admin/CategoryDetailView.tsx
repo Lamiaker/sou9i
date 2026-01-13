@@ -134,7 +134,7 @@ export default function CategoryDetailView({ category, allCategories }: Category
 
             // Rediriger si c'est la catégorie principale
             if (confirmDelete.categoryId === category.id) {
-                router.push('/admin/categories');
+                router.push('/sl-panel-9x7k/categories');
             } else {
                 router.refresh();
             }
@@ -295,7 +295,7 @@ export default function CategoryDetailView({ category, allCategories }: Category
                                                 {child.icon || <FolderTree size={16} />}
                                             </div>
                                             <div>
-                                                <Link href={`/admin/categories/${child.id}`} className="text-white font-medium hover:underline">
+                                                <Link href={`/sl-panel-9x7k/categories/${child.id}`} className="text-white font-medium hover:underline">
                                                     {child.name}
                                                 </Link>
                                             </div>

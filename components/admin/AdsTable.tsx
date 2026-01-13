@@ -76,7 +76,7 @@ const moderationConfig: Record<string, { label: string; color: string; icon: any
     REJECTED: { label: 'Rejetée', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle },
 };
 
-export default function AdsTable({ ads, pagination, basePath = '/admin/ads' }: AdsTableProps) {
+export default function AdsTable({ ads, pagination, basePath = '/sl-panel-9x7k/ads' }: AdsTableProps) {
     const router = useRouter();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);

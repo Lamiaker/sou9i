@@ -56,7 +56,7 @@ interface UsersTableProps {
     basePath?: string; // Chemin de base pour la pagination (par défaut: /admin/users)
 }
 
-export default function UsersTable({ users, pagination, onMutate, basePath = '/admin/users' }: UsersTableProps) {
+export default function UsersTable({ users, pagination, onMutate, basePath = '/sl-panel-9x7k/users' }: UsersTableProps) {
     const router = useRouter();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);

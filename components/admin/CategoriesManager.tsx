@@ -214,7 +214,7 @@ export default function CategoriesManager({ initialCategories, pagination, curre
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                        <Link href={`/admin/categories/${category.id}`} className="hover:text-cyan-400 transition-colors">
+                        <Link href={`/sl-panel-9x7k/categories/${category.id}`} className="hover:text-cyan-400 transition-colors">
                             <p className="text-white font-medium">{category.name}</p>
                         </Link>
                         <p className="text-white/40 text-sm">{category.slug}</p>
@@ -229,7 +229,7 @@ export default function CategoriesManager({ initialCategories, pagination, curre
                     {/* Actions */}
                     <div className="flex items-center gap-1">
                         <Link
-                            href={`/admin/categories/${category.id}`}
+                            href={`/sl-panel-9x7k/categories/${category.id}`}
                             className="p-2 text-white/60 hover:bg-white/10 rounded-lg transition-colors"
                             title="Voir détails"
                         >
