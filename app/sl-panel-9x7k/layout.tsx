@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import AdminLayoutClient from '@/components/admin/AdminLayoutClient';
+import SWRProvider from '@/components/providers/SWRProvider';
 
 // Zone privée : force-dynamic requis (sera conservé après refonte ISR)
 export const dynamic = 'force-dynamic';
@@ -13,7 +14,11 @@ export default function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    return <AdminLayoutClient>{children}</AdminLayoutClient>;
+    return (
+        <SWRProvider>
+            <AdminLayoutClient>{children}</AdminLayoutClient>
+        </SWRProvider>
+    );
 }
 
 
