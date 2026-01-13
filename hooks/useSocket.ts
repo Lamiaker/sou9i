@@ -44,12 +44,14 @@ interface UseSocketOptions {
 
 // Singleton pour la connexion Socket.IO
 let globalSocket: Socket | null = null
-let connectionCount = 0
+let isConnecting = false
+let disconnectTimeout: NodeJS.Timeout | null = null
 
 export function useSocket(options: UseSocketOptions = {}) {
     const { data: session, status } = useSession()
     const [isConnected, setIsConnected] = useState(false)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const mountedRef = useRef(true)
 
     // Utiliser des refs pour les callbacks pour éviter les re-renders
     const onNewMessageRef = useRef(options.onNewMessage)
@@ -73,29 +75,49 @@ export function useSocket(options: UseSocketOptions = {}) {
 
     // Connexion au serveur Socket.IO
     const connect = useCallback(() => {
+        // Annuler toute déconnexion programmée
+        if (disconnectTimeout) {
+            clearTimeout(disconnectTimeout)
+            disconnectTimeout = null
+        }
+
+        // Si déjà connecté, mettre à jour l'état
         if (globalSocket?.connected) {
             setIsConnected(true)
+            setIsAuthenticated(true)
             return
         }
 
+        // Si une connexion est en cours, attendre
+        if (isConnecting) {
+            return
+        }
+
+        // Si le socket existe mais pas connecté, reconnecter
         if (globalSocket) {
-            // Socket existe mais pas connecté, on reconnecte
             globalSocket.connect()
             return
         }
+
+        isConnecting = true
 
         const socket = io({
             path: '/api/socket',
             transports: ['websocket', 'polling'],
             autoConnect: false,
             reconnection: true,
-            reconnectionAttempts: 5,
+            reconnectionAttempts: 10,
             reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            timeout: 20000,
         })
 
         socket.on('connect', () => {
             console.log('✅ Socket.io connecté')
-            setIsConnected(true)
+            isConnecting = false
+            if (mountedRef.current) {
+                setIsConnected(true)
+            }
 
             // Authentifier l'utilisateur
             if (userIdRef.current) {
@@ -105,7 +127,9 @@ export function useSocket(options: UseSocketOptions = {}) {
 
         socket.on('authenticated', () => {
             console.log('✅ Socket.io authentifié')
-            setIsAuthenticated(true)
+            if (mountedRef.current) {
+                setIsAuthenticated(true)
+            }
         })
 
         socket.on('new_message', (message: SocketMessage) => {
@@ -130,31 +154,38 @@ export function useSocket(options: UseSocketOptions = {}) {
 
         socket.on('disconnect', (reason) => {
             console.log('⚠️ Socket.io déconnecté:', reason)
-            setIsConnected(false)
-            setIsAuthenticated(false)
+            isConnecting = false
+            if (mountedRef.current) {
+                setIsConnected(false)
+                setIsAuthenticated(false)
+            }
         })
 
         socket.on('connect_error', (error) => {
             console.error('❌ Socket.io erreur de connexion:', error.message)
+            isConnecting = false
         })
 
         socket.connect()
         globalSocket = socket
     }, [])
 
-    // Déconnexion
-    const disconnect = useCallback(() => {
-        connectionCount--
-
-        // Ne déconnecter que si plus aucun composant n'utilise le socket
-        if (connectionCount <= 0 && globalSocket) {
-            console.log('🔌 Déconnexion Socket.io')
-            globalSocket.disconnect()
-            globalSocket = null
-            connectionCount = 0
-            setIsConnected(false)
-            setIsAuthenticated(false)
+    // Déconnexion avec délai pour éviter les déconnexions prématurées
+    const scheduleDisconnect = useCallback(() => {
+        // Ne pas déconnecter immédiatement - attendre 5 secondes
+        // Cela permet aux composants de se remonter sans perdre la connexion
+        if (disconnectTimeout) {
+            clearTimeout(disconnectTimeout)
         }
+
+        disconnectTimeout = setTimeout(() => {
+            if (globalSocket && !mountedRef.current) {
+                console.log('🔌 Déconnexion Socket.io (après délai)')
+                globalSocket.disconnect()
+                globalSocket = null
+                isConnecting = false
+            }
+        }, 5000) // 5 secondes de délai
     }, [])
 
     // Rejoindre une conversation
@@ -193,21 +224,44 @@ export function useSocket(options: UseSocketOptions = {}) {
         globalSocket?.emit('mark_read', { conversationId })
     }, [])
 
+    // Disconnect immédiat (pour usage manuel)
+    const disconnect = useCallback(() => {
+        if (disconnectTimeout) {
+            clearTimeout(disconnectTimeout)
+            disconnectTimeout = null
+        }
+        if (globalSocket) {
+            globalSocket.disconnect()
+            globalSocket = null
+            isConnecting = false
+            setIsConnected(false)
+            setIsAuthenticated(false)
+        }
+    }, [])
+
     // Auto-connect quand l'utilisateur est authentifié
     useEffect(() => {
+        mountedRef.current = true
+
         if (autoConnect && status === 'authenticated' && session?.user?.id) {
             userIdRef.current = session.user.id
-            connectionCount++
             connect()
         }
 
         return () => {
-            if (status === 'authenticated') {
-                disconnect()
-            }
+            mountedRef.current = false
+            // Ne pas déconnecter immédiatement, utiliser le délai
+            scheduleDisconnect()
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [autoConnect, status, session?.user?.id])
+
+    // Synchroniser l'état avec le socket global
+    useEffect(() => {
+        if (globalSocket?.connected) {
+            setIsConnected(true)
+        }
+    }, [])
 
     return {
         socket: globalSocket,
