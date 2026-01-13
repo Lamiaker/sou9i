@@ -29,9 +29,9 @@ export default async function AdminCategoriesPage({ searchParams }: PageProps) {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center">
-                            <FolderTree className="w-5 h-5 text-white" />
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                            <FolderTree className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                         Gestion des Catégories
                     </h1>

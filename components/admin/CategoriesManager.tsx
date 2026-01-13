@@ -215,47 +215,50 @@ export default function CategoriesManager({ initialCategories, pagination, curre
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                         <Link href={`/sl-panel-9x7k/categories/${category.id}`} className="hover:text-cyan-400 transition-colors">
-                            <p className="text-white font-medium">{category.name}</p>
+                            <p className="text-white font-medium truncate sm:whitespace-normal">{category.name}</p>
                         </Link>
-                        <p className="text-white/40 text-sm">{category.slug}</p>
+                        <p className="text-white/40 text-xs sm:text-sm truncate">{category.slug}</p>
                     </div>
 
-                    {/* Ads Count */}
-                    <div className="flex items-center gap-1 px-3 py-1 bg-white/5 rounded-full text-white/60 text-sm">
-                        <ShoppingBag className="w-4 h-4" />
-                        {category._count.ads}
-                    </div>
+                    {/* Ads Count & Actions Container */}
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4">
+                        {/* Ads Count */}
+                        <div className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-white/5 rounded-full text-white/60 text-xs sm:text-sm">
+                            <ShoppingBag className="w-3 h-3 sm:w-4 h-4" />
+                            {category._count.ads}
+                        </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-1">
-                        <Link
-                            href={`/sl-panel-9x7k/categories/${category.id}`}
-                            className="p-2 text-white/60 hover:bg-white/10 rounded-lg transition-colors"
-                            title="Voir détails"
-                        >
-                            <Eye size={18} />
-                        </Link>
-                        <button
-                            onClick={() => openCreateModal(category.id)}
-                            className="p-2 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition-colors"
-                            title="Ajouter une sous-catégorie"
-                        >
-                            <Plus size={18} />
-                        </button>
-                        <button
-                            onClick={() => openEditModal(category)}
-                            className="p-2 text-white/60 hover:bg-white/10 rounded-lg transition-colors"
-                            title="Modifier"
-                        >
-                            <Edit2 size={18} />
-                        </button>
-                        <button
-                            onClick={() => initiateDelete(category.id, category.name, category._count?.ads || 0)}
-                            className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                            title="Supprimer"
-                        >
-                            <Trash2 size={18} />
-                        </button>
+                        {/* Actions */}
+                        <div className="flex items-center gap-1">
+                            <Link
+                                href={`/sl-panel-9x7k/categories/${category.id}`}
+                                className="p-1.5 sm:p-2 text-white/60 hover:bg-white/10 rounded-lg transition-colors"
+                                title="Voir détails"
+                            >
+                                <Eye size={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                            </Link>
+                            <button
+                                onClick={() => openCreateModal(category.id)}
+                                className="p-1.5 sm:p-2 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition-colors"
+                                title="Ajouter une sous-catégorie"
+                            >
+                                <Plus size={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                            </button>
+                            <button
+                                onClick={() => openEditModal(category)}
+                                className="p-1.5 sm:p-2 text-white/60 hover:bg-white/10 rounded-lg transition-colors"
+                                title="Modifier"
+                            >
+                                <Edit2 size={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                            </button>
+                            <button
+                                onClick={() => initiateDelete(category.id, category.name, category._count?.ads || 0)}
+                                className="p-1.5 sm:p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                                title="Supprimer"
+                            >
+                                <Trash2 size={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 

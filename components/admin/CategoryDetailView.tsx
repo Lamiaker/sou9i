@@ -219,45 +219,47 @@ export default function CategoryDetailView({ category, allCategories }: Category
             )}
 
             {/* Header / Breadcrumb */}
-            <div className="flex items-center gap-4">
-                <Link
-                    href="/sl-panel-9x7k/categories"
-                    className="p-2 bg-white/5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                    <ArrowLeft size={20} />
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                        {category.icon && <span>{category.icon}</span>}
-                        {category.name}
-                    </h1>
-                    <div className="flex items-center gap-2 text-sm text-white/40 mt-1">
-                        <span>slug: {category.slug}</span>
-                        {category.parent && (
-                            <>
-                                <span>•</span>
-                                <span>Parent: {category.parent.name}</span>
-                            </>
-                        )}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-4">
+                    <Link
+                        href="/sl-panel-9x7k/categories"
+                        className="p-2 bg-white/5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+                    >
+                        <ArrowLeft size={20} />
+                    </Link>
+                    <div className="min-w-0">
+                        <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 truncate">
+                            {category.icon && <span>{category.icon}</span>}
+                            {category.name}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-white/40 mt-1">
+                            <span className="truncate">slug: {category.slug}</span>
+                            {category.parent && (
+                                <>
+                                    <span className="hidden sm:inline">•</span>
+                                    <span className="truncate">Parent: {category.parent.name}</span>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                <div className="ml-auto flex gap-2">
+                <div className="flex gap-2 sm:ml-auto">
                     <button
                         onClick={() => setEditingCategory(category)}
                         disabled={loading}
-                        className="px-4 py-2 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-lg hover:bg-cyan-500/20 transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-lg hover:bg-cyan-500/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base font-medium"
                     >
-                        <Edit2 size={18} />
-                        Modifier
+                        <Edit2 size={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                        <span>Modifier</span>
                     </button>
                     <button
                         onClick={() => initiateDelete(category.id, category.name, category._count?.ads || 0, false)}
                         disabled={loading}
-                        className="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base font-medium"
                     >
-                        <Trash2 size={18} />
-                        Supprimer
+                        <Trash2 size={18} className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                        <span>Supprimer</span>
                     </button>
                 </div>
             </div>
@@ -289,38 +291,41 @@ export default function CategoryDetailView({ category, allCategories }: Category
                         {category.children.length > 0 ? (
                             <div className="divide-y divide-white/5">
                                 {category.children.map((child: any) => (
-                                    <div key={child.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center text-teal-400">
+                                    <div key={child.id} className="p-3 sm:p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                                            <div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center text-teal-400 flex-shrink-0">
                                                 {child.icon || <FolderTree size={16} />}
                                             </div>
-                                            <div>
-                                                <Link href={`/sl-panel-9x7k/categories/${child.id}`} className="text-white font-medium hover:underline">
+                                            <div className="min-w-0">
+                                                <Link href={`/sl-panel-9x7k/categories/${child.id}`} className="text-white font-medium hover:underline block truncate">
                                                     {child.name}
                                                 </Link>
+                                                <p className="text-[10px] sm:text-xs text-white/30 truncate sm:hidden">{child.slug}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-white/40 text-sm">
-                                            <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded-lg">
-                                                <ShoppingBag size={14} />
-                                                {child._count?.ads || 0}
+                                        <div className="flex items-center gap-1 sm:gap-2 text-white/40 text-sm ml-2">
+                                            <div className="flex items-center gap-1 px-1.5 sm:px-2 py-1 bg-white/5 rounded-lg text-xs">
+                                                <ShoppingBag size={12} className="sm:w-3.5 sm:h-3.5" />
+                                                <span>{child._count?.ads || 0}</span>
                                             </div>
-                                            <button
-                                                onClick={() => setEditingCategory(child)}
-                                                disabled={loading}
-                                                className="p-1.5 hover:bg-white/10 rounded-lg text-white/60 transition-colors disabled:opacity-50"
-                                                title="Modifier sous-catégorie"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => initiateDelete(child.id, child.name, child._count?.ads || 0, true)}
-                                                disabled={loading}
-                                                className="p-1.5 hover:bg-red-500/20 rounded-lg text-red-400 transition-colors disabled:opacity-50"
-                                                title="Supprimer sous-catégorie"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                            <div className="flex items-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => setEditingCategory(child)}
+                                                    disabled={loading}
+                                                    className="p-1.5 hover:bg-white/10 rounded-lg text-white/60 transition-colors disabled:opacity-50"
+                                                    title="Modifier sous-catégorie"
+                                                >
+                                                    <Edit2 size={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => initiateDelete(child.id, child.name, child._count?.ads || 0, true)}
+                                                    disabled={loading}
+                                                    className="p-1.5 hover:bg-red-500/20 rounded-lg text-red-400 transition-colors disabled:opacity-50"
+                                                    title="Supprimer sous-catégorie"
+                                                >
+                                                    <Trash2 size={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
