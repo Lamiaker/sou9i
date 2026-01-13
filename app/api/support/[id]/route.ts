@@ -22,15 +22,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
         const { id } = await params;
 
-        // 1. Vérifier session NextAuth
-        const nextAuthSession = await getServerSession(authOptions);
-
-        // 2. Vérifier session Admin dédiée
+        // 1. Vérifier session Admin dédiée (Connexion classique)
         const adminSession = await getAdminSession();
 
-        const isAdmin = nextAuthSession?.user?.role === 'ADMIN' || !!adminSession;
+        // 2. Vérifier session NextAuth (Utilisateur)
+        const nextAuthSession = !adminSession ? await getServerSession(authOptions) : null;
 
-        if (!nextAuthSession?.user?.id && !adminSession) {
+        const isAdmin = !!adminSession;
+        const userId = nextAuthSession?.user?.id;
+
+        if (!isAdmin && !userId) {
             return NextResponse.json(
                 { success: false, error: 'Non autorisé' },
                 { status: 401 }
@@ -46,8 +47,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             );
         }
 
-        // Vérifier que l'utilisateur a accès
-        if (!isAdmin && ticket.userId !== nextAuthSession?.user?.id) {
+        // Vérifier que l'utilisateur a accès (s'il n'est pas admin)
+        if (!isAdmin && ticket.userId !== userId) {
             return NextResponse.json(
                 { success: false, error: 'Accès non autorisé' },
                 { status: 403 }
@@ -70,13 +71,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
         const { id } = await params;
 
-        // 1. Vérifier session NextAuth
-        const nextAuthSession = await getServerSession(authOptions);
-
-        // 2. Vérifier session Admin dédiée
+        // 1. Vérifier session Admin dédiée (Connexion classique)
         const adminSession = await getAdminSession();
 
-        const isAdmin = nextAuthSession?.user?.role === 'ADMIN' || !!adminSession;
+        // 2. Vérifier session NextAuth (Utilisateur)
+        const nextAuthSession = !adminSession ? await getServerSession(authOptions) : null;
+
+        const isAdmin = !!adminSession;
         const adminId = adminSession?.admin?.id || nextAuthSession?.user?.id;
 
         if (!isAdmin || !adminId) {
@@ -143,13 +144,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
         const { id } = await params;
 
-        // 1. Vérifier session NextAuth
-        const nextAuthSession = await getServerSession(authOptions);
-
-        // 2. Vérifier session Admin dédiée
+        // 1. Vérifier session Admin dédiée (Connexion classique)
         const adminSession = await getAdminSession();
 
-        const isAdmin = nextAuthSession?.user?.role === 'ADMIN' || !!adminSession;
+        // 2. Vérifier session NextAuth (Utilisateur)
+        const nextAuthSession = !adminSession ? await getServerSession(authOptions) : null;
+
+        const isAdmin = !!adminSession;
 
         if (!isAdmin) {
             return NextResponse.json(

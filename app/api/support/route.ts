@@ -35,15 +35,16 @@ export async function GET(request: NextRequest) {
         const status = searchParams.get('status') as string | null;
         const category = searchParams.get('category') as string | null;
 
-        // 1. Vérifier session NextAuth (User ou Admin par NextAuth)
-        const nextAuthSession = await getServerSession(authOptions);
-
-        // 2. Vérifier session Admin dédiée
+        // 1. Vérifier session Admin dédiée (Connexion classique panneau secret)
         const adminSession = await getAdminSession();
 
-        const isAdmin = nextAuthSession?.user?.role === 'ADMIN' || !!adminSession;
+        // 2. Vérifier session NextAuth (Utilisateurs du site)
+        const nextAuthSession = !adminSession ? await getServerSession(authOptions) : null;
 
-        if (!nextAuthSession?.user?.id && !adminSession) {
+        const isAdmin = !!adminSession;
+        const userId = nextAuthSession?.user?.id;
+
+        if (!isAdmin && !userId) {
             return NextResponse.json(
                 { success: false, error: 'Non autorisé' },
                 { status: 401 }
@@ -61,8 +62,8 @@ export async function GET(request: NextRequest) {
         }
 
         // User (via NextAuth) voit ses propres tickets
-        if (nextAuthSession?.user?.id) {
-            const tickets = await SupportService.getUserTickets(nextAuthSession.user.id);
+        if (userId) {
+            const tickets = await SupportService.getUserTickets(userId);
             return NextResponse.json({ success: true, data: tickets });
         }
 
