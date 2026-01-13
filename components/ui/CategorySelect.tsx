@@ -69,7 +69,6 @@ export default function CategorySelect({
     const handleOpen = () => {
         if (!disabled) {
             setIsOpen(true);
-            setTimeout(() => inputRef.current?.focus(), 100);
         }
     };
 
