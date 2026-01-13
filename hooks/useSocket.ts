@@ -103,13 +103,17 @@ export function useSocket(options: UseSocketOptions = {}) {
 
         const socket = io({
             path: '/api/socket',
-            transports: ['websocket', 'polling'],
+            // Utiliser polling en premier car Cloudflare peut bloquer WebSocket
+            transports: ['polling', 'websocket'],
             autoConnect: false,
             reconnection: true,
             reconnectionAttempts: 10,
             reconnectionDelay: 1000,
             reconnectionDelayMax: 5000,
-            timeout: 20000,
+            timeout: 30000,
+            // Forcer le polling si WebSocket échoue
+            upgrade: true,
+            rememberUpgrade: false,
         })
 
         socket.on('connect', () => {

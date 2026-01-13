@@ -94,7 +94,15 @@ export async function initSocketServer(httpServer: any): Promise<SocketIOServer>
             methods: ['GET', 'POST'],
             credentials: true,
         },
-        transports: ['websocket', 'polling'],
+        // Polling en premier pour compatibilité Cloudflare
+        transports: ['polling', 'websocket'],
+        // Timeouts plus longs pour Cloudflare
+        pingTimeout: 60000,
+        pingInterval: 25000,
+        // Permettre l'upgrade vers WebSocket après connexion polling
+        allowUpgrades: true,
+        // Options HTTP long-polling
+        httpCompression: true,
     })
 
     // Configurer l'adapter Redis en production
