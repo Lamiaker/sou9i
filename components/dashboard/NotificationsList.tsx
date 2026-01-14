@@ -110,11 +110,8 @@ export default function NotificationsList() {
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="divide-y divide-gray-100">
-                        {notifications.map((notif: any) => (
-                            <div
-                                key={notif.id}
-                                className={`p-5 group transition-colors relative ${!notif.read ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-gray-50'}`}
-                            >
+                        {notifications.map((notif: any) => {
+                            const notificationContent = (
                                 <div className="flex gap-4">
                                     {/* Icone */}
                                     <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${!notif.read ? 'bg-white shadow-sm' : 'bg-gray-50'}`}>
@@ -140,14 +137,10 @@ export default function NotificationsList() {
                                                     </span>
 
                                                     {notif.link && (
-                                                        <Link
-                                                            href={notif.link}
-                                                            onClick={() => markAsRead(notif.id)}
-                                                            className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-                                                        >
+                                                        <span className="text-xs font-bold text-primary flex items-center gap-1">
                                                             Consulter
                                                             <ExternalLink size={12} />
-                                                        </Link>
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>
@@ -155,7 +148,11 @@ export default function NotificationsList() {
                                             <div className="flex flex-col gap-2">
                                                 {!notif.read && (
                                                     <button
-                                                        onClick={() => markAsRead(notif.id)}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            markAsRead(notif.id);
+                                                        }}
                                                         className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                                         title="Marquer comme lu"
                                                     >
@@ -166,8 +163,25 @@ export default function NotificationsList() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+
+                            const baseClassName = `block p-5 group transition-colors relative cursor-pointer ${!notif.read ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-gray-50'}`;
+
+                            return notif.link ? (
+                                <Link
+                                    key={notif.id}
+                                    href={notif.link}
+                                    onClick={() => markAsRead(notif.id)}
+                                    className={baseClassName}
+                                >
+                                    {notificationContent}
+                                </Link>
+                            ) : (
+                                <div key={notif.id} className={baseClassName}>
+                                    {notificationContent}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}

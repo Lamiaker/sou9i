@@ -48,11 +48,6 @@ export default function Header() {
             >
               <Menu size={24} className="text-gray-800" strokeWidth={2} />
             </button>
-            {!isMobileMenuOpen && unreadTotal > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center border-2 border-white">
-                {unreadTotal > 9 ? '9+' : unreadTotal}
-              </span>
-            )}
           </div>
 
           {/* Logo centré */}
@@ -134,7 +129,7 @@ export default function Header() {
                 href="/favoris"
               />
               {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {favorites.length}
                 </span>
               )}
@@ -240,7 +235,7 @@ export default function Header() {
                   onClick={closeMobileMenu}
                 />
                 {favorites.length > 0 && (
-                  <span className="absolute top-1/2 -translate-y-1/2 right-4 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+                  <span className="absolute top-1/2 -translate-y-1/2 right-4 bg-primary text-white text-xs font-bold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
                     {favorites.length}
                   </span>
                 )}
