@@ -15,6 +15,7 @@ interface ListeCategoricesProps {
 
 export default function ListeCategorices({ isMobileMenu = false, onSelectItem, showAll = false }: ListeCategoricesProps) {
   const [hoverCategory, setHoverCategory] = useState<string | null>(null);
+  const [openCategory, setOpenCategory] = useState<string | null>(null); // Pour l'accordion mobile
   const pathname = usePathname();
 
   const { categories, loading, error } = useCategories({
@@ -96,22 +97,64 @@ export default function ListeCategorices({ isMobileMenu = false, onSelectItem, s
     return null;
   }
 
-  // Menu mobile
+  // Menu mobile avec Accordion
   if (isMobileMenu) {
     return (
-      <>
-        {displayedCategories.map((cat) => (
-          <Link
-            key={cat.id}
-            href={`/categories/${cat.slug}`}
-            className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-primary/5 transition-all text-gray-700 font-medium text-sm group"
-            onClick={() => onSelectItem && onSelectItem(cat.slug)}
-          >
-            <span className="group-hover:text-primary transition-colors">{cat.name}</span>
-            <ChevronRight size={16} className="text-gray-300 group-hover:text-primary transition-colors" />
-          </Link>
-        ))}
-      </>
+      <div className="space-y-1">
+        {displayedCategories.map((cat) => {
+          const hasChildren = cat.children && cat.children.length > 0;
+          const isOpen = openCategory === cat.id;
+
+          return (
+            <div key={cat.id}>
+              {/* Catégorie principale */}
+              <div className="flex items-center">
+                <Link
+                  href={`/categories/${cat.slug}`}
+                  className="flex-1 flex items-center py-3 px-2 rounded-lg hover:bg-primary/5 transition-all text-gray-700 font-medium text-sm group"
+                  onClick={() => onSelectItem && onSelectItem(cat.slug)}
+                >
+                  <span className="group-hover:text-primary transition-colors">{cat.name}</span>
+                </Link>
+
+                {hasChildren && (
+                  <button
+                    onClick={() => setOpenCategory(isOpen ? null : cat.id)}
+                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    aria-label={isOpen ? "Fermer" : "Ouvrir les sous-catégories"}
+                  >
+                    <ChevronDown
+                      size={18}
+                      className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                )}
+
+                {!hasChildren && (
+                  <ChevronRight size={16} className="text-gray-300 mr-2" />
+                )}
+              </div>
+
+              {/* Sous-catégories (accordion) */}
+              {hasChildren && isOpen && (
+                <div className="ml-4 pl-3 border-l-2 border-primary/20 space-y-1 animate-fadeIn">
+                  {cat.children?.map((child) => (
+                    <Link
+                      key={child.id}
+                      href={`/categories/${child.slug}`}
+                      className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-primary/5 transition-all text-gray-600 text-sm group"
+                      onClick={() => onSelectItem && onSelectItem(child.slug)}
+                    >
+                      <span className="group-hover:text-primary transition-colors">{child.name}</span>
+                      <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors" />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     );
   }
 
