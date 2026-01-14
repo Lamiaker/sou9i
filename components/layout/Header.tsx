@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 import Image from "next/image";
-import { Plus, Heart, Mail, Search, Menu, X, MessageCircle, Gift } from "lucide-react";
+import { Plus, Heart, Mail, Search, Menu, X, MessageCircle, Gift, Home } from "lucide-react";
 import logo from "@/public/logo.png";
 import SearchBar from "./SearchBar";
 import ListeCategorices from "./ListeCategorices";
@@ -32,6 +33,18 @@ export default function Header() {
       setMenuClosing(false);
     }, 250);
   };
+
+  // Déterminer si on doit afficher la barre de recherche et les catégories
+  const pathname = usePathname();
+  const isPrivatePage = pathname?.startsWith('/dashboard') ||
+    pathname?.startsWith('/login') ||
+    pathname?.startsWith('/signup') ||
+    pathname?.startsWith('/forgot-password') ||
+    pathname?.startsWith('/reset-password') ||
+    pathname?.startsWith('/connexion-requise') ||
+    pathname?.startsWith('/banned');
+
+  const showSearchAndCategories = !isPrivatePage;
 
   return (
     <header className="w-full shadow-sm bg-white sticky top-0 z-30">
@@ -69,15 +82,19 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Barre de recherche mobile */}
-        <div className="px-4 py-3 border-b border-gray-100">
-          <SearchBar />
-        </div>
+        {/* Barre de recherche mobile - uniquement pages publiques */}
+        {showSearchAndCategories && (
+          <div className="px-4 py-3 border-b border-gray-100">
+            <SearchBar />
+          </div>
+        )}
 
-        {/* Catégories scrollables horizontalement - Mobile */}
-        <div className="overflow-x-auto scrollbar-hide bg-white border-b border-gray-100">
-          <ListeCategorices />
-        </div>
+        {/* Catégories scrollables horizontalement - Mobile - uniquement pages publiques */}
+        {showSearchAndCategories && (
+          <div className="overflow-x-auto scrollbar-hide bg-white border-b border-gray-100">
+            <ListeCategorices />
+          </div>
+        )}
       </div>
 
       {/* Header Desktop */}
@@ -109,10 +126,15 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Section milieu : barre de recherche */}
-          <div className="flex-1 max-w-xl mx-6">
-            <SearchBar />
-          </div>
+          {/* Section milieu : barre de recherche - uniquement pages publiques */}
+          {showSearchAndCategories && (
+            <div className="flex-1 max-w-xl mx-6">
+              <SearchBar />
+            </div>
+          )}
+
+          {/* Spacer si pas de barre de recherche */}
+          {!showSearchAndCategories && <div className="flex-1" />}
 
           {/* Section droite : menu utilisateur */}
           <div className="flex items-center space-x-6 text-gray-700">
@@ -155,8 +177,8 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Catégories Desktop */}
-        <ListeCategorices />
+        {/* Catégories Desktop - uniquement pages publiques */}
+        {showSearchAndCategories && <ListeCategorices />}
       </div>
 
       {/* Menu latéral mobile - Style Leboncoin exact */}
@@ -194,6 +216,14 @@ export default function Header() {
 
             {/* Menu principal */}
             <div className="py-2">
+              {/* Accueil */}
+              <MenuButton
+                icon={Home}
+                text="Accueil"
+                href="/"
+                onClick={closeMobileMenu}
+              />
+
               {/* Déposer une annonce */}
               <MenuButton
                 icon={Plus}

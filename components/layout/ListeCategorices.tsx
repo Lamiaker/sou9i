@@ -108,11 +108,7 @@ export default function ListeCategorices({ isMobileMenu = false, onSelectItem, s
             onClick={() => onSelectItem && onSelectItem(cat.slug)}
           >
             <span className="group-hover:text-primary transition-colors">{cat.name}</span>
-            {cat._count?.ads !== undefined && cat._count.ads > 0 && (
-              <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                {cat._count.ads}
-              </span>
-            )}
+            <ChevronRight size={16} className="text-gray-300 group-hover:text-primary transition-colors" />
           </Link>
         ))}
       </>
