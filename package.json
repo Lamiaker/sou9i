@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node server.js",
+    "start:next": "next start",
     "lint": "eslint",
     "create-admin": "ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} create-admin.ts",
     "create-super-admin": "ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} scripts/create-super-admin.ts"

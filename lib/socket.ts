@@ -34,7 +34,16 @@ export interface UserTypingEvent {
 // Map pour garder trace des utilisateurs connectés (local au worker)
 const userSockets = new Map<string, Set<string>>()
 
-let io: SocketIOServer | null = null
+// Variable locale pour le mode Pages Router (next dev / compatibilité)
+let localIO: SocketIOServer | null = null
+
+// Déclaration du type global pour TypeScript
+declare global {
+    // eslint-disable-next-line no-var
+    var io: SocketIOServer | undefined
+    // eslint-disable-next-line no-var
+    var httpServer: HttpServer | undefined
+}
 
 /**
  * Configure l'adapter Redis pour Socket.io
@@ -81,12 +90,14 @@ async function setupRedisAdapter(socketServer: SocketIOServer): Promise<void> {
 }
 
 /**
- * Initialise le serveur Socket.io (utilisé par la route API)
+ * Initialise le serveur Socket.io (utilisé par la route API ou le custom server)
  */
-export async function initSocketServer(httpServer: any): Promise<SocketIOServer> {
-    if (io) return io
+export async function initSocketServer(httpServer: HttpServer): Promise<SocketIOServer> {
+    // Si déjà initialisé (globalement ou localement), retourner l'instance existante
+    if (global.io) return global.io
+    if (localIO) return localIO
 
-    io = new SocketIOServer(httpServer, {
+    const io = new SocketIOServer(httpServer, {
         path: '/api/socket',
         addTrailingSlash: false,
         cors: {
@@ -111,6 +122,8 @@ export async function initSocketServer(httpServer: any): Promise<SocketIOServer>
     }
 
     io.on('connection', (socket: Socket) => {
+        console.log(`[Socket.io] Nouvelle connexion: ${socket.id}`)
+
         // Authentification
         socket.on('authenticate', async (userId: string) => {
             if (!userId) return
@@ -128,6 +141,7 @@ export async function initSocketServer(httpServer: any): Promise<SocketIOServer>
                     socket.join(`conversation:${conv.id}`)
                 })
                 socket.emit('authenticated', { userId })
+                console.log(`[Socket.io] Utilisateur ${userId} authentifié`)
             } catch (error) {
                 console.error('Socket Auth Error:', error)
             }
@@ -166,7 +180,8 @@ export async function initSocketServer(httpServer: any): Promise<SocketIOServer>
         })
 
         // Déconnexion
-        socket.on('disconnect', () => {
+        socket.on('disconnect', (reason) => {
+            console.log(`[Socket.io] Déconnexion: ${socket.id} (${reason})`)
             const userId = socket.data.userId
             if (userId) {
                 const sockets = userSockets.get(userId)
@@ -176,11 +191,26 @@ export async function initSocketServer(httpServer: any): Promise<SocketIOServer>
         })
     })
 
+    // Stocker l'instance localement ET globalement
+    localIO = io
+    global.io = io
+
+    console.log('[Socket.io] Serveur initialisé ✓')
+
     return io
 }
 
+/**
+ * Récupère l'instance Socket.IO
+ * Vérifie d'abord la variable globale (custom server), puis la variable locale (Pages Router)
+ */
 export function getIO(): SocketIOServer | null {
-    return io
+    // 1. Vérifier l'instance globale (custom server en production)
+    if (global.io) {
+        return global.io
+    }
+    // 2. Fallback sur l'instance locale (next dev / Pages Router)
+    return localIO
 }
 
 /**
@@ -188,8 +218,13 @@ export function getIO(): SocketIOServer | null {
  * Avec Redis adapter, le message sera propagé à tous les workers
  */
 export function broadcastNewMessage(message: NewMessageEvent) {
+    const io = getIO()
     if (io) {
         io.to(`conversation:${message.conversationId}`).emit('new_message', message)
+        console.log(`[Socket.io] Message broadcast -> conversation:${message.conversationId}`)
+    } else {
+        console.warn('[Socket.io] ⚠️ Instance IO non disponible - message non diffusé')
+        // En production, ceci ne devrait JAMAIS arriver si le custom server est utilisé
     }
 }
 
@@ -197,6 +232,7 @@ export function broadcastNewMessage(message: NewMessageEvent) {
  * Helper pour notifier d'une lecture de message
  */
 export function broadcastMessagesRead(conversationId: string, userId: string) {
+    const io = getIO()
     if (io) {
         io.to(`conversation:${conversationId}`).emit('messages_read', {
             conversationId,
