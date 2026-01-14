@@ -75,13 +75,11 @@ export default function Footer() {
                                 <MapPin size={18} className="shrink-0 text-primary" />
                                 <span>Oran, Algérie</span>
                             </li>
-                            {/* <li className="flex items-center gap-3">
-                                <Phone size={18} className="shrink-0 text-primary" />
-                                <span>+213 555 123 456</span>
-                            </li> */}
                             <li className="flex items-center gap-3">
                                 <Mail size={18} className="shrink-0 text-primary" />
-                                <span>contact@sweetlook.net</span>
+                                <Link href="/dashboard/support" className="hover:text-white transition-colors">
+                                    Contactez-nous via la page support
+                                </Link>
                             </li>
                         </ul>
                     </div>
