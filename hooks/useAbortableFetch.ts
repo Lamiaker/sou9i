@@ -1,26 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 
-/**
- * Hook pour gérer les requêtes fetch avec AbortController
- * Annule automatiquement les requêtes précédentes et nettoie au démontage
- * 
- * @returns Objet avec la fonction fetch et contrôles d'annulation
- * 
- * @example
- * const { fetchWithAbort, abort, isAborted } = useAbortableFetch();
- * 
- * const handleSearch = async (query: string) => {
- *   try {
- *     const response = await fetchWithAbort(`/api/search?q=${query}`);
- *     const data = await response.json();
- *     setResults(data);
- *   } catch (error) {
- *     if (!isAborted(error)) {
- *       console.error('Erreur:', error);
- *     }
- *   }
- * };
- */
+
 export function useAbortableFetch() {
     const abortControllerRef = useRef<AbortController | null>(null);
 

@@ -117,7 +117,6 @@ export function useSocket(options: UseSocketOptions = {}) {
         })
 
         socket.on('connect', () => {
-            console.log('✅ Socket.io connecté')
             isConnecting = false
             if (mountedRef.current) {
                 setIsConnected(true)
@@ -130,7 +129,6 @@ export function useSocket(options: UseSocketOptions = {}) {
         })
 
         socket.on('authenticated', () => {
-            console.log('✅ Socket.io authentifié')
             if (mountedRef.current) {
                 setIsAuthenticated(true)
             }
@@ -152,12 +150,11 @@ export function useSocket(options: UseSocketOptions = {}) {
             onMessagesReadRef.current?.(data)
         })
 
-        socket.on('error', (error) => {
-            console.error('❌ Socket erreur:', error)
+        socket.on('error', () => {
+            // Error silencieuse en production
         })
 
-        socket.on('disconnect', (reason) => {
-            console.log('⚠️ Socket.io déconnecté:', reason)
+        socket.on('disconnect', () => {
             isConnecting = false
             if (mountedRef.current) {
                 setIsConnected(false)
@@ -165,8 +162,7 @@ export function useSocket(options: UseSocketOptions = {}) {
             }
         })
 
-        socket.on('connect_error', (error) => {
-            console.error('❌ Socket.io erreur de connexion:', error.message)
+        socket.on('connect_error', () => {
             isConnecting = false
         })
 

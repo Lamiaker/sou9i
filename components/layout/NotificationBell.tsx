@@ -114,14 +114,10 @@ export default function NotificationBell() {
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-50">
-                                {notifications.map((notif: any) => (
-                                    <div
-                                        key={notif.id}
-                                        className={`p-4 hover:bg-gray-50 transition relative group ${!notif.read ? 'bg-primary/5' : ''
-                                            }`}
-                                    >
+                                {notifications.map((notif: any) => {
+                                    const notificationContent = (
                                         <div className="flex gap-3">
-                                            {/* Icone selon le type */}
+                                            {/* Indicateur non lu */}
                                             <div className="flex-shrink-0 mt-1">
                                                 <div className={`w-2 h-2 rounded-full mt-2 ${!notif.read ? 'bg-primary' : 'bg-transparent'}`} />
                                             </div>
@@ -141,7 +137,11 @@ export default function NotificationBell() {
                                                     <div className="flex items-center gap-2">
                                                         {!notif.read && (
                                                             <button
-                                                                onClick={() => markAsRead(notif.id)}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    markAsRead(notif.id);
+                                                                }}
                                                                 className="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition"
                                                                 title="Marquer comme lu"
                                                             >
@@ -149,23 +149,36 @@ export default function NotificationBell() {
                                                             </button>
                                                         )}
                                                         {notif.link && (
-                                                            <Link
-                                                                href={notif.link}
-                                                                onClick={() => {
-                                                                    markAsRead(notif.id);
-                                                                    setIsOpen(false);
-                                                                }}
-                                                                className="p-1 text-gray-400 hover:text-primary hover:bg-primary/5 rounded transition"
-                                                            >
+                                                            <span className="p-1 text-gray-400">
                                                                 <ExternalLink size={14} />
-                                                            </Link>
+                                                            </span>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+
+                                    const baseClassName = `block p-4 hover:bg-gray-50 transition cursor-pointer ${!notif.read ? 'bg-primary/5' : ''}`;
+
+                                    return notif.link ? (
+                                        <Link
+                                            key={notif.id}
+                                            href={notif.link}
+                                            onClick={() => {
+                                                markAsRead(notif.id);
+                                                setIsOpen(false);
+                                            }}
+                                            className={baseClassName}
+                                        >
+                                            {notificationContent}
+                                        </Link>
+                                    ) : (
+                                        <div key={notif.id} className={baseClassName}>
+                                            {notificationContent}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
