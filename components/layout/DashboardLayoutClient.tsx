@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import DashboardSkeleton from "@/components/layout/DashboardSkeleton";
@@ -11,9 +11,25 @@ export default function DashboardLayoutClient({
     children: React.ReactNode;
 }) {
     const { isAuthenticated, isLoading } = useAuth();
+    const pathname = usePathname();
+
+    // Détecter si on est sur la page messages pour un layout spécial
+    const isMessagesPage = pathname?.includes('/dashboard/messages');
 
     if (isLoading) {
         return <DashboardSkeleton />;
+    }
+
+    // Pour la page messages sur mobile : layout fullscreen fixe
+    if (isMessagesPage) {
+        return (
+            <div className="fixed inset-0 top-[60px] bottom-[72px] lg:static lg:inset-auto lg:top-auto lg:bottom-auto flex flex-col lg:flex-row bg-gray-50 lg:min-h-screen z-40">
+                <Sidebar />
+                <main className="flex-1 p-0 lg:p-4 overflow-hidden">
+                    {children}
+                </main>
+            </div>
+        );
     }
 
     return (
