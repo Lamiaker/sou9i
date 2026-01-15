@@ -23,7 +23,7 @@ export default function DashboardLayoutClient({
     // Pour la page messages sur mobile : layout fullscreen fixe
     if (isMessagesPage) {
         return (
-            <div className="fixed inset-0 top-[60px] bottom-[72px] lg:static lg:inset-auto lg:top-auto lg:bottom-auto flex flex-col lg:flex-row bg-gray-50 lg:min-h-screen z-40">
+            <div className="fixed inset-0 top-[60px] bottom-[72px] lg:static lg:inset-auto lg:top-auto lg:bottom-auto flex flex-col lg:flex-row bg-gray-50 lg:min-h-screen z-10">
                 <Sidebar />
                 <main className="flex-1 p-0 lg:p-4 overflow-hidden">
                     {children}

@@ -354,11 +354,11 @@ export default function MessagesPage() {
                 {selectedConversation ? (
                     <>
                         {/* Chat Header - Design premium */}
-                        <div className="px-4 py-3 bg-white/95 backdrop-blur-sm border-b border-gray-200/80 flex items-center justify-between shadow-sm flex-shrink-0 z-20">
+                        <div className="px-4 pt-4 pb-3 bg-white/95 backdrop-blur-sm border-b border-gray-200/80 flex items-center justify-between shadow-sm flex-shrink-0 z-20">
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => selectConversation(null)}
-                                    className="lg:hidden p-2 -ml-2 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors"
+                                    className="lg:hidden p-2 -ml-2 mr-1 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors"
                                 >
                                     <ArrowLeft size={22} />
                                 </button>
